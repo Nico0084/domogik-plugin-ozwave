@@ -1,0 +1,3 @@
+# model : AEON z-Stick serie 2
+# description : Usb Zwave Stick R adaptator link to /dev/zwave
+DRIVERS=="usb", ATTRS{manufacturer}=="Silicon Labs", ATTRS{product}=="CP2102 USB to UART Bridge Controller", SYMLINK+="zwave", MODE="0666"

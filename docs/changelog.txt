@@ -1,0 +1,130 @@
+==========
+Change log
+==========
+
+New instructions to apply changes from immediatly previous version.
+
+- 0.4a1 : (30-03-2014) Compatibily library : OpenZwave >= 1.0.711 (/branches/2013-11-13_release_testing), python_openzwave >= 0.2.5 (rev >= 3bef0f1cb27f)
+    - Target : python-openzwave, domogik (0.4a1), domoweb (?.???)
+    - Initial version for domogik 0.4 - Source plugin 0.2c4 for domogik 0.3
+
+For domogik version 0.3.x
+=========================
+
+- 0.2c4 : (31-01-2014) Compatibily library : OpenZwave >= 1.0.711 (/branches/2013-11-13_release_testing), python_openzwave >= 0.2.5 (rev >= 3bef0f1cb27f)
+    - Target : python-openzwave, domogik (0.2c4), domoweb (0.2c3)
+    - An `insert_data <changelog.html#do-an-insert-data>`_ or a reinstall is necessary.
+    - Update, compile and install python_openzwave.
+        - checkout openzwave branch : goto python-openzwave/openzwave,
+        - do command: svn checkout http://open-zwave.googlecode.com/svn/branches/2013-11-13_release_testing
+    - Change log :
+        - Add heal node/network functions.
+        - Add command_class_sensor_alarm.
+        - Add auto battery level request at wakeup node.
+        - Update doc
+
+- 0.2c3 : (06-01-2014) Compatibily library : OpenZwave >= 1.0.706, python_openzwave >= 0.2.5 (rev >= 75d9b6a8dd77), Compatibilty with ws4py last update >= 0.3.3
+    - Target : OpenZwave, python-openzwave, ws4py, domogik (0.2c3), domoweb (0.2c2)
+    - Update ws4py with pip or easy_install or update source and compile it.
+    - Update, compile and install python_openzwave.
+    - Change log :
+        - GetPollIntensity add in openzwave lib.
+        - Add log debug information for wsServer.
+        - Fix auto-startup failure (rest no response).
+        - Fix automatique COMMAND_CLASS_SENSOR_BINARY type set for xpl (recreate devices and widget for changes).
+        - Fix issue in monitornodes xpl-report if no conforme xpl_msg.
+        - Fix wsClient error if ack = undefined (domoweb).
+        - Force default name for controler device if not defined (CtrlMustBeCreate.1.1).
+        - Update doc
+        
+- 0.2c2 : (30-10-2013) Compatibily library : The same, Warning in case of ws4py install or update use >= 0.3.0-beta rev eec3a7dcb33b322eac598f5125425e62c0050969, see instructions in `dependencies page. <dependencies.html>`_
+    - Target : domogik (0.2c2), domoweb (0.2c1)
+    - An `insert_data <changelog.html#do-an-insert-data>`_ or a reinstall is necessary.
+    - Knows issue : At auto start plugin fail sometimes, stop it or kill process ($ps -ef | grep ozwave) and restart it.
+    - Change log :
+        - Add individual monitoring node(s) in log file for debugging and helper develop device compatibilities.
+        - Add removing ghost node from groups capability.
+        - Add Dimmer multi-controls (FGD211) and bright/dim commands.
+        - Add Thermostat setpoint (Danfos living-connect)
+        - Add NotifyTransactions option (You must probably modify openzwave lib to fix issues failling plugin start, see doc section `options <ozwave.html#configuration>`_ .)
+        - Fix wsServer fail connection some time.
+        - Fix memory change during websocket sending Broadcast and Ack Message.
+        - Fix no display "Support tools" page with some browsers versions.
+        - Fix select last controleur action in reopen dialog box.
+        - Graph neighbors code improved.
+        - Update doc
+
+- 0.2c1 : (15-09-2013) Compatibily library : The same, Warning in case of ws4py install or update use >= 0.3.0-beta rev eec3a7dcb33b322eac598f5125425e62c0050969, see instructions in `dependencies page. <dependencies.html>`_
+    - Target : domogik.
+    - Change log :
+        - Retrieve domogik device zwave ctrl address from rest.
+        - Update doc
+		
+- 0.2b5 : (29-07-2013) Compatibily library : OpenZwave >= 1.0.663, python_openzwave >= 0.2.5 (rev >= 18832df1dd95).
+    - Target : python_openzwave, domogik and domoweb.
+    - Update, compile and install python_openzwave.
+    - An insert_data or a reinstall is necessary.
+    - Change log :
+        - Fix some report controller action.
+        - Fix accent on node name and location.
+        - Fix display update name and location name just after sended.
+        - Fix some actions bug.
+        - Fix some Exception error.
+        - Forced unit conversion F -> °C for temperature device in F.
+        - Double xPL message for switch multi-level. (for testing-not sure it's a good idea !)
+        - UI dialog node associations improvement.
+        - Add device motion binary multi sensor 4-in-1.
+        - Add polling command_class. Some limitations : there is an issue with getPollIntensity openzwave lib so for moment function is deactivated and value 1 is always received. Some command class like COMMAND_CLASS_POWERLEVEL seem to enable but the polling is not in effect.
+        - Add timer reporting controller status on widget (every 60s) and report status "started plugin, started, init, lock, no-ctrl, ok, stop".
+        - Add list of recognized manufacturers and products by openzwave in "support tools" tab.
+        - Add force refresh node.
+        - Add openzwave log report in "support tools" tab.
+        - Add Battery status in tab nodes.
+        - Update doc.
+
+- 0.2b4 : (05-28-2013) Compatibily library : the same. 
+	- Target : domogik and domoweb
+	- Change log :
+	    - Fixe bug plugin starting with package installation
+	    - Add Domoweb version. (first 0.2.b4)
+	    - Add support tools, memory usage and log report to UI.
+	    - Change websocket server private plugin to generic usage.
+	    - Add load xml open-zwave usage, don't finish coding.
+
+- 0.2b3 : Compatibily library : python_openzwave >= 0.2.5 (rev : b434c50b795b), tailer >=0.2.1
+	- Target : python_openzwave, domogik and domoweb
+	- Update, compile and install python_openzwave
+	- Install tailer : "sudo pip install tailer" or "sudo easy_install tailer"
+	- Change log : 
+	    - Add test network and node
+	    - Add id message req-ack
+
+- 0.2b2 : Compatibily library : the same. 
+	- Target : domogik and domoweb
+	- An insert_data or a reinstall is necessary
+	- Change log : 
+	    - Check user directory and config directory acces
+	    - Realtime improvements for graph neighbors
+	    - Add Start/Stop driver function
+	    - Add zwave device switch with power meter (Everspring (C.T.) - AN158 full handling)
+	    - Fixe ON/OFF sensor return status
+
+- 0.2b1 : Compatibily library : OpenZwave >= 1.0.645, python_openzwave >= 0.2.5, ws4py >= 0.3.0-beta
+	- Target : domogik and domoweb
+	- Install new dependency `ws4py 0.3.0-beta <dependencies.html#Install WebSocket library for Python>`_
+	- An insert_data or a reinstall is necessary
+	- Enter new wsportserver key (Plugin configuration) and save the config (necessary to restart plugin if is started)
+
+- 0.1b8 : 
+	- An insert_data or a reinstall is necessary.
+	- Created primary controller device for domogik and traced back to the state it to domogik.
+	
+Do an insert data
+=================
+In your domogik directory with user domogik :
+
+.. code-block:: bash
+
+	$ src/tools/packages/insert_data.py src/share/domogik/plugins/ozwave.json
+
+
