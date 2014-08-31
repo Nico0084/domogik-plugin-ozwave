@@ -222,7 +222,7 @@ class ZWaveValueNode:
             print "setValue : call requestConfigParam..."
         report = {'Value' : str(self),  'report': retval}
         self._node.updateLastMsg('setValue', self.valueData)
-        self._node._ozwmanager.monitorNodes.nodeChange_report(self._node.id, report)
+        self._node._ozwmanager.monitorNodes.nodeChange_report(self.nodeId, report)
         if retval['error'] == '' : 
             self.HandleSleepingSetvalue()
             self._node.requestOZWValue(self.getCmdClassAssociateValue())
@@ -275,7 +275,7 @@ class ZWaveValueNode:
         """Determine si la value peut être un device domogik et retourne le format du nom de device"""
         if (self.valueData['commandClass'] in  CmdsClassAvailable) and (self.labelDomogik in  DomogikTypeAvailable) :
             nameAssoc = self._node._ozwmanager._nameAssoc
-            retval = "%s.%d.%d" % (nameAssoc.keys()[nameAssoc.values().index(self.valueData['homeId'])] , self._node.nodeId, self.valueData['instance'])        
+            retval = "%s.%d.%d" % (nameAssoc.keys()[nameAssoc.values().index(self.valueData['homeId'])] , self.nodeId, self.valueData['instance'])        
         else: retval = ""
         return retval
 

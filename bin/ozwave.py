@@ -47,7 +47,7 @@ try:
     from domogik.mq.message import MQMessage
     
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
-    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
+    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException, getOZWNodeID
     import threading
     import sys
     import time
@@ -99,12 +99,11 @@ class OZwave(XplPlugin):
                 self.force_leave()
                 return
         # Crée le listener pour les messages de commande xPL traités par les devices zwave
-        Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic',
-                                                                        'xpltype': 'xpl-cmnd'})
+        Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic','xpltype': 'xpl-cmnd'})
         # Validation avant l'ouverture du controleur, la découverte du réseaux zwave prends trop de temps -> RINOR Timeout
         self.add_stop_cb(self.myzwave.stop)
         if self._waitForRest() :
-            self._ctrlHBeat = XplTimer(60, self.myzwave._getXplCtrlState, self.myxpl)
+            self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
             self._ctrlHBeat.start()
             #lancement du thread de démarrage des sercices ozwave
             self.myzwave.starter.start()
@@ -158,22 +157,16 @@ class OZwave(XplPlugin):
         print message
         self.log.debug(message)
         if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
-        if 'command' in message.data:
+        if 'command' in message.data: # TODO:  A supprimer faire avec MQ.
             if 'group'in message.data:
                 # en provenance de l'UI spéciale
                 self.ui_cmd_cb(message)
             else :
-                cmd = message.data['command']
-                device = message.data['device']
-                if cmd == 'level' :
-                    value = message.data['level']
-                    self.myzwave.sendNetworkZW(cmd, device, value)
-                elif cmd == "on"  or cmd == "off" :
-                    self.myzwave.sendNetworkZW(cmd, device)
-                elif cmd == 'setpoint' :
-                    self.myzwave.sendNetworkZW(cmd, device, {'type': message.data['type'], 'value': message.data['value']})
-                else:
-                    self.myzwave.sendNetworkZW(cmd, device)
+                device = self.myzwave.getZWRefFromxPL(message.data)
+                if device :
+                    self.myzwave.sendNetworkZW(device, message.data['command'], message.data['value'])
+                else :
+                    self.log.warning("Zwave command not sended : {0}".format(message))
                     
     def getdict2UIdata(self, UIdata):
         """ retourne un format dict en provenance de l'UI (passage outre le format xPL)"""
@@ -228,7 +221,7 @@ class OZwave(XplPlugin):
                                     'group' :'UI', 
                                     'data': info})   
             elif request['request'] == 'GetPluginInfo' :
-                info = self.getUIdata2dict(self.myzwave.GetPluginInfo())
+                info = self.getUIdata2dict(self.myzwave.getPluginInfo())
                 mess.add_data({'command' : 'Refresh-ack', 
                                     'group' :'UI', 
                                     'node' : 0, 

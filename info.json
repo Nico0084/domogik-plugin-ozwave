@@ -1,59 +1,134 @@
 { 
-    "products" : [{
+    "products" : [
+        {
             "name" : "Z-Stick S2",
-            "id" : "ozwave.zsticks2",
             "documentation" : "http://http://aeotec.com/z-wave-usb-stick",
-            "type" : "primary.controler"
+            "instances": {
+                "Primary Controler": {
+                    "type" : "fixed",
+                    "instance_types": ["primary.controller"]
+                }
+            }
+            
         }, {
-            "name" : "FGS211 Switch 3kW",
-            "id" : "ozwave.fgs211",
+            "name" : "FGS211 Relay 3kW",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type" : "simple.switch"
+            "instances": {
+                "Simple Relais": {
+                    "type" : "fixed",
+                    "instance_types": ["basic.switch"]
+                }
+            }
         }, {
             "name" : "FGS221 Double Relay Switch 2x1,5kW",
-            "id" : "ozwave.fgs221",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type" : "double.switch"
+            "instances": {
+                "Simple Relais": {
+                    "type": "duplicate",
+                    "range": [1, 2],
+                    "instance_types": ["basic.switch"]
+                }
+            }
         }, {
             "name" : "HSM02 Mini Door/Window Detector",
-            "id" : "ozwave.hsm02",
             "documentation" : "http://www.everspring.com/Products/SecuritySystem/HSM02.aspx",
-            "type" : "opening.sensor.security"
+            "instances": {
+                "Opening sensor": {
+                    "type" : "fixed",
+                    "instance_types": ["battery.opening.sensor"]
+                }
+            }
+
         }, {
             "name" : "ZME_KFOB 4 Button Key Fob",
-            "id" : "ozwave.zmekfob4",
             "documentation" : "http://www.z-wave.me/index.php?id=31",
-            "type" : "remote.4buttons"
+            "instances": {
+                "Remote 4 buttons": {
+                    "type" : "fixed",
+                    "instance_types": ["remote.4buttons"]
+                }
+            }
         }, {
-            "name" : "Home Energy Meter",
-            "id" : "ozwave.hem3",
+            "name" : "Home Energy Meter 3 phases",
             "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
-            "type" : "power.meter.3phases"
+            "instances": {
+                "Power meter 3 phases": {
+                    "type" : "duplicate",
+                    "range": [1, 4],
+                    "instance_types": ["power.energy.prev.meter"]
+                }
+            }
+        }, {
+            "name" : "Home Energy Meter 2 phases",
+            "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
+            "instances": {
+                "Power meter 2 phases": {
+                    "type" : "duplicate",
+                    "range": [1, 3],
+                    "instance_types": ["power.energy.prev.meter"]
+                }
+            }
         }, {
             "name" : "HSM100 Wireless Multi-Sensor",
-            "id" : "ozwave.hsm100",
             "documentation" : "http://www.homeseer.com/company/releases/07-07-HSM100.htm",
-            "type" : "motion.4in1.level"
+            "instances": {
+                "motion level": {
+                    "type" : "fixed",
+                    "instance_types": ["battery.motion"]
+                },
+                "luminace": {
+                    "type" : "fixed",
+                    "instance_types": ["basic.luminance"]
+                },
+                "temperature": {
+                    "type" : "fixed",
+                    "instance_types": ["basic.temp_c"]
+                }
+            }
         }, {
             "name" : "AN158 Plug-in Meter Appliance Module",
-            "id" : "ozwave.an158",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/AN158.aspx",
-            "type" : "meter.switch.prev"
+            "instances": {
+                "Switch power meter": {
+                    "type" : "fixed",
+                    "instance_types": ["switch.power.energy.prev.meter"]
+                }
+            }
         }, {
             "name" : "FGWPE Wall Plug",
-            "id" : "ozwave.fgwpe",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type" : "meter.switch"
+            "instances": {
+                "Switch power meter": {
+                    "type" : "fixed",
+                    "instance_types": ["switch.power.energy.meter"]
+                }
+            }
         }, {
             "name" : "ST814 Temperature and Humidity Sensor",
-            "id" : "ozwave.st814",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/ST814.aspx",
-            "type" : "temp.humidity.relative"
+            "instances": {
+                "Temperature, humidity ": {
+                    "type" : "fixed",
+                    "instance_types": ["battery.temp_c.rhumidity"]
+                },
+                "Relative humidity ": {
+                    "type" : "fixed",
+                    "instance_types": ["basic.rhumidity"]
+                }
+            }
         }, {
             "name" : "SF812 Smoke Alarm",
-            "id" : "ozwave.sf812",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/SF812.aspx",
-            "type" : "alarm.sensor.security"
+            "instances": {
+                "Smoke alarm": {
+                    "type" : "fixed",
+                    "instance_types": ["alarm.sensor.security"]
+                },
+                "Tamper alarm": {
+                    "type" : "fixed",
+                    "instance_types": ["alarm.tamper.security"]
+                }
+            }
         }
     ],
     "configuration" : [{
@@ -105,6 +180,7 @@
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": false,
                     "duplicate": false,
@@ -118,6 +194,7 @@
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": false,
                     "duplicate": false,
@@ -131,6 +208,7 @@
             "incremental": false,
             "data_type" : "DT_Scaling",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -144,6 +222,7 @@
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -157,6 +236,7 @@
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "form_Power_applied_to_DT_Binary",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -170,6 +250,7 @@
             "incremental": false,
             "data_type" : "DT_Temp",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -183,6 +264,7 @@
             "incremental": false,
             "data_type" : "DT_TempK",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -196,6 +278,7 @@
             "incremental": false,
             "data_type" : "DT_TempF",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -209,6 +292,7 @@
             "incremental": false,
             "data_type" : "DT_Humidity",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -222,6 +306,7 @@
             "incremental": false,
             "data_type" : "DT_Scaling",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -235,6 +320,7 @@
             "incremental": false,
             "data_type" : "DT_Number",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -248,6 +334,7 @@
             "incremental": false,
             "data_type" : "DT_OpenClose",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -261,6 +348,7 @@
             "incremental": false,
             "data_type" : "DT_Bool",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -274,6 +362,7 @@
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -287,6 +376,7 @@
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -300,6 +390,7 @@
             "incremental": false,
             "data_type" : "DT_Power",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -313,6 +404,7 @@
             "incremental": true,
             "data_type" : "DT_ActiveEnergy",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -326,6 +418,7 @@
             "incremental": true,
             "data_type" : "DT_kActiveEnergy",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -339,6 +432,7 @@
             "incremental": false,
             "data_type" : "DT_ActiveEnergy",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -352,6 +446,7 @@
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -365,6 +460,7 @@
             "incremental": true,
             "data_type" : "DT_Number",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -378,6 +474,7 @@
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -391,6 +488,7 @@
             "incremental": false,
             "data_type" : "DT_State",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -404,6 +502,7 @@
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -417,6 +516,7 @@
             "incremental": false,
             "data_type" : "DT_OpenClose",
             "conversion" : "form_Tamper_Event_to_DT_OpenClose",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -430,6 +530,7 @@
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -443,6 +544,7 @@
             "incremental": false,
             "data_type" : "DT_Switch",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -456,6 +558,7 @@
             "incremental": false,
             "data_type" : "DT_HVACVent",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -469,6 +572,7 @@
             "incremental": false,
             "data_type" : "DT_Number",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -482,6 +586,7 @@
             "incremental": false,
             "data_type" : "DT_HVACMode",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -495,6 +600,7 @@
             "incremental": false,
             "data_type" : "DT_HVACHeat",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -508,6 +614,7 @@
             "incremental": false,
             "data_type" : "DT_Temp",
             "conversion" : "",
+            "timeout": 0,
             "history": {
                     "store": true,
                     "duplicate": false,
@@ -527,13 +634,7 @@
                     "value" : "status"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ],
+                "device" : [],
                 "dynamic" : [{
                     "key" : "status",
                     "ignore_values" : "",
@@ -563,13 +664,7 @@
                         "value" : "battery-level"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ],
+                "device" : [],
                 "dynamic" : [{
                         "key" : "level",
                         "ignore_values" : "",
@@ -1636,13 +1731,7 @@
                         "value" : "switch"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ]
+                "device" : []
             }
         },
         "set_push_button" : {
@@ -1655,13 +1744,7 @@
                         "value" : "pressed"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ]
+                "device" : []
             }
         },
         "set_select" : {
@@ -1674,13 +1757,7 @@
                         "value" : "select"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ]
+                "device" : []
             }
         },
         "set_temperature" : {
@@ -1693,13 +1770,7 @@
                         "value" : "temperature"
                     }
                 ],
-                "device" : [{
-                        "key" : "instance",
-                        "xpl": true,
-                        "description" : "Zwave Instance id",
-                        "type" : "integer"
-                    }
-                ]
+                "device" : []
             }
         }
     },
@@ -2039,58 +2110,55 @@
 		}
 	],
 	"device_types": {
-            "primary.controler" :{
+            "primary.controller" :{
                 "description": "Primary Controller",
                 "id": "ozwave.ctrl",
                 "name": "Zwave Controller",
                 "commands": [],
                 "sensors": ["ctrl_status"],
                 "parameters" : [{
-                        "key" : "device",
+                        "key" : "network-id",
                         "xpl": true,
-                        "description" : "Zwave controler id",
+                        "description" : "Zwave network name to replace Home ID for easier of nodes addressing. [e.g. : MyHomeId]",
                         "type" : "string"
                     },{
-                        "key" : "home-name",
+                        "key" : "driver",
                         "xpl": false,
-                        "description" : "Zwave network name to identify nodes associated with this primary controler. [default : MyHomeId]",
-                        "type" : "string"
-                    },{
-                        "key" : "home-id",
-                        "description" : "Openzwave Home id, you can refered to ozwave controler admin page to find it. [default : 0] ",
+                        "description" : "Z-wave device from os. [eg. : /dev/zwave]",
                         "type" : "string"
                     }
                 ]
             },
-            "simple.switch" :{
+            "basic.switch" :{
                 "description" : "Switch",
-                "id": "ozwave.simple.switch",
+                "id": "ozwave.basic.switch",
                 "name" : "Switch",
                 "commands": ["switch"],
                 "sensors": ["switch_state"],
                 "parameters" : [{
-                    "key" : "device",
+                    "key" : "network-id",
+					"xpl": true,
+                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
+                    "type" : "string"
+                },{
+                    "key" : "node",
 					"xpl": true,
                     "description" : "Zwave node id",
-                    "type" : "string"
-                }]
-            },
-            "double.switch" :{
-                "description" : "Double switch",
-                "id": "ozwave.double.switch",
-                "name" : "Switchs",
-                "commands": ["switch", "switch"],
-                "sensors": ["switch_state", "switch_state"],
-                "parameters" : [{
-                    "key" : "device",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
 					"xpl": true,
-                    "description" : "Zwave node id",
-                    "type" : "string"
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
                 }]
             },
-            "meter.switch.prev" :{
-                "description" : "Switch",
-                "id": "ozwave.simple.switch",
+            "switch.power.energy.prev.meter" :{
+                "description" : "Switch with power, energy meter (and previous value)",
+                "id": "switch.power.energy.prev.meter",
                 "name" : "Switch",
                 "commands": ["switch"],
                 "sensors": ["switch_state", "energy", "energy_k", "power"],
@@ -2101,9 +2169,9 @@
                     "type" : "string"
                 }]
             },
-            "meter.switch" :{
-                "description" : "Switch",
-                "id": "ozwave.simple.switch",
+            "switch.power.energy.meter" :{
+                "description" : "Switch with power, energy meter",
+                "id": "switch.power.energy.meter",
                 "name" : "Switch",
                 "commands": ["switch"],
                 "sensors": ["switch_state", "energy", "power"],

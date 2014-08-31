@@ -133,41 +133,40 @@ controller to learn new data.
   #               'DeleteAllReturnRoutes', 'SendNodeInformation', 'ReplicationSend', 'CreateButton', 'DeleteButton']
                   
 
-    def __init__(self,  ozwmanager,  homeId, nodeId,  isPrimaryCtrl=False):
+    def __init__(self,  ozwmanager, homeId, nodeId,  isPrimaryCtrl=False,  networkId =""):
         '''
         Innitialise un controlleur.
 
         @param ozwmanager: pointeur sur l'instance du manager
         @param homeid: ID du réseaux home/controleur
         @param nodeid: ID du node
+        @param isPrimaryCtrl: Identifie si le controlleur est le primaire d'un réseaux
+        @param networkId: Nom optionel d'un controleur primaire, est utile pour remplacer le Home ID dans les message xPL
         '''
         if nodeId == None:
             nodeId = 1
-        ZWaveNode.__init__(self, ozwmanager,  homeId, nodeId)
+        ZWaveNode.__init__(self, ozwmanager, homeId, nodeId)
         self._isPrimaryCtrl = isPrimaryCtrl
+        self.networkId = networkId if self._isPrimaryCtrl else ""
         self._lastCtrlState = {'update' : time.time(),  'state': self.SIGNAL_CTRL_NORMAL, 'error_msg' : 'None.', 'message': 'No command in progress.', 'nodeid': nodeId, 'error': 0}
  
 # On accède aux attributs uniquement depuis les property
     isPrimaryCtrl = property(lambda self: self._isPrimaryCtrl)
     ctrlDeviceName = property(lambda self: self._getCtrlDeviceName())
-                              
-    def _getCtrlDeviceName(self):
-        """Retourne le nom du controlleur sous la forme d'adresse de device de domogik."""
-        vBasic = self._getValuesForCommandClass(0x20)   # COMMAND_CLASS_BASIC
-        if vBasic :
-            name = vBasic[0].getDomogikDevice()
-        else  :
-            nameAssoc = self._ozwmanager._nameAssoc
-            name = "%s.%d.1" % (nameAssoc.keys()[nameAssoc.values().index(self.homeId)] , self.nodeId)
-        return name
+    
+    def getNetworkID(self):
+        """Retourne le networkId ou Home ID du réseaux"""
+        if self._isPrimaryCtrl :
+            networkId = self.networkId if self.networkId else self.homeId
+     #   else : networkId = ZWaveNode.getNetworkID(self)
+        return networkId
         
     def __str__(self):
         """
         The string representation of the node.
         :rtype: str
         """
-        if self.isPrimaryCtrl : typeCtrl = "the primary"
-        else : typeCtrl = "a secondary"
+        typeCtrl = "the primary" if self.isPrimaryCtrl else "a secondary"
         return 'homeId: [{0}]  nodeId: [{1}] product: {2}  name: {3} is it {4} controller'.format(self._homeId, self._nodeId, self._product, self._name, typeCtrl)
 
     def getLastState(self):
@@ -747,7 +746,7 @@ controller to learn new data.
         state = args['state']
         message = args['message']
         print 'zwcallback Action State :', state, ' -- message :', message, ' -- controller', self
-        self._ozwmanager.reportCtrlMsg(self._lastCtrlState)
+        self._ozwmanager.reportCtrlMsg(self.homeId,  self._lastCtrlState)
         
 # -----------------------------------------------------------------------------
 # Polling Z-Wave devices

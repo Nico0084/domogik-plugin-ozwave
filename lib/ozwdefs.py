@@ -27,6 +27,68 @@ Implements
 ==========
 
 -Zwave
+------------------------------------------
+    xpl-cmnd
+    {
+    ...
+    }
+    ozwave.basic
+    {
+    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+    node =  The node number
+    instance = The instance number
+    command = The Label openzwave
+    value = new value of command
+    }
+------------------------------------------
+    xpl-trig
+    {
+    ...
+    }
+    sensor.basic
+    {
+    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+    node =  The node number
+    instance = The instance number
+    type = The Label openzwave
+    current = new current value of sensor
+    }
+------------------------------------------
+    xpl-trig
+    {
+    ...
+    }
+    ozwctrl.basic
+    {
+    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+    type :  <status, nodemsg> The type of message
+    <status case>
+          [status] : <started, init..., ok, locked, no-Ctrl, fail> State of controller 
+          [usermsg] : A message to final user, that can display in UI
+          [data] : Some extra data json string {'state':'wsserver_started', 'wsport': self._wsPort}
+    <nodemsg case>
+          [node]: The node who is concerned, 
+          [usermsg] : A message to final user, that can display in UI
+          [data] : Some extra data json string {'state':'wsserver_started', 'wsport': self._wsPort}
+    }
+------------------------------------------
+    xpl-trig
+    {
+    ...
+    }
+    ozwnode.basic
+    {
+    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+    node =  The node number
+    type :  <status, nodemsg> The type of message
+    <status case>
+          [status] : <initialized, undiscovered, completed, initializing, linked, receiver, out-of-order, receiver-unlink>
+          [usermsg] : A message to final user, that can display in UI
+          [data] : Some extra data json string {}
+          <nodemsg case>
+          [usermsg] : A message to final user, that can display in UI
+          [data] : Some extra data json string {}
+    }
 
 @author: Nico <nico84dev@gmail.com>
 @copyright: (C) 2007-2012 Domogik project
@@ -44,7 +106,6 @@ import sys
 
 FlagDebug = False # pour debug eviter recurtion +2, passé a True pour debug
 
-OZWPLuginVers = "0.2c4"
 # Déclaration de tuple nomée pour la clarification des infos des noeuds zwave (node)
 # Juste à rajouter ici la déclaration pour future extension.
 NamedPair = namedtuple('NamedPair', ['id', 'name'])
@@ -179,3 +240,8 @@ class OZwaveException(Exception):
     def __str__(self):
         """String format objet"""
         return repr(self.msg+' '+self.value)
+
+    
+    
+    
+    

@@ -86,7 +86,8 @@ class ZWaveNode:
         
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
-    id = property(lambda self: self._nodeId)
+    networkID = property(lambda self: self._ozwmanager.getNetworkID(self._homeId))
+    refName = property(lambda self: self._getNodeRefName())
     name = property(lambda self: self._name)
     location = property(lambda self: self._location)
     product = property(lambda self: self._getProductName())
@@ -117,6 +118,10 @@ class ZWaveNode:
     security = property(lambda self: self._nodeInfos.security if self._nodeInfos else None)
     version = property(lambda self: self._nodeInfos.version if self._nodeInfos else None)
     isPolled = property(lambda self: self._hasValuesPolled())
+    
+    def _getNodeRefName(self):
+        """Retourne le la ref du node pour les message<networkId.nodeId>"""
+        return "{0}.{1}".format(self.networkID,  self_.nodeId)
     
     def setLinked(self):
         """Le node a reçu la notification NodeProtocolInfo , il est relié au controleur."""
@@ -167,7 +172,7 @@ class ZWaveNode:
             msg['node'] = self.nodeId
             print '******** Node Object report vers UI ******** '
             self._ozwmanager.controllerNode.reportChangeToUI(msg)
-            self._ozwmanager.monitorNodes.nodeChange_report(self.id, msg)
+            self._ozwmanager.monitorNodes.nodeChange_report(self.nodeId, msg)
     
     def _getIsLocked(self):
         return False
@@ -446,7 +451,7 @@ class ZWaveNode:
         else:
             self._neighbors = neighbors
         if self.isSleeping and self._neighbors is not None and len(self._neighbors) > 10:
-            self._ozwmanager._log.warning('Probable OZW bug: Node [%d] is sleeping and reports %d neighbors; marking neighbors as none.', self.id, len(self._neighbors))
+            self._ozwmanager._log.warning('Probable OZW bug: Node [%d] is sleeping and reports %d neighbors; marking neighbors as none.', self.refName, len(self._neighbors))
             self._neighbors = None
         print ('Node [%d] neighbors are: ' %self._nodeId) , self._neighbors
         self._ozwmanager._log.debug('Node [%d] neighbors are: %s', self._nodeId, self._neighbors)
@@ -516,7 +521,7 @@ class ZWaveNode:
         """Vérifie si le dernier message completé est bien pour ce node, retourne le message d'origine si vrai, False si non.
            envoi un trig xpl si le last message est un setvalue."""
         if self._lastMsg :
-            if self.id == completMsg['nodeId'] :
+            if self.nodeId == completMsg['nodeId'] :
                 lastMsg = self._lastMsg.copy()
                 empty = True
                 if self._lastMsg['type'] == 'testNetworkNode' :
@@ -528,7 +533,7 @@ class ZWaveNode:
                         msgtrig = valueNode.valueToxPLTrig()
                         if msgtrig : self._ozwmanager._cb_sendxPL_trig(msgtrig)
                 if empty : self._lastMsg= None
-                self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.id, {'msgOrg': lastMsg, 'completMsg' : completMsg})
+                self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
                 return lastMsg
             else: return False
         else: return False
@@ -537,14 +542,14 @@ class ZWaveNode:
         """Vérifie si le dernier message à pu etre envoyé pour ce node, retourne le message d'origine si vrai, False si non.
            envoi un trig xpl si le last message est un setvalue mais n'efface pas le last message."""
         if self._lastMsg :
-            if self.id == sleepMsg['nodeId'] :
+            if self.nodeId == sleepMsg['nodeId'] :
                 lastMsg = self._lastMsg.copy()
                 if self._lastMsg['type'] == 'setValue' :
                     valueNode = self.getValue(self._lastMsg['zwMsg']['id'])
                     if valueNode :
                         msgtrig = valueNode.valueToxPLTrig()
                         if msgtrig : 
-                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.id, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
+                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
                             self._ozwmanager._cb_sendxPL_trig(msgtrig)
                     return True
                 else: return False
@@ -649,7 +654,7 @@ class ZWaveNode:
         retval["Polled"] = self.isPolled
         retval["ComQuality"] = self.getComQuality()
         retval["BatteryLevel"] = self._getBatteryLevel()
-        retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.id) if self._ozwmanager.monitorNodes.isMonitored(self.id) else ''
+        retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.nodeId) else ''
         return retval
         
     def getValuesInfos(self):
@@ -716,8 +721,8 @@ class ZWaveNode:
             quality = ((Q1 + (Q2*2) + (Q3*3) + Q4) / 7.0) * 100.0
             print 'Quality com : ',  quality,  Q1,  Q2,  Q3,  Q4
         else :
-            self._ozwmanager._log.debug('GetNodeStatistic return empty for node {0} '.format(self.id,))
-            print ('GetNodeStatistic return empty for node {0} '.format(self.id,))
+            self._ozwmanager._log.debug('GetNodeStatistic return empty for node {0} '.format(self.refName))
+            print ('GetNodeStatistic return empty for node {0} '.format(self.refName))
             quality = 20; 
         return int(quality)
     
@@ -728,9 +733,9 @@ class ZWaveNode:
         if not self.isSleeping :
             retval = self.trigTest(count, timeOut, allReport,  True)
             if retval['error'] =='' :
-                self._manager.testNetworkNode(self.homeId, self.id, count)
+                self._manager.testNetworkNode(self.homeId, self.nodeId, count)
                 self.updateLastMsg('testNetworkNode',  {'count': count})
-        else :  retval['error'] = "Zwave node %d is sleeping, can't send test." % self.id
+        else :  retval['error'] = "Zwave node %d is sleeping, can't send test." % self.refName
         return  retval
     
     def trigTest(self, count = 1, timeOut = 10000,  allReport = False,  single = True) :
@@ -743,7 +748,7 @@ class ZWaveNode:
             self._thTest.start()
             return {'error': ''}
         else :
-            return {'error': "Node %d, test allReady launch, can't send an other test." % self.id}
+            return {'error': "Node %d, test allReady launch, can't send an other test." % self.refName}
 
     def receivesNoOperation(self,  args,  lastTest):
         """Gère les notifications NoOperation du manager."""
@@ -753,15 +758,15 @@ class ZWaveNode:
     def validateTest(self,  cptMsg, countMsg, dTime) :
         '''Un message de test a été recu, il est reporté à l'UI.'''
         # TODO: Crée un journal de report (Possible aussi dan le thread ?)
-        msg = 'Node %d success test %d/%d in %d ms.' % (self.id,  cptMsg, countMsg, dTime)
+        msg = 'Node %d success test %d/%d in %d ms.' % (self.refName,  cptMsg, countMsg, dTime)
         self.reportToUI({'notifytype': 'node-state-changed', 'usermsg' : msg,
                                'data': {'typestate': 'receviedtestmsg',  'state': 'processing'}})
         
     def endTest(self, state, cptMsg, countMsg, tTime,  dTime):
         if state == 'finish':
-            msg = 'Node %d success last test %d in %d ms, all tests in %d ms.' % (self.id, cptMsg, tTime, dTime)
+            msg = 'Node %d success last test %d in %d ms, all tests in %d ms.' % (self.refName, cptMsg, tTime, dTime)
         elif state == 'timeout' :
-            msg = 'Test Node %d as recevied time out (%d ms), %d/%d received.' % (self.id, dTime,  cptMsg, countMsg)
+            msg = 'Test Node %d as recevied time out (%d ms), %d/%d received.' % (self.refName, dTime,  cptMsg, countMsg)
         self._thTest = None
         self.reportToUI({'notifytype': 'node-state-changed', 'usermsg' : msg,
                                'data': {'typestate': 'receviedtestmsg',  'state': state}})
@@ -770,65 +775,65 @@ class ZWaveNode:
         '''Arrête un test si en cours'''
         if self._thTest :
             self._thTest.stopTest()
-            self.reportToUI({'notifytype': 'node-state-changed', 'usermsg' : 'Test Node %d is stopped.' % self.id,
+            self.reportToUI({'notifytype': 'node-state-changed', 'usermsg' : 'Test Node %d is stopped.' % self.refName,
                                'data': {'typestate': 'receviedtestmsg',  'state': 'Stopped'}})
             
     def setName(self, name):
         """Change le nom du node"""
         try :
             name = name.encode('utf_8', 'replace')
-            self._manager.setNodeName(self.homeId, self.id, name)
-            self._ozwmanager._log.debug('Requesting setNodeName for node {0} with new name {1}'.format(self.id, name))
+            self._manager.setNodeName(self.homeId, self.nodeId, name)
+            self._ozwmanager._log.debug('Requesting setNodeName for node {0} with new name {1}'.format(self.refName, name))
             return True
         except Exception as e :
-            self._ozwmanager._log.error('Node {0} naming error with name : {1}. '.format(self.id, name) + e.message)
-            print('Node {0} naming error with name : {1}. '.format(self.id, name) + e.message)
+            self._ozwmanager._log.error('Node {0} naming error with name : {1}. '.format(self.refName, name) + e.message)
+            print('Node {0} naming error with name : {1}. '.format(self.refName, name) + e.message)
             return False
             
     def setLocation(self, loc):
         """"Change la localisation du node"""
         try :
             loc = loc.encode('utf_8', 'replace')
-            self._manager.setNodeLocation(self.homeId, self.id, loc)   
-            self._ozwmanager._log.debug('Requesting setNodeLocation for node {0} with new location {1}'.format(self.id, loc))
+            self._manager.setNodeLocation(self.homeId, self.nodeId, loc)   
+            self._ozwmanager._log.debug('Requesting setNodeLocation for node {0} with new location {1}'.format(self.refName, loc))
             return True
         except Exception as e :
-            self._ozwmanager._log.error('Node {0} naming error with location : {1}. '.format(self.id, loc) + e.message)
-            print('Node {0} naming error with location : {1}. '.format(self.id, loc) + e.message)
+            self._ozwmanager._log.error('Node {0} naming error with location : {1}. '.format(self.refName, loc) + e.message)
+            print('Node {0} naming error with location : {1}. '.format(self.refName, loc) + e.message)
             return False
 
     def refresh(self):
         """Rafraichis le node, util dans le cas d'un reveil si le node dormait lors de l''init """
-        self._manager.refreshNodeInfo(self.homeId, self.id)
-        self._ozwmanager._log.debug('Requesting refresh for node {0}'.format(self.id))
+        self._manager.refreshNodeInfo(self.homeId, self.nodeId)
+        self._ozwmanager._log.debug('Requesting refresh for node {0}'.format(self.refName))
         
     def addAssociation(self, groupIndex,  targetNodeId):
         """Ajout l'association du targetNode au groupe du node"""
-        self._manager.addAssociation(self.homeId, self.id, groupIndex,  targetNodeId)
-        self._ozwmanager._log.debug('Requesting for node {0} addAssociation node {1} in group index {2}  '.format(self.id,  targetNodeId, groupIndex))
+        self._manager.addAssociation(self.homeId, self.nodeId, groupIndex,  targetNodeId)
+        self._ozwmanager._log.debug('Requesting for node {0} addAssociation node {1} in group index {2}  '.format(self.refName,  targetNodeId, groupIndex))
 
     def removeAssociation(self, groupIndex,  targetNodeId):
         """supprime l'association du targetNode au groupe du node"""
-        self._manager.removeAssociation(self.homeId, self.id, groupIndex,  targetNodeId)
-        self._ozwmanager._log.debug('Requesting for node {0} removeAssociation node {1} in group index {2}  '.format(self.id,  targetNodeId, groupIndex))
+        self._manager.removeAssociation(self.homeId, self.nodeId, groupIndex,  targetNodeId)
+        self._ozwmanager._log.debug('Requesting for node {0} removeAssociation node {1} in group index {2}  '.format(self.refName,  targetNodeId, groupIndex))
         
     def setOn(self):
         """Set node on pour commandclass basic"""
-        self._manager.setNodeOn(self.homeId, self.id)
+        self._manager.setNodeOn(self.homeId, self.nodeId)
         self.updateLastMsg('setOn',  {'command': 'commandclass basic'})
-        self._ozwmanager._log.debug('Requesting setNodeOn for node {0}'.format(self.id))
+        self._ozwmanager._log.debug('Requesting setNodeOn for node {0}'.format(self.refName))
 
     def setOff(self):
         """Set node off pour commandclass basic"""
-        self._manager.setNodeOff(self.homeId, self.id)
+        self._manager.setNodeOff(self.homeId, self.nodeId)
         self.updateLastMsg('setOff',  {'command': 'commandclass basic'})
-        self._ozwmanager._log.debug('Requesting setNodeOff for node {0}'.format(self.id))
+        self._ozwmanager._log.debug('Requesting setNodeOff for node {0}'.format(self.refName))
 
     def setLevel(self, level):
         """Set node level pour commandclass basic"""
-        self._manager.setNodeLevel(self.homeId, self.id, level)
+        self._manager.setNodeLevel(self.homeId, self.nodeId, level)
         self.updateLastMsg('setLevel',  {'command': 'commandclass basic'})
-        self._ozwmanager._log.debug('Requesting setNodeLevel for node {0} with new level {1}'.format(self.id, level))
+        self._ozwmanager._log.debug('Requesting setNodeLevel for node {0} with new level {1}'.format(self.refName, level))
 
     def createValue(self, valueId):
         """Crée la valueNode valueId du node si besoin et renvoie l'object valueNode."""
@@ -912,61 +917,60 @@ class ZWaveNode:
         print ('set members association remove members result :'), newGroups
         return newGroups
         
-    def sendCmdBasic(self, instance,  command,  opt):
-        """Envoie une commande au node"""
+    def sendCmdBasic(self, instance,  command,  newVal):
+        """Envoie une commande au node""" 
         retval = {'error' : ''}
-        if (opt is None) or (opt == 'None'): opt = 0
+        if (newVal is None) or (newVal == 'None'): newVal = 0
         blockonoff = True # TODO: Cmd on/off/level désactivé, inspecter bug probable  depuis rev 650 ?"
         if instance == 1 and self.getValuesForCommandClass('COMMAND_CLASS_BASIC') and not blockonoff :
             if command == 'level':
-                self.setLevel(int(opt))
-            elif command == 'on':
-                self.setOn()
-            elif command == 'off':
-                self.setOff()
+                self.setLevel(int(newVal))
+            if command == 'switch':
+                if newVal == 'on': self.setOn()
+                elif newVal == 'off': self.setOff()
             else : 
                 self._ozwmanager._log.info("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
                 retval['error'] = ("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
         else : # instance secondaire, ou command class non basic utilisation de set value
             print ("instance secondaire ou pas de COMMAND_CLASS_BASIC")
-            if command in ['on',  'off'] : 
+            if command == 'switch' : 
                 cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL']
                 for value in self.values.keys() :
                     val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and (val['label'].lower() in ['switch',  'level']):                 
-                        if command == 'on' : opt = 255
-                        elif command == 'off' : opt = 0
+                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and (self.values[value].labelDomogik in ['switch',  'level']):                 
+                        if newVal == 'on' : newVal = 255
+                        elif newVal == 'off' : newVal = 0
                         print ("valeur Identifiée comme type switch : {0}".format(val))
-                        retval = self.values[value].setValue(opt)
+                        retval = self.values[value].setValue(newVal)
                         break
             elif command == 'level' : 
                 cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_MULTILEVEL']
                 for value in self.values.keys() :
                     val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and val['label'].lower() == 'level':                 
+                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and self.values[value].labelDomogik == 'level':                 
                         print ("valeur Identifiée comme type level : {0}".format(val))
-                        retval = self.values[value].setValue(int(opt))
+                        retval = self.values[value].setValue(int(newVal))
                         break
             elif command in  ['bright',  'dim'] : 
                 cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL']
                 for value in self.values.keys() :
                     val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and val['label'].lower() == command :                 
+                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and self.values[value].labelDomogik == command :                 
                         print ("valeur Identifiée comme type button : {0}".format(val))
-                        opt = True
-                        retval = self.values[value].setValue(opt)
+                        newVal = True
+                        retval = self.values[value].setValue(newVal)
                         break
             elif command == 'setpoint' : 
                 cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
                 for value in self.values.keys() :
                     val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and self.values[value].labelDomogik == opt['type'] :                 
+                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and self.values[value].labelDomogik == command :                 
                         print ("valeur Identifiée comme type setpoint : {0}".format(val))
-                        retval = self.values[value].setValue(opt['value'])
+                        retval = self.values[value].setValue(newVal)
                         break                    
             else : 
-                self._ozwmanager._log.info("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, opt, self.nodeId))
-                retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, opt, self.nodeId))                       
+                self._ozwmanager._log.info("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
+                retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))                       
         if retval['error'] == '' :
             self._ozwmanager._log.debug("xPL to ozwave sended command : %s , nodeId : %d",  command,  self.nodeId)
             print ("commande transmise")
@@ -1003,10 +1007,10 @@ class TestNetworkNode(threading.Thread):
         
     def run(self):
         """Demarre le test en mode forever, methode appelee depuis le start du thread, Sortie sur fin de test ou timeout""" 
-        print "**************** Starting Test Node %d**************" % self._node.id
+        print "**************** Starting Test Node %d**************" % self._node.refName
         self._startTime = time.time()
         self._lastTime = self._startTime
-        if self._log: self._log.info('Starting Test Node %d' % self._node.id)
+        if self._log: self._log.info('Starting Test Node %d' % self._node.refName)
         self._running = True
         state = 'Stopped'
         while not self._stop.isSet() and self._running:
@@ -1016,8 +1020,8 @@ class TestNetworkNode(threading.Thread):
                 state = 'timeout'
                 self._running = False
         if state == 'timeout' : self._node.endTest(state, self._cptMsg, self._countMsg, tRef,  self._timeOut)
-        if self._log: self._log.info('Stop Test Node %d, status : %s' % (self._node.id,  state))
-        print "**************** Stopped Test Node %d satus : %s**************" % (self._node.id,  state)
+        if self._log: self._log.info('Stop Test Node %d, status : %s' % (self._node.refName,  state))
+        print "**************** Stopped Test Node %d satus : %s**************" % (self._node.refName,  state)
    
     def decMsg(self, lastTest = 0):
         '''Décrémente le compteur de test'''        
