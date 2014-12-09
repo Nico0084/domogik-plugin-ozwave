@@ -47,7 +47,7 @@ try:
     from domogik.mq.message import MQMessage
     
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
-    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException, getOZWNodeID
+    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
     import threading
     import sys
     import time
@@ -73,7 +73,6 @@ class OZwave(XplPlugin):
             return
         # get the devices list
         self.devices = self.get_device_list(quit_if_no_device = False)
-
         # Récupère la config 
         ozwlogConf = self.get_config('ozwlog')
         self.myzwave = None
@@ -98,6 +97,8 @@ class OZwave(XplPlugin):
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))
                 self.force_leave()
                 return
+                # get the devices list
+        self.devices = self.get_device_list(quit_if_no_device = False)
         # Crée le listener pour les messages de commande xPL traités par les devices zwave
         Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic','xpltype': 'xpl-cmnd'})
         # Validation avant l'ouverture du controleur, la découverte du réseaux zwave prends trop de temps -> RINOR Timeout
@@ -120,10 +121,10 @@ class OZwave(XplPlugin):
         cfg_rest = Loader('rest')
         config_rest = cfg_rest.load()
         conf_rest = dict(config_rest[1])
-        if conf_rest['rest_use_ssl'] == 'False' : protocol = 'http'
+        if conf_rest['use_ssl'] == 'False' : protocol = 'http'
         else : protocol = 'https'
-        rest = "%s://%s:%s" % (protocol, conf_rest['rest_server_ip'], conf_rest['rest_server_port'])
-        the_url = "%s/base/device/list" % (rest)
+        rest = "%s://%s:%s" % (protocol, config_rest[0]['bind_interface'], conf_rest['port'])
+        the_url = "%s" % (rest) #/base/device/list
         rest_ok = False
         time_out = False
         t = time.time()
@@ -152,7 +153,20 @@ class OZwave(XplPlugin):
         return sys.getsizeof(self) + sum(sys.getsizeof(v) for v in self.__dict__.values())
 
     def ozwave_cmd_cb(self, message):
-        """" Envoie la cmd xpl vers le OZWmanager"""
+        """" Envoie la cmd xpl vers le OZWmanager
+        xpl-cmnd
+        {
+        ...
+        }
+        ozwave.basic
+        {
+        networkid = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+        node =  The node number
+        instance = The instance number
+        command = The Label openzwave (property : ZWaveValueNode.labelDomogik)
+        value = new value of command
+        }
+        """
         print ("commande xpl recue")
         print message
         self.log.debug(message)
@@ -238,6 +252,7 @@ class OZwave(XplPlugin):
     def send_xPL(self, xPLmsg,  args = None):
         """ Envoie une commande ou message zwave vers xPL"""
         self.log.debug('********************* send_xPL *****************')
+        # TODO: Vérifier le format xpl d'adresse du device
         mess = XplMessage()
         mess.set_type(xPLmsg['type']) 
         mess.set_schema(xPLmsg['schema'])
@@ -253,6 +268,7 @@ class OZwave(XplPlugin):
         """Envoie un message trig sur le hub xPL"""
         mess = XplMessage()
         messDup = None
+        # TODO: Récupérer le format xpl d'adresse du device
         if 'info' in msgtrig:
             self.log.error ("Error : Node %s unreponsive" % msgtrig['node'])
         elif 'Find' in msgtrig:
@@ -261,7 +277,7 @@ class OZwave(XplPlugin):
             print "sendxPL_trig  +++++++++++++++++++ ", msgtrig
             mess.set_type(msgtrig['typexpl'])
             mess.set_schema(msgtrig['schema'])
-            mess.add_data({'device' : msgtrig['device']})
+            mess.add_data(msgtrig['device'])
             mess.add_data(msgtrig['data'])                            
             if msgtrig.has_key('msgdump'): 
                 messDup = msgtrig['msgdump']

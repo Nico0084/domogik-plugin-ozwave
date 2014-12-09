@@ -28,6 +28,8 @@ Implements
 
 -Zwave
 ------------------------------------------
+Pour une commande provenant du xPL :
+
     xpl-cmnd
     {
     ...
@@ -37,10 +39,12 @@ Implements
     network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
     node =  The node number
     instance = The instance number
-    command = The Label openzwave
+    command = The Label openzwave (property : ZWaveValueNode.labelDomogik)
     value = new value of command
     }
 ------------------------------------------
+Pour un capteur ou ack de commande à envoyer par xPL (peux également être reçue) :
+
     xpl-trig
     {
     ...
@@ -50,8 +54,23 @@ Implements
     network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
     node =  The node number
     instance = The instance number
-    type = The Label openzwave
+    type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
     current = new current value of sensor
+    }
+------------------------------------------
+Pour un capteur type alarm à envoyer par xPL (peux également être reçue) :
+
+    xpl-trig
+    {
+    ...
+    }
+    alarm.basic
+    {
+    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+    node =  The node number
+    instance = The instance number
+    type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
+    state = new state of alarm 'high' or 'low'
     }
 ------------------------------------------
     xpl-trig
@@ -130,14 +149,14 @@ NodeStatusNW = {0:'Uninitialized',
 Capabilities = ['Primary Controller', 'Secondary Controller', 'Static Update Controller', 'Bridge Controller' ,
                     'Routing', 'Listening', 'Beaming', 'Security', 'FLiRS']
 
-# Listes de commandes Class reconnues comme device domogik
-CmdsClassAvailable = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY', 'COMMAND_CLASS_SENSOR_BINARY', 
+# Listes de commandes Class reconnues comme device domogik , il semble que la COMMAND_CLASS_BASIC ne soit pas util pour la device domogik.
+CmdsClassAvailable = ['COMMAND_CLASS_SWITCH_BINARY', 'COMMAND_CLASS_SENSOR_BINARY', 
                                'COMMAND_CLASS_SENSOR_MULTILEVEL', 'COMMAND_CLASS_BATTERY',  'COMMAND_CLASS_METER', 
                                'COMMAND_CLASS_SWITCH_MULTILEVEL', 'COMMAND_CLASS_THERMOSTAT_SETPOINT',  'COMMAND_CLASS_ALARM', 
                                'COMMAND_CLASS_SENSOR_ALARM']
                                
 # Listes des types reconnues comme device domogik (label openzwave)
-DomogikTypeAvailable = ['temperature', 'relative-humidity', 'humidity', 'battery-level', 'sensor', 'status', # sensor / actuator
+DomogikLabelAvailable = ['temperature', 'relative-humidity', 'humidity', 'battery-level', 'sensor', 'status', # sensor / actuator
                                   'power', 'energy', 'previous-reading', 'luminance',  'general', 'motion',
                                   'count', 'instant-energy-production', 'total-energy-production',
                                   'energy-production-today', 'total-production-time', 'indicator', 'locked', 'level',

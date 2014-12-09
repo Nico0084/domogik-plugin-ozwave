@@ -143,7 +143,7 @@ controller to learn new data.
         @param isPrimaryCtrl: Identifie si le controlleur est le primaire d'un réseaux
         @param networkId: Nom optionel d'un controleur primaire, est utile pour remplacer le Home ID dans les message xPL
         '''
-        if nodeId == None:
+        if nodeId is None:
             nodeId = 1
         ZWaveNode.__init__(self, ozwmanager, homeId, nodeId)
         self._isPrimaryCtrl = isPrimaryCtrl
@@ -152,14 +152,6 @@ controller to learn new data.
  
 # On accède aux attributs uniquement depuis les property
     isPrimaryCtrl = property(lambda self: self._isPrimaryCtrl)
-    ctrlDeviceName = property(lambda self: self._getCtrlDeviceName())
-    
-    def getNetworkID(self):
-        """Retourne le networkId ou Home ID du réseaux"""
-        if self._isPrimaryCtrl :
-            networkId = self.networkId if self.networkId else self.homeId
-     #   else : networkId = ZWaveNode.getNetworkID(self)
-        return networkId
         
     def __str__(self):
         """
@@ -180,7 +172,7 @@ controller to learn new data.
         """
         #TODO: reportChangeToUI utilise le hub xPL, a basculer sur MQ
         msg = report
-        msg['ctrldevice'] = self.ctrlDeviceName
+        msg['ctrldevice'] = self.networkID
         print 'Send report to WebSockect server for UI : '
    #     print msg
         self._ozwmanager.serverUI.broadcastMessage(msg.copy())

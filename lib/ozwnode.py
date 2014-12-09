@@ -56,12 +56,20 @@ class ZWaveNode:
     def __init__(self, ozwmanager,  homeId, nodeId):
         '''initialise le node zwave
         @param manager: pointeur sur l'instance du manager
-        @param homeid: ID du réseaux home/controleur
+        @param homeid: ID openzwave du réseaux home/controleur 
         @param nodeid: ID du node
         '''
         self._ozwmanager = ozwmanager
         self._manager = ozwmanager._manager
         self._lastUpdate = None
+        if type(homeId) is long : self._homeId = homeId
+        elif type(homeId) is int : self._homeId = long(homeId)
+        elif type(homeId) is str : 
+            try :
+               self._homeId = long(homeId,16)
+            except Exception as e :
+                self._ozwmanager._log.error(u"Node {0} creation error with HomeID : {1}. ".format(nodeId, homeId) + e.message)
+                raise OZwaveNodeException("Node {0} creation error with HomeID : {1}. ".format(nodeId, homeId) + e.message)
         self._homeId = homeId
         self._nodeId = nodeId
         self._linked = False
@@ -87,6 +95,7 @@ class ZWaveNode:
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
     networkID = property(lambda self: self._ozwmanager.getNetworkID(self._homeId))
+    homeID = property(lambda self: self._ozwmanager.matchHomeID(self._homeId))
     refName = property(lambda self: self._getNodeRefName())
     name = property(lambda self: self._name)
     location = property(lambda self: self._location)
@@ -118,14 +127,14 @@ class ZWaveNode:
     security = property(lambda self: self._nodeInfos.security if self._nodeInfos else None)
     version = property(lambda self: self._nodeInfos.version if self._nodeInfos else None)
     isPolled = property(lambda self: self._hasValuesPolled())
-    
+            
     def _getNodeRefName(self):
         """Retourne le la ref du node pour les message<networkId.nodeId>"""
-        return "{0}.{1}".format(self.networkID,  self_.nodeId)
+        return "{0}.{1}".format(self.networkID,  self.nodeId)
     
     def setLinked(self):
         """Le node a reçu la notification NodeProtocolInfo , il est relié au controleur."""
-        self_linked = True
+        self._linked = True
 
     def setReceiver(self):
         """Le node a reçu la notification EssentialNodeQueriesComplete , il est relié au controleur et peut recevoir des messages basic."""
@@ -169,10 +178,15 @@ class ZWaveNode:
     def reportToUI(self,  msg):
         """ transfert à l'objet controlleur  le message à remonter à l'UI"""
         if msg :
-            msg['node'] = self.nodeId
-            print '******** Node Object report vers UI ******** '
-            self._ozwmanager.controllerNode.reportChangeToUI(msg)
-            self._ozwmanager.monitorNodes.nodeChange_report(self.nodeId, msg)
+            ctrlNode = self._ozwmanager.getCtrlOfNode(self)
+            if ctrlNode is not None and ctrlNode.node is not None :
+                msg['node'] = self.nodeId
+                print '******** Node Object report vers UI ******** '
+                ctrlNode.node.reportChangeToUI(msg)
+                print '******** Node Object report vers monitorNodes ******** '
+                self._ozwmanager.monitorNodes.nodeChange_report(self.homeId,  self.nodeId, msg)
+            else :
+                self._ozwmanager._log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
     
     def _getIsLocked(self):
         return False
@@ -533,7 +547,7 @@ class ZWaveNode:
                         msgtrig = valueNode.valueToxPLTrig()
                         if msgtrig : self._ozwmanager._cb_sendxPL_trig(msgtrig)
                 if empty : self._lastMsg= None
-                self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
+                self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
                 return lastMsg
             else: return False
         else: return False
@@ -549,7 +563,7 @@ class ZWaveNode:
                     if valueNode :
                         msgtrig = valueNode.valueToxPLTrig()
                         if msgtrig : 
-                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
+                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
                             self._ozwmanager._cb_sendxPL_trig(msgtrig)
                     return True
                 else: return False
@@ -638,7 +652,7 @@ class ZWaveNode:
         retval = {}
         self._updateInfos() # mise à jour selon OZW
         self._updateCommandClasses()
-        retval["HomeID"] ="0x%.8x" % self.homeId
+        retval["HomeID"] = self._ozwmanager.getHomeID(self.homeId)
         retval["Model"]= self.manufacturer + " -- " + self.product
         retval["State sleeping"] = self.isSleeping
         retval["Node"] = self.nodeId
@@ -654,7 +668,7 @@ class ZWaveNode:
         retval["Polled"] = self.isPolled
         retval["ComQuality"] = self.getComQuality()
         retval["BatteryLevel"] = self._getBatteryLevel()
-        retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.nodeId) else ''
+        retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.homeId,  self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.homeId,  self.nodeId) else ''
         return retval
         
     def getValuesInfos(self):

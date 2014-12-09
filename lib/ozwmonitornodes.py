@@ -60,7 +60,10 @@ class ManageMonitorNodes(threading.Thread):
         self._pluginLog = ozwManager._log
         self._stop = ozwManager._stop
         self._pluginLog.info('Monitor node(s) manager is initialized.')
-    
+
+    def refNode(self, homeId, nodeId):
+        return self._ozwManager.refNode(homeId, nodeId)
+
     def run(self):
         """Tache en cours"""
         if self._ozwManager._ozwLog : 
@@ -75,7 +78,7 @@ class ManageMonitorNodes(threading.Thread):
         while not self._stop.isSet():
             if self.__reports :
                 report = self.__reports.popleft()
-                self.logNode(report['date'], report['type'],  report['nodeId'], report['datas'])
+                self.logNode(report['date'], report['type'], report['homeId'], report['nodeId'], report['datas'])
             else : self._stop.wait(0.01)
         # flush and close list nodes
         for node in self.nodesMonitor :
@@ -87,70 +90,77 @@ class ManageMonitorNodes(threading.Thread):
     def openzwave_report(self,  args):
         """Callback depuis la librairie py-openzwave 
         """
-        if self.isMonitored(args['nodeId']) : 
-            self.__reports.append({'date': datetime.now(),'type': "Openzwave Notification : " + args['notificationType'], 'nodeId': args['nodeId'], 'datas': args})
+        if self.isMonitored(args['homeId'], args['nodeId']) : 
+            self.__reports.append({'date': datetime.now(),'type': "Openzwave Notification : " + args['notificationType'], 'homeId': args['homeId'], 'nodeId': args['nodeId'], 'datas': args})
     
     def xpl_report(self,  xplMsg):
         """Callback un message Xpl"""
-        if xplMsg.data.has_key('device') and xplMsg.data['device'] != None :
+        device = self._ozwManager.getZWRefFromxPL(xplMsg.data)
+        if device is not None :
             try :
-                zN,  nodeId,  instance = xplMsg.data['device'].split(".")
-                nodeId = int(nodeId)
-                if self.isMonitored(nodeId) : 
-                    self.__reports.append({'date': datetime.now(),'type': "Xpl report : ", 'nodeId': nodeId, 'datas': str(xplMsg)})
+                if 'nodeId' not in device :
+                    device['nodeId'] = self._ozwManager.getCtrlOfNetwork(device['homeId']).node.nodeId
+                if self.isMonitored(device['homeId'], device['nodeId']) : 
+                    self.__reports.append({'date': datetime.now(),'type': "Xpl report : ", 'homeid': device['homeId'], 'nodeId': device['nodeId'], 'datas': str(xplMsg.data)})
             except Exception as e :
-                raise OZwaveMonitorNodeException(e)
+                raise OZwaveMonitorNodeException("xpl_report error : {0} \n -- xplMsg : {1}".format(e.message, xplMsg))
     #    else : self._pluginLog.debug("Monitoring nodes, No 'device' key defined in xPL msg ({0})".format(xplMsg))
             
-    def nodeChange_report(self,  nodeId,  msg):
+    def nodeChange_report(self,  homeId,  nodeId,  msg):
         """Callback de node lui même"""
-        if self.isMonitored(nodeId) :
+        if self.isMonitored(homeId,  nodeId) :
             if msg.has_key('header') : del msg['header']
             if msg.has_key('node') : del msg['node']
             if msg.has_key('ctrldevice') : del msg['ctrldevice']
             self.__reports.append({'date': datetime.now(),'type': "Node change report : ", 'nodeId': nodeId, 'datas': msg})
-        
+            
     def logOZW_report(self,  line):
         """Callback de surveillance du log openzwave"""
         idx = line.find('Node')
         if  idx != -1 : 
             try :
                 nodeId = int(line[idx+4:idx+7])
-                if self.isMonitored(nodeId) :
-                    self.__reports.append({'date': datetime.now(),'type': "openzwave lib", 'nodeId': nodeId, 'datas': line})
+                # TODO: Boucle necessaire parceque le log openzwave ne renvoi pas le homeID, Donc tous les nodeId de tous le controleurs sont logger. A modifier quand lib OK.
+                homeId = 0
+                for node in self.nodesMonitor.itervalues():
+                    if node.nodeId == nodeId : 
+                        homeId = node.homeId
+                        break
+                if self.isMonitored(homeId,  nodeId) :
+                    self.__reports.append({'date': datetime.now(),'type': "openzwave lib", 'homeid': homeId, 'nodeId': nodeId, 'datas': line})
             except :
                 pass
 
-    def nodeCompletMsg_report(self,  nodeId,  msg):
+    def nodeCompletMsg_report(self,  homeId,  nodeId,  msg):
         """Callback de node lui même"""
-        if self.isMonitored(nodeId) :
+        if self.isMonitored(homeId,  nodeId) :
             if msg.has_key('header') : del msg['header']
             if msg.has_key('node') : del msg['node']
             if msg.has_key('ctrldevice') : del msg['ctrldevice']
-            self.__reports.append({'date': datetime.now(),'type': "Node receive completed message : ", 'nodeId': nodeId, 'datas': msg})
+            self.__reports.append({'date': datetime.now(),'type': "Node receive completed message : ", 'homeid': homeId, 'nodeId': nodeId, 'datas': msg})
 
-    def isMonitored(self, nodeId):
+    def isMonitored(self, homeId, nodeId):
         """Renvois True si le node est surveillé."""
-        if int(nodeId) in self.nodesMonitor: 
+        if self.refNode(homeId, nodeId) in self.nodesMonitor: 
             return True
         else:
             return False
     
-    def getFileName(self,  nodeId):
+    def getFileName(self, homeId, nodeId):
         """Retourne le nom du fichier de log attendus"""
-        node = '%03d' % nodeId 
+        node = self._ozwManager.getNetworkID(homeId)  + '_%03d' % nodeId 
         return self._ozwManager._userPath + "lognode"  + node +".log"
         
-    def startMonitorNode(self, nodeId):
+    def startMonitorNode(self, homeId, nodeId):
         """Demarre la surveillance du node dans un fichier log."""
         retval = {'error': ''}
-        if not self.isMonitored(nodeId) :
-            fName = self.getFileName(nodeId)
+        if not self.isMonitored(homeId, nodeId) :
+            fName = self.getFileName(homeId, nodeId)
             fLog = open(fName,  "w")
             self._pluginLog.info('Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
             retval.update({'state': 'started','usermsg':'Start monitor node {0} in log file.'.format(nodeId), 'file': fName})
             fLog.write("{0} - Started monitor log for node {1}.\n".format(datetime.now(),  nodeId))
-            node = self._ozwManager._getNode(self._ozwManager.homeId, nodeId)
+            node = self._ozwManager._getNode(homeId, nodeId)
             if node : 
                 infos = node.getInfos()
                 fLog.write("Node is registered in manager, state information : \n ")
@@ -162,29 +172,29 @@ class ManageMonitorNodes(threading.Thread):
                 fLog.write("Node isn't registered in manager.\n")
             fLog.close()
             fLog = open(fName,  "a")  # reopen in append mode
-            self.nodesMonitor.update({nodeId : fLog})
+            self.nodesMonitor.update({self.refNode(homeId, nodeId) : fLog})
         else :
             retval.update({'state': 'started','usermsg': 'Monitor node {0} in log already started.'.format(nodeId), 'file': fName})
             self._pluginLog.debug('Monitor node {0} in log already started.'.format(nodeId))
         return retval
         
-    def stopMonitorNode(self, nodeId):
+    def stopMonitorNode(self, homeId, nodeId):
         """Arrete la surveillance du node"""
         retval = {'error': ''}
         if self.isMonitored(nodeId) :
-            fLog = self.nodesMonitor[nodeId]
-            retval.update({'state': 'stopped','usermsg': 'Stop monitor node {0} in log file.'.format(nodeId), 'file': self.getFileName(nodeId)})
-            self._pluginLog.info('Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(nodeId)))
+            fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
+            retval.update({'state': 'stopped','usermsg': 'Stop monitor node {0} in log file.'.format(nodeId), 'file': self.getFileName(homeId, nodeId)})
+            self._pluginLog.info('Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(homeId, nodeId)))
             fLog.write("{0} - Stopped monitor log for node {1}.".format(datetime.now(),  nodeId))
             fLog.close()
-            del self.nodesMonitor[nodeId]
+            del self.nodesMonitor[self.refNode(homeId, nodeId)]
         else :
             retval.update({'error': 'Monitor node {0} not running.'.format(nodeId)})
         return retval
             
-    def logNode(self, date,  type, nodeId, args):
+    def logNode(self, date,  type, homeId, nodeId, args):
         """log les informations d'un node dans le fichier lognodeXXX.log de data/ozwave"""
-        fLog = self.nodesMonitor[nodeId]
+        fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
         if type == 'openzwave lib':
             fLog.write('{0}\n'.format(args))
         else :

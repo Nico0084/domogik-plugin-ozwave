@@ -97,6 +97,7 @@ class ZWaveValueNode:
   
     homeId = property(lambda self: self._node._homeId)
     nodeId = property(lambda self: self._node._nodeId)
+    instance = property(lambda self: self.valueData['instance'])    
     lastUpdate = property(lambda self: self._lastUpdate)
     valueData = property(lambda self: self._valueData)
     labelDomogik = property(lambda self: self._getLabelDomogik())
@@ -112,7 +113,7 @@ class ZWaveValueNode:
         
     def HandleSleepingSetvalue(self):
         """Gère un akc eventuel pour un device domogik et un node sleeping."""
-        if self._node.isSleeping and self.getDomogikDevice() != "":
+        if self._node.isSleeping and self.getDomogikDevice() is not None:
             msgtrig = self.valueToxPLTrig()
             if msgtrig : 
                 self._node._ozwmanager._cb_sendxPL_trig(msgtrig)
@@ -222,7 +223,7 @@ class ZWaveValueNode:
             print "setValue : call requestConfigParam..."
         report = {'Value' : str(self),  'report': retval}
         self._node.updateLastMsg('setValue', self.valueData)
-        self._node._ozwmanager.monitorNodes.nodeChange_report(self.nodeId, report)
+        self._node._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, report)
         if retval['error'] == '' : 
             self.HandleSleepingSetvalue()
             self._node.requestOZWValue(self.getCmdClassAssociateValue())
@@ -232,7 +233,7 @@ class ZWaveValueNode:
         """Mise à jour de valueData depuis les arguments du callback."""
         if self._tempConv and valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
             valueData['units'] = '°C'
-            print '************** Convertion : ',  float(valueData['value'])
+            print '************** Conversion : ',  float(valueData['value'])
             print float(valueData['value'])*(5.0/9)
             valueData['value'] = (float(valueData['value'])*(5.0/9))-(160.0/9)
             print valueData['value']
@@ -242,7 +243,7 @@ class ZWaveValueNode:
         valueData['homeId'] = int(valueData['homeId']) # Pour etre compatible avec javascript
         valueData['id'] = str(valueData['id']) # Pour etre compatible avec javascript
         self._node.reportToUI({'notifytype': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueData})
-
+        
     def convertInType(self,  val):
         """Convertion de val dans le type de la value."""
         retval = val
@@ -273,10 +274,9 @@ class ZWaveValueNode:
         
     def getDomogikDevice(self):
         """Determine si la value peut être un device domogik et retourne le format du nom de device"""
-        if (self.valueData['commandClass'] in  CmdsClassAvailable) and (self.labelDomogik in  DomogikTypeAvailable) :
-            nameAssoc = self._node._ozwmanager._nameAssoc
-            retval = "%s.%d.%d" % (nameAssoc.keys()[nameAssoc.values().index(self.valueData['homeId'])] , self.nodeId, self.valueData['instance'])        
-        else: retval = ""
+        retval = None
+        if (self.valueData['commandClass'] in CmdsClassAvailable) and (self.labelDomogik in DomogikLabelAvailable) :
+            retval = self._node._ozwmanager.getxPLRefFromZW(self)
         return retval
 
     def getInfos(self):
@@ -365,72 +365,79 @@ class ZWaveValueNode:
     
     def valueToxPLTrig(self):
         """Renvoi le message xPL à trigger en fonction de la command_class de la value.
+                xpl-trig
+                {
+                ...
+                }
+                sensor.basic
+                {
+                network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+                node =  The node number
+                instance = The instance number
+                type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
+                current = new current value of sensor
+                }
+                ou :
+                alarm.basic
+                {
+                network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
+                node =  The node number
+                instance = The instance number
+                type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
+                state = new state of alarm 'high' or 'low'
+                }
         """
         # TODO: Traiter le formattage en fonction du type de message à envoyer à domogik rajouter ici le traitement pour chaque command_class
-        # ne pas modifier celles qui fonctionnent mais rajouter. la fusion ce fera après implémentation des toutes les command-class.
+        # Ne pas modifier celles qui fonctionnent mais rajouter. la fusion ce fera après implémentation des toutes les command-class.
+        # Le schema est toujours sensor.basic ou alarm.basic, meme pour les commandes puisque le xpl-trig est destiné au OK et à un sensor.
         msgtrig = None
         device =  self.getDomogikDevice()
-        if  device != "" :
-            msgtrig = {'typexpl':'xpl-trig', 'device': device}
-            if self.valueData['commandClass'] == 'COMMAND_CLASS_BASIC':
-                if self.valueData['readOnly'] :
-                    msgtrig['schema'] = 'sensor.basic'
-                else : 
-                    msgtrig['schema'] = 'ozwave.basic'
-                if self.valueData['type'] in ['Bool',  'Button']: msgtrig ['data']  = {'type': 'status', 'status' : self.valueData['value']}
-                elif  self.valueData['type'] in ['String',  'Schedule',  'List'] : msgtrig ['data']  = {'type': 'value', 'value' : self.valueData['value']}
-                else : msgtrig ['data']  = {'type': 'level', 'level' : self.valueData['value']}
-            elif self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
+        if  device is not None :
+            msgtrig = {'typexpl':'xpl-trig', 'schema': 'sensor.basic', 'device': device}
+            if self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
                 if self.valueData['type'] == 'Bool' :
-                    msgtrig['schema'] = 'ozwave.basic'
-                    if self.valueData['value']  in ['False', False] : command ="off"
-                    elif  self.valueData['value'] in ['True',  True] : command ="on"
+                    if self.valueData['value']  in ['False', False] : current ="off"
+                    elif  self.valueData['value'] in ['True',  True] : current ="on"
                     else : raise OZwaveValueException("Error format in valueToxPLTrig : %s" %str(msgtrig))
-                    msgtrig['data'] =  {'type': self.labelDomogik, 'command': command}
+                    msgtrig['data'] =  {'type': self.labelDomogik, 'current': current}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_MULTILEVEL' :
-                msgtrig['schema'] = 'ozwave.basic'
                 if self.valueData['type']  == 'Byte' and self.valueData['label']  == 'Level' :  # cas d'un module type dimmer, gestion de l'état on/off
                     if self.valueData['value'] == 0: 
-                        msgtrig['msgdump'] = {'type': 'switch','command': 'off', 'cmdsource' : 'level' ,'level': 0}        
-                    else : msgtrig['msgdump']  = {'type': 'switch', 'command': 'on',  'cmdsource' : 'level' ,'level': self.valueData['value'] }
-                    msgtrig['data'] = {'type': self.labelDomogik, 'command': 'level', 'level' : self.valueData['value']}
-                else :                                                          # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
-                    msgtrig['data']  = {'type': self.labelDomogik, 'command':  self.labelDomogik,  'value': self.valueData['value']}
+                        msgtrig['msgdump'] = {'type': 'switch','current': 'off'}        
+                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 'on'}
+                    msgtrig['data'] = {'type': self.labelDomogik, 'current': self.valueData['value']}
+                elif self.valueData['type']  == 'Button' :                                                        # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
+                    msgtrig['data']  = {'type': self.labelDomogik, 'current':  self.valueData['value']}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_THERMOSTAT_SETPOINT' :
-                msgtrig['schema'] = 'ozwave.basic'
-                msgtrig['data']  = {'type': self.labelDomogik, 'command':  'setpoint',  'value': self.valueData['value']}
-                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
+                msgtrig['data']  = {'type': self.labelDomogik, 'current': self.valueData['value']}
+                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']  # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_BINARY' : 
                 if self.valueData['type'] == 'Bool' :
-                    msgtrig['schema'] = 'sensor.basic'
-                    msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 'true' if self.valueData['value']   else 'false'} # gestion du sensor binary pour widget binary
+                    msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 'true' if self.valueData['value']  else 'false'} # gestion du sensor binary pour widget binary
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_MULTILEVEL' :
-                msgtrig['schema'] = 'sensor.basic'
                 if self.valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
                     value = round(self.valueData['value'], 2)
                 else:
                     value = self.valueData['value']
                 msgtrig ['data'] = {'type': self.labelDomogik, 'current': value}
-                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
+                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_BATTERY' :
-                msgtrig['schema'] = 'sensor.basic'
                 msgtrig ['data'] = {'type': self.labelDomogik, 'current':self.valueData['value']}
-                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
+                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_METER' :
-                msgtrig['schema'] = 'sensor.basic'
                 if self.valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
                     value = round(self.valueData['value'], 2)
                 else:
                     value = self.valueData['value']
                 msgtrig ['data'] = {'type' : self.labelDomogik,  'current' : value}
-                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
+                if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
                 msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self.valueData['value']}                
+                msgtrig ['data'] = {'type': self.labelDomogik, 'state':self.valueData['value']} # TODO: A vérifier pas sur que l'unit soit util              
                 if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
                 msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'status' : 'high' if self.valueData['value']   else 'low'} # gestion du sensor binary pour widget binary
+                msgtrig ['data'] = {'type': self.labelDomogik, 'state' : 'high' if self.valueData['value'] else 'low'} # gestion du sensor binary pour widget binary
 
         print "*** valueToxPLTrig : {0}".format(msgtrig)
         return msgtrig
