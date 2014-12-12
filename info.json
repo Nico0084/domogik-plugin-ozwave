@@ -605,7 +605,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "level",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "battery_level"
                     }
@@ -623,7 +623,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "low_battery"
                     }
@@ -1055,7 +1055,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "power_applied"
                     }
@@ -1073,7 +1073,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "tamper_event"
                     }
@@ -1091,7 +1091,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "sensor_alarm"
                     }
@@ -1109,7 +1109,7 @@
                 ],
                 "device" : [],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "sensor_alarm"
                     }

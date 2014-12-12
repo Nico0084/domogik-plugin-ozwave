@@ -433,11 +433,11 @@ class ZWaveValueNode:
                 if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
                 msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'state':self.valueData['value']} # TODO: A vérifier pas sur que l'unit soit util              
+                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self.valueData['value']} # TODO: A vérifier pas sur que l'unit soit util              
                 if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
                 msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'state' : 'high' if self.valueData['value'] else 'low'} # gestion du sensor binary pour widget binary
+                msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 'high' if self.valueData['value'] else 'low'} # gestion du sensor binary pour widget binary
 
         print "*** valueToxPLTrig : {0}".format(msgtrig)
         return msgtrig
