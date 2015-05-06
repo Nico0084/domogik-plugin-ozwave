@@ -252,7 +252,7 @@ class OZwaveException(Exception):
     """
     def __init__(self, value):
         """Initialisation"""
-        Exception.__init__(self)
+        Exception.__init__(self, value)
         self.msg = "OZwave generic exception:"
         self.value = value
                                 

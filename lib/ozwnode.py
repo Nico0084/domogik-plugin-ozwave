@@ -3,7 +3,7 @@
 """ This file is part of B{Domogik} project (U{http://www.domogik.org}$
 
 License
-=======
+======
 
 B{Domogik} is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,28 +19,26 @@ You should have received a copy of the GNU General Public License
 along with Domogik. If not, see U{http://www.gnu.org/licenses}.
 
 Plugin purpose
-==============
+===========
 
 Support Z-wave technology
+Version for domogik >= 0.4
 
 Implements
-==========
+========
 
--Zwave
+- Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2012 Domogik project
+@copyright: (C) 2007-2015 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
 
-import binascii
-import libopenzwave
 from libopenzwave import PyManager
 from ozwvalue import ZWaveValueNode
 from ozwdefs import *
 import time
-from time import sleep
 import threading
 
 class OZwaveNodeException(OZwaveException):
@@ -76,7 +74,9 @@ class ZWaveNode:
         self._receiver = False
         self._ready = False
         self._named = False
-        self._failed =False
+        self._failed = False
+        self._configAsk = False
+        self._isConfigured = False # A améliorer en gérant le retour réel de value de config
         self._capabilities = set()
         self._commandClasses = set()
         self._neighbors = set()
@@ -116,6 +116,7 @@ class ZWaveNode:
     isReceiver = property(lambda self: self._receiver)
     isReady = property(lambda self: self._ready)
     isNamed = property(lambda self: self._named)
+    isConfigured = property(lambda self: self._isConfigured)
     isFailed = property(lambda self: self._isFailed())
     level = property(lambda self: self._getLevel())
     isOn = property(lambda self: self._getIsOn())
@@ -162,6 +163,8 @@ class ZWaveNode:
             values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
             if values:
                 for value in values : value.RefreshOZWValue()
+            if self._configAsk and self.GetNodeStateNW() in [1, 3, 4, 5] : # :'Initialized - not known', 3:'In progress - Devices initializing', 4:'In progress - Linked to controller', 5:'In progress - Can receive messages'
+                self._updateConfig()
         
     def markAsFailed(self): 
         """Le node est marqué comme HS."""
@@ -265,7 +268,8 @@ class ZWaveNode:
             if self.isLinked : retval = NodeStatusNW[5]
             else : retval = NodeStatusNW[7]
         if self.isReady : retval = NodeStatusNW[1]
-        if self.isReady and self.isNamed : retval = NodeStatusNW[2]
+        if self.isReady and self.isNamed : retval = NodeStatusNW[3]
+        if self.isReady and self.isNamed and self.isConfigured: retval = NodeStatusNW[2]
         if self.isFailed : retval = NodeStatusNW[6]
         print ('node state linked:',  self.isLinked, ' isReceiver:', self.isReceiver, ' isReady:', self.isReady, 'isNamed:', self.isNamed, ' isFailed:', self._failed )
         return retval
@@ -509,14 +513,17 @@ class ZWaveNode:
                 ))
         del(self._groups[:])
         self._groups = groups
-        print ('Node [%d] groups are: ' %self._nodeId) , self._groups
-        self._ozwmanager._log.debug('Node [%d] groups are: %s', self._nodeId, self._groups)
+        self._ozwmanager._log.debug(u'Node [%d] groups are: %s', self._nodeId, self._groups)
 
     def _updateConfig(self):
-        self._ozwmanager._log.debug('Requesting config params for node [%d]', self._nodeId)
-        self._manager.requestAllConfigParams(self._homeId, self._nodeId)
+        if not self._sleeping :
+            self._ozwmanager._log.debug(u"Requesting config params for node {0}".format(self._nodeId))
+            self._manager.requestAllConfigParams(self._homeId, self._nodeId)
+            self._isConfigured = True
+        else : 
+            self._ozwmanager._log.debug(u"Node {0} is sleeping can't request config params.".format(self._nodeId))
+        self._configAsk = True
 
-        
     def updateNode(self):
         """Mise à jour de toutes les caractéristiques du node"""
         self._updateCapabilities()

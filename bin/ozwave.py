@@ -4,7 +4,7 @@
 """ This file is part of B{Domogik} project (U{http://www.domogik.org}$
 
 License
-=======
+======
 
 B{Domogik} is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@ You should have received a copy of the GNU General Public License
 along with Domogik. If not, see U{http://www.gnu.org/licenses}.
 
 Plugin purpose
-==============
+===========
 
 Support Z-wave technology
 Version for domogik >= 0.4
 
 Implements
-==========
+========
 
 - Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2014 Domogik project
+@copyright: (C) 2007-2015 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
@@ -79,7 +79,7 @@ class OZwave(XplPlugin):
         self._ctrlHBeat = None
         print ('Mode log openzwave :',  ozwlogConf)
         # Recupère l'emplacement des fichiers de configuration OZW
-        pathUser = self.get_data_files_directory()  +'/'
+        pathUser = self.get_data_files_directory()
         pathConfig = self.get_config('configpath') + '/'
         # Initialise le manager Open zwave
         try:
@@ -251,16 +251,15 @@ class OZwave(XplPlugin):
                                     
     def send_xPL(self, xPLmsg,  args = None):
         """ Envoie une commande ou message zwave vers xPL"""
-        self.log.debug('********************* send_xPL *****************')
         # TODO: Vérifier le format xpl d'adresse du device
         mess = XplMessage()
         mess.set_type(xPLmsg['type']) 
         mess.set_schema(xPLmsg['schema'])
         if xPLmsg.has_key('data') : mess.add_data(xPLmsg['data'])
-        print '********************* Dans send_xPL *****************'
         if args :
             mess.add_data({'data': self.getUIdata2dict(args)})
         print mess
+        self.log.debug("************ sending xPL :{0}, {1} : {2}".format(mess.type, mess.schema, mess.data)) 
         self.myxpl.send(mess)
         if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(mess)
         

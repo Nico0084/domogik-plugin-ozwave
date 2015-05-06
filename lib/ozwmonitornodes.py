@@ -3,7 +3,7 @@
 """ This file is part of B{Domogik} project (U{http://www.domogik.org}$
 
 License
-=======
+======
 
 B{Domogik} is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,20 +19,22 @@ You should have received a copy of the GNU General Public License
 along with Domogik. If not, see U{http://www.gnu.org/licenses}.
 
 Plugin purpose
-==============
+===========
 
 Support Z-wave technology
+Version for domogik >= 0.4
 
 Implements
-==========
+========
 
--Zwave
+- Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2013 Domogik project
+@copyright: (C) 2007-2015 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
+
 import threading
 from datetime import datetime
 from ozwdefs import *
@@ -103,7 +105,8 @@ class ManageMonitorNodes(threading.Thread):
                 if self.isMonitored(device['homeId'], device['nodeId']) : 
                     self.__reports.append({'date': datetime.now(),'type': "Xpl report : ", 'homeid': device['homeId'], 'nodeId': device['nodeId'], 'datas': str(xplMsg.data)})
             except Exception as e :
-                raise OZwaveMonitorNodeException("xpl_report error : {0} \n -- xplMsg : {1}".format(e.message, xplMsg))
+                self._pluginLog.warning("Can't do Xpl report, domogik device controler of networkid unknown : {0} ".format(device))
+#                raise OZwaveMonitorNodeException("xpl_report error for device {0} : {1} \n -- xplMsg : {2}".format(device, e, xplMsg))
     #    else : self._pluginLog.debug("Monitoring nodes, No 'device' key defined in xPL msg ({0})".format(xplMsg))
             
     def nodeChange_report(self,  homeId,  nodeId,  msg):
