@@ -58,16 +58,17 @@ except ImportError as exc :
     print err
     logging.error(err)
 
+#from domogik_packages.plugin_ozwave.lib.ozwmqworker import OZWMQRep
 
 class OZwave(XplPlugin):
     """ Implement a listener for Zwave command messages
         and launch background  manager to listening zwave events by callback
     """
+        
     def __init__(self):
         """ Create listener and background zwave manager
         """
         XplPlugin.__init__(self, name = 'ozwave')
-        
         # check if the plugin is configured. If not, this will stop the plugin and log an error
         if not self.check_configured():
             return
@@ -82,6 +83,7 @@ class OZwave(XplPlugin):
         pathUser = self.get_data_files_directory()
         pathConfig = self.get_config('configpath') + '/'
         # Initialise le manager Open zwave
+        
         try:
             self.myzwave = OZWavemanager(self, self.send_xPL, self.sendxPL_trig, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
             print 'OZWmanager demarré :-)'
@@ -97,6 +99,11 @@ class OZwave(XplPlugin):
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))
                 self.force_leave()
                 return
+                
+#        self.log.debug('Opening worker MQ')        
+#        self.serverUI = OZWMQRep(self.myzwave.cb_ServerWS, self.log)
+#        self.log.debug('worker MQ open')        
+#        
                 # get the devices list
         self.devices = self.get_device_list(quit_if_no_device = False)
         # Crée le listener pour les messages de commande xPL traités par les devices zwave
@@ -203,7 +210,34 @@ class OZwave(XplPlugin):
                     print("value raccourccis : ", k, ddict[k])
                     self.log.debug ("Format data to UI : value to large, cut to 800, key : %s, value : %s" % (str(k), str(ddict[k])))
         return str(ddict).replace('{', '&ouvr;').replace('}', '&ferm;').replace('"','&quot;').replace("'",'&quot;').replace('False', 'false').replace('True', 'true').replace('None', '""')
-        
+     
+
+    def on_mdp_request(self, msg):
+        # display the req message
+        print(msg)
+        XplPlugin.on_mdp_request(self, msg)
+        # call a function to reply to the message depending on the header
+        action = msg.get_action().split(".")
+        handled = False  
+        print action
+        if action[0] == 'ozwave' :
+            self.log.debug(u"Handle MQ request action <{0}>.".format(action))
+            if action[1] == "networks" :# "ozwave.networks.get":
+                if action[2] == "get" :
+                    handled = True
+                    req = {'header':{'type': 'req'}, 'request': 'GetNetworkID'} # TODO remove header key it's just for starting with less modif
+                    report = self.myzwave.cb_ServerWS(req)
+                    print report
+                    # send the reply
+                    msg = MQMessage()
+                    msg.set_action('ozwave.networks.get')
+                    for k, item in report.items():
+                        msg.add_data(k, item)
+                    print msg.get()
+                    self.reply(msg.get())
+            if not handled :
+                self.log.warning(u"MQ request unknown action <{0}>.".format(action))
+
     def ui_cmd_cb(self, message):
         """xpl en provenace de l'UI (config/special)"""
         response = True
@@ -292,6 +326,10 @@ class OZwave(XplPlugin):
                 if self.myzwave is not None :  self.myzwave.monitorNodes.xpl_report(mess)
         elif 'command' in msgtrig and msgtrig['command'] == 'Info':
             print("Home ID is %s" % msgtrig['Home ID'])
+            
+    def publishMsg(self, category, content):
+        self._pub.send_event(category, content)
+        self.log.debug(u"Publishing over MMQ <{0}>, data : {1}".format(category, content))
 
 if __name__ == "__main__":
     OZwave()

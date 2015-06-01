@@ -45,7 +45,8 @@ from ozwnode import ZWaveNode
 from ozwctrl import ZWaveController
 from ozwxmlfiles import *
 from ozwmonitornodes import ManageMonitorNodes
-from wsuiserver import BroadcastServer
+#from wsuiserver import BroadcastServer
+from ozwmqworker import OZWMQRep
 from ozwdefs import *
 from datetime import timedelta
 import pwd
@@ -54,6 +55,8 @@ import resource
 import traceback
 import tailer
 import re
+import os
+import time
 
 class OZwaveManagerException(OZwaveException):
     """"Zwave Manager exception  class"""
@@ -63,7 +66,7 @@ class OZwaveManagerException(OZwaveException):
         self.msg = "OZwave Manager exception:"
                                                     
 
-class OZWavemanager(threading.Thread):
+class OZWavemanager():
     """
     ZWave class manager
     """
@@ -99,7 +102,6 @@ class OZWavemanager(threading.Thread):
         self._initFully = False
         self._ctrlActProgress = None
         self.lastTest = 0
-        self.serverUI = None
         self._completMsg = self._xplPlugin.get_config('cpltmsg')
         self._wsPort = int(self._xplPlugin.get_config('wsportserver'))
         self._device = self._xplPlugin.get_config('device')
@@ -154,6 +156,7 @@ class OZWavemanager(threading.Thread):
         # "List les devices de type primary.controler.""
         self._devicesCtrl = []
         self._openingDriver = None
+        
         for a_device in self._xplPlugin.devices:
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl : 
@@ -175,7 +178,7 @@ class OZWavemanager(threading.Thread):
         ready =False
         for device in self._devicesCtrl:
             if device.ready and device.node is not None : 
-                ready = true
+                ready = True
                 break
         return ready
 
@@ -184,7 +187,6 @@ class OZWavemanager(threading.Thread):
             A appeler dans un thread à la fin de l'init du pluginmanager."""
         self._log.info("Start Ozwave services in 100ms...")
         self._stop.wait(0.1) # s'assurer que l'init du pluginmanager est achevé
-        self.serverUI =  BroadcastServer(self._wsPort,  self.cb_ServerWS,  self._log) # demarre le websocket server
         self.monitorNodes = ManageMonitorNodes(self)
         self.monitorNodes.start()  # demarrer la surveillance des nodes pour helper log
         # Ouverture du ou des controleurs principaux
@@ -303,7 +305,7 @@ class OZWavemanager(threading.Thread):
             self._manager.removeDriver(device.driver)
             device.status = 'close'
             device.ready = False
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed.', 'data': False})
+            self._xplPlugin.publishMsg('ozwave.ctrl.closed', {'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed.', 'data': False})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': device.networkID, 'status':'close', 'usrmsg': "Openzwave driver closed",  'data': "None"}})
 
@@ -311,9 +313,7 @@ class OZWavemanager(threading.Thread):
         """ Stop class OZWManager."""
         self._log.info(u"Stopping plugin, Remove driver(s) from openzwave")
         for device in self._devicesCtrl : self.removeDeviceCtrl(device)
-        if self.serverUI : 
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Plugin stopped.', 'data': False})
-            self.serverUI.close()
+        self._xplPlugin.publishMsg('ozwave.manager.stopped',{'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Plugin stopped.', 'data': False})
         if self._xplPlugin. _ctrlHBeat: self._xplPlugin. _ctrlHBeat.stop()
 
     def sendXplCtrlState(self):
@@ -589,7 +589,7 @@ class OZWavemanager(threading.Thread):
                                                                                                                                                                                            self.matchHomeID(ctrl.homeId), 
                                                                                                                                                                                            ctrl.nodeID, ctrl.libraryTypeName, ctrl.libraryVersion))
             self._log.info(u"OpenZWave Initialization Begins.")
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-ready', 'usermsg' : 'Driver is ready.', 'data': True})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-ready', 'usermsg' : 'Driver is ready.', 'data': True})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                            'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'init...', 'usrmsg': "Openzwave opening driver, init process ...",  'data': "None"}})
 
@@ -603,12 +603,12 @@ class OZWavemanager(threading.Thread):
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is reset, all network nodes deleted".format(ctrl.driver, args))
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.', 'data': False})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.', 'data': False})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'reseted', 'usrmsg': "Openzwave driver reseted, All nodes must be recovered.",'data': "None"}})
         else :
             self._log.warning(u"A driver reset is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted but not registered, All nodes must be recovered.', 'data': args})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted but not registered, All nodes must be recovered.', 'data': args})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': 'unknown', 'status':'reseted', 'usrmsg': "Driver reseted but not registered, All nodes must be recovered.",'data': "None"}})
             self._nodes = None
@@ -624,14 +624,14 @@ class OZWavemanager(threading.Thread):
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is removed, all network nodes deleted".format(ctrl.driver, args))
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.', 'data': False})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.', 'data': False})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'removed', 'usrmsg': "Openzwave driver removed, All nodes deleted.",'data': "None"}})
             self._devicesCtrl.pop(ctrl)
             del (ctrl)
         else :
             self._log.warning(u"A driver removed is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
-            self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'data': args})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'data': args})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': 'unknown', 'status':'removed', 'usrmsg': "Driver removed but not registered, All nodes deleted.",'data': "None"}})
             self._devicesCtrl = None
@@ -644,7 +644,7 @@ class OZWavemanager(threading.Thread):
         ctrl.status = 'close'
         ctrl.ready = False
         self._log.error(u"Openzwave fail to open driver {0}, ozw message : {1}".format(ctrl.driver, args))
-        self.serverUI.broadcastMessage({'node': 'controller', 'type': 'driver-failed', 'usermsg' : "Openzwave opening driver {0} fail.".format(ctrl.driver), 'data': True})
+        self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-failed', 'usermsg' : "Openzwave opening driver {0} fail.".format(ctrl.driver), 'data': True})
         self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                        'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'fail', 'usrmsg': "Openzwave opening driver {0} fail.".format(ctrl.driver),  'data': "None"}})
 
@@ -774,18 +774,18 @@ class OZWavemanager(threading.Thread):
                 self._log.error('Error notification code unknown : ', args)
 
     def _handlePollingDisabled(self, args):
-        """le polling d'une value commande classe à été désactivé."""
+        """le polling d'une value commande classe a été désactivé."""
         self._log.info('Node {0} polling disabled.'.format(args['nodeId']))
         data = {'polled': False}
     #    data['id'] = str(args['valueId']['id'])
-        self.serverUI.broadcastMessage({'node': args['nodeId'], 'notifytype': 'polling', 'usermsg' : 'Polling disabled.', 'data': data})
+        self._xplPlugin.publishMsg('ozwave.node.poll', {'node': args['nodeId'], 'notifytype': 'polling', 'usermsg' : 'Polling disabled.', 'data': data})
         
     def _handlePollingEnabled(self, args):
         """le polling d'une value commande classe à été activé."""
         self._log.info('Node {0} polling enabled.'.format(args['nodeId']))
         data = {'polled': True}
      #   data['id'] = str(args['valueId']['id'])
-        self.serverUI.broadcastMessage({'node': args['nodeId'], 'notifytype': 'polling', 'usermsg' : 'Polling enabled.', 'data': data})
+        self._xplPlugin.publishMsg('ozwave.node.poll', {'node': args['nodeId'], 'notifytype': 'polling', 'usermsg' : 'Polling enabled.', 'data': data})
 
     def _handleNodeChanged(self, args):
         """Un node est ajouté ou a changé"""
@@ -916,7 +916,7 @@ class OZWavemanager(threading.Thread):
         else : retval['error'] = 'Controller node ready'
         return retval
        
-    def getNetworkInfo(self):
+    def getNetworkInfo(self, networkId):
         """ Retourne les infos principales du réseau zwave (dict) """
         retval = {}
         retval["ConfigPath"] = self._configPath
@@ -933,27 +933,30 @@ class OZWavemanager(threading.Thread):
                 if ctrl.ready :
                     ctrlInfos["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
                     ctrlInfos["Protocol"] = self._manager.getControllerInterfaceType(ctrl.homeId)
-                    ctrlInfos["Primary controller"] = devices.getControllerDescription()
+                    ctrlInfos["Primary controller"] = ctrl.getControllerDescription()
                     ctrlInfos["Node"] = ctrl.node.nodeId
                     ctrlInfos["Library"] = ctrl.libraryTypeName
                     ctrlInfos["Version"] = ctrl.libraryVersion
                     ctrlInfos["Node count"] = ctrl.getNodeCount()
                     ctrlInfos["Node sleeping"] = ctrl.getSleepingNodeCount()
                     ctrlInfos["Poll interval"] = ctrl.node.getPollInterval()
-                    ctrlInfos["ListNodeId"] = ctrl.getNodes()
+                    ctrlInfos["ListNodeId"] = ctrl.getNodesId()
                 else:
                     ctrlInfos["Model"] = "Controller not find, wait or check configuration and hardware."
                 retval["Controllers"].append(ctrlInfos)
             if self._initFully :
                 retval["Init state"] = NodeStatusNW[2] #Completed
+                retval["state"] = "alive"
             else :
                 retval["Init state"] = NodeStatusNW[3] #In progress - Devices initializing
+                retval["state"] = "starting "
             retval["error"] = ""
             print'**** getNetworkinfo : ',  retval
             return retval
         else : 
             retval["error"] = "Zwave network not ready, be patient..."
             retval["Init state"] = NodeStatusNW[0] # Uninitialized
+            retval["state"] = "not-configured"
             return retval
         
     def getZWRefFromxPL(self, xplParams):
@@ -1346,19 +1349,21 @@ class OZWavemanager(threading.Thread):
                 else :
                     report['error'] ='Unknown request.'
                     print "commande inconnue"
-            if message['header']['type'] == 'req-ack' and not blockAck :
-                ackMsg['header'] = {'type': 'ack',  'idws' : message['header']['idws'], 'idmsg' : message['header']['idmsg'],
-                                               'ip' : message['header']['ip'] , 'timestamp' : long(time.time()*100)}
-                ackMsg['request'] = message['request']
-                if report :
-                    if 'error' in report :
-                        ackMsg['error'] = report['error']
-                    else :
-                        ackMsg['error'] = ''
-                    ackMsg['data'] = report
-                else : 
-                    ackMsg['error'] = 'No data report.'
-                self.serverUI.sendAck(ackMsg)
+            # probablement  a supprimer
+#            if message['header']['type'] == 'req-ack' and not blockAck :
+#                ackMsg['header'] = {'type': 'ack',  'idws' : message['header']['idws'], 'idmsg' : message['header']['idmsg'],
+#                                               'ip' : message['header']['ip'] , 'timestamp' : long(time.time()*100)}
+#                ackMsg['request'] = message['request']
+#                if report :
+#                    if 'error' in report :
+#                        ackMsg['error'] = report['error']
+#                    else :
+#                        ackMsg['error'] = ''
+#                    ackMsg['data'] = report
+#                else : 
+#                    ackMsg['error'] = 'No data report.'
+#                self.serverUI.sendAck(ackMsg)   TODO: A supprimer après implantation de la MQ qui utilise le contenu de report
+            return report
         else :
             raise OZwaveManagerException("WS request bad format : {0}".format(message))
 
@@ -1411,7 +1416,7 @@ class OZWavemanager(threading.Thread):
             report['cmdstate'] = 'waiting'
         msg = {'notifytype': 'ctrlstate'}
         msg['data'] = report
-        self.serverUI.broadcastMessage(msg)
+        self._xplPlugin.publishMsg('ozwave.ctrl.state', msg)
 
 class PrimaryController():
     """Objet de liaison entre un device domogik un controleur primaire zwave.
@@ -1488,6 +1493,15 @@ class PrimaryController():
                     retval.append(node)
         return retval
 
+    def getNodesId(self):
+        """ Renvoi la liste des nodes du reseaux."""
+        retval = []
+        if self.node is not None :
+            for node in self.node._ozwmanager._nodes.itervalues():
+                if node.homeId == self.homeId:
+                    retval.append(node.nodeId)
+        return retval
+        
     def getNodeCount(self):
         """Renvoi le nombre de node du reseaux."""
         retval = 0

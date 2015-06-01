@@ -110,7 +110,7 @@ Pour un capteur type alarm à envoyer par xPL (peux également être reçue) :
     }
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2012 Domogik project
+@copyright: (C) 2007-2015 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
@@ -118,10 +118,7 @@ Pour un capteur type alarm à envoyer par xPL (peux également être reçue) :
 #import libopenzwave
 #from libopenzwave import PyManager
 from collections import namedtuple
-import time
-from time import sleep
-import os.path
-import sys
+
 
 FlagDebug = False # pour debug eviter recurtion +2, passé a True pour debug
 
@@ -257,10 +254,7 @@ class OZwaveException(Exception):
         self.value = value
                                 
     def __str__(self):
-        """String format objet"""
+        """String format object"""
         return repr(self.msg+' '+self.value)
-
-    
-    
     
     

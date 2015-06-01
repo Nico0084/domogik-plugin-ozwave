@@ -1,0 +1,138 @@
+{% block content %}
+
+<!-- Sidebar CSS -->
+    <link rel="stylesheet" type="text/css" href="static/css/bootstrap-sidebar.css">
+
+<div class="container">
+    <div class="list-group">
+        <h4> 
+           <a class="list-group-item bg-info" href="#" onclick="toggleVisible('detailOZWconfig', 'toggle-OZWconfig');return false;">
+               <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span> 
+               <span><strong >&nbsp;&nbsp;{% trans %}Openzwave config{% endtrans %}</strong></span>
+               <div class="pull-right"><small>{{ zw_networks.PYOZWLibVers }}</small></div>
+            </a>        
+        </h4>
+        <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
+            <li><b>{% trans %}Openzwave path{% endtrans %} : </b>{{ zw_networks.ConfigPath }}</li>
+            <li><b>{% trans %}User path{% endtrans %} : </b>{{ zw_networks.UserPath }}</li>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <nav id="ozwave2-navbar" class="nav navbar-tab" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#client-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+    {% if not network_active %}
+        {% if zw_networks.Controllers|length > 0 %}
+            {% set network_active = zw_networks.Controllers[0].NetworkID %}
+        {% endif %}
+    {% endif %}
+    
+    <div class="tabbable">
+        <ul  id="ozwave-navbar" class="nav nav-tabs ">
+        {% for network in zw_networks.Controllers %}
+            <li {% if network_active == network.NetworkID %}class="active"{% endif %}>
+                <a data-toggle="tab" href="#{{ network.NetworkID }}">{{ network.NetworkID }} - {{ network.HomeID }}</a></li>
+        {% endfor %}
+            <li><a data-toggle="tab" href="#testtab"> a test tab</a></li>
+        </ul>
+    </div>
+    </nav>
+</div>
+<nav class="navbar navbar-default sidebar" role="navigation">
+    <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>      
+    </div>
+    <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li{% if plugin_active == "controller" %} class="active" {% endif %}>
+            <a href="/plugin_ozwave/controller/{{ network_active }}/{{ clientid }}">{% trans %}Controller{% endtrans %}
+                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
+            </a>
+        </li>
+        <li{% if plugin_active == "node" %} class="active" {% endif %}>
+            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Nodes{% endtrans %}
+                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tree-deciduous"></span>
+            </a>
+        </li>
+        <li{% if plugin_active == "network" %} class="active" {% endif %}>
+            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
+                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span>
+            </a>
+        </li>
+        <li{% if plugin_active == "tools" %} class="active" {% endif %}>
+            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
+                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-wrench"></span>
+            </a>
+        </li>
+    </ul>
+    </div>
+  </div>
+</nav>
+<div class="container">
+    <div class="tab-content">
+    {% for network in zw_networks.Controllers %}
+        <div class="tab-pane{% if network_active == network.NetworkID %} active{% endif %}" id="{{ network.NetworkID }}">
+            <h3>{% trans %}Zwave Controller{% endtrans %} {{network.Model }}, {% trans %}protocol{% endtrans %} : {{ network.Protocol }}
+            <div id="node-status" class="btn-group navbar-brand pull-right">
+              <button type="button" class="btn btn-info btn-xs dropdown-toggle status-label status-{{ zw_networks.state }}" data-toggle="dropdown" aria-expanded="false">
+                <span class="status">{{ zw_networks['Init state'] }}</span>
+              </button> 
+            </div> </h3>
+            <p>{{ network }}</p>
+        </div>
+    {% endfor %}
+        <div class="tab-pane" id="testtab">
+            <h3>Test Multi  Controllers</h3>
+            <p> {{ client_detail }}</p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+        
+        /* Action which shows and hides div with a id of "Specific command class details" */
+        $("[id^='toggle-OZWconfig']").click(function() {
+          var target_selector = $(this).attr('data-target');
+          toggleVisible(target_selector, this.id);
+          return false;
+        });
+        
+        function toggleVisible(target_selector, icon_selector) {
+          var $target = $("[id^='"+target_selector+"']" );
+          if ($target.is(':hidden')) {
+            $target.show("fast" );
+            $('#'+icon_selector).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+          } else {
+            $target.hide( "fast" );
+            $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+          };
+        };
+</script>
+<script type="text/javascript">
+    $( document ).ready(function() {
+        ws.onmessage = function(e) {
+            data = JSON.parse(e.data);
+            msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave") {
+                console.log("Zwave menu publish receive :)", data.msgid);
+                console.log(data);
+            };
+        };
+    });
+</script>
+
+{% endblock %}

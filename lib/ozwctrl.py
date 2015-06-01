@@ -167,15 +167,13 @@ controller to learn new data.
         
     def reportChangeToUI(self, report):
         """Envois un report de changement/notification du réseau zwave en générant un evénement
-            à destination de l'UI.
-            Pour l'instant utilise le reseaux xPL, doit basculer vers MQ.
+            à destination de l'UI a travers la MQ.
         """
-        #TODO: reportChangeToUI utilise le hub xPL, a basculer sur MQ
         msg = report
         msg['ctrldevice'] = self.networkID
-        print 'Send report to WebSockect server for UI : '
+        print 'Send report to MQ: '
    #     print msg
-        self._ozwmanager.serverUI.broadcastMessage(msg.copy())
+        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg.copy())
         print '**************************************'
         
     def stats(self):

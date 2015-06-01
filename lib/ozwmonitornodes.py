@@ -41,6 +41,7 @@ from ozwdefs import *
 from collections import deque
 import pprint
 from tailer import Tailer
+import os
 
 class OZwaveMonitorNodeException(OZwaveException):
     """"Zwave monitor node manager exception  class"""
