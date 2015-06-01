@@ -59,7 +59,7 @@
     <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li{% if plugin_active == "controller" %} class="active" {% endif %}>
-            <a href="/plugin_ozwave/controller/{{ network_active }}/{{ clientid }}">{% trans %}Controller{% endtrans %}
+            <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller">{% trans %}Controller{% endtrans %}
                 <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
             </a>
         </li>

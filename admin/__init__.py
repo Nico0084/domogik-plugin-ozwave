@@ -40,7 +40,7 @@ def index(client_id):
     except TemplateNotFound:
         abort(404)
 
-@plugin_ozwave_adm.route('/controller/<network_id>/<client_id>')
+@plugin_ozwave_adm.route('/<client_id>/<network_id>/controller')
 def network_ctrl(client_id, network_id):
     detail = get_client_detail(client_id)
     networkState = get_zwave_state()
