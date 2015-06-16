@@ -1,0 +1,55 @@
+{% block content %}
+<div class="contenaire-fluid">
+    <h4>sssssss</h4>
+       <table id="tabnodes_{{ network_active }}" class="display cell-border" cellspacing="0" width="100%">
+                          <thead>
+                            <tr>
+                              <th>Node</th>
+                              <th>Name</th>
+                              <th>Location</th>
+                              <th>Model</th>
+                              <th>Awake</th>
+                              <th>Type</th>
+                              <th>LastUpdate</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                        <tbody>
+                        {% for node in nodes_state %}
+                            <tr>
+                                <td id="node-{{ nodes_state[node].Node }}" nodeData='{{  nodes_state[node]|tojson}}'>
+                                    {"nodeId": "{{ nodes_state[node].Node }}"}
+                                </td>
+                                <td>{{ nodes_state[node].Name }}</td>
+                                <td>{{ nodes_state[node].Location }}</td>
+                                <td>{{ nodes_state[node].Model }}</td>
+                                <td>{{ nodes_state[node]["State sleeping"] }}</td>
+                                <td>{{ nodes_state[node].Type }}</td>
+                                <td>{{ nodes_state[node]["Last update"] }}</td>
+                                <td>Actions...</td>
+                            </tr> 
+                        {% endfor %}
+                        </tbody>
+                    </table>
+</div>
+
+<script type='text/javascript'>
+
+    $(document).ready(function(){
+        $("[id^='tabnodes_']").DataTable({
+        "paging":   true,
+        "ordering": true,
+        "order": [[ 0, "asc" ]],
+        "lengthMenu": [[20, 35, 50, -1], [20, 35, 50, "All"]],
+        "info": true,
+        "columnDefs": [{
+            "targets": 0,
+            "data": "nodeData",
+            "render": function (data, type, full, meta) {return renderNodeStatusCol(data, type, full, meta);}
+            }]
+        });
+    });
+
+</script>
+
+ {% endblock %}

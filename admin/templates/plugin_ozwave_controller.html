@@ -4,11 +4,44 @@
 {% block content %}
 {% include theme("client_menu.html") %}
 {% include "plugin_ozwave_menu.html" %}
-<div class="container">
-<h2>{% trans %}ZWave Controller(s){% endtrans %}</H2>
-<p>{% trans %}Network_state{% endtrans %}: {{ zw_networks }}</p>
-<p>{% trans %}State {% endtrans %} : {{ zw_networks['Init state'] }}</p>
-<pre>{{ zw_networks.Controllers }}</pre>
+
+<!-- ozwave lib -->
+<script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwlib.js"></script>
+
+<div class="container" id="test-move">
+{% include "network.html" %}
 </div>
+<script type="text/javascript">
+    $( document ).ready(function() {
+        var container = document.getElementById("{{ network_active }}");
+        $('#test-move').appendTo("#{{ network_active }}");
+        ws.onmessage = function(e) {
+            data = JSON.parse(e.data);
+            msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
+                console.log("Zwave controller receive :)", data.msgid);
+                console.log(data.content);
+                if (msgId[2] == "state" && data.content.networkid == "{{ network_active }}") {
+                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                        $("#ctrl-status").removeClass().addClass("btn btn-info btn-xs dropdown-toggle status-label status-" + data.content.status);
+                        $("#ctrl-status").html('<span class="status">'+data.content.init+'</span>');
+                    };
+                } else {
+                    if (data.content.type == 'node-state-changed') {
+                        if (data.content.data.state == "sleep") {
+                            renderBadgeCount("count_sleep", data.content["Node sleeping"]);
+                            $("#statistic_sleep").text(data.content["Node sleeping"]);
+                        };
+                        if (data.content.data.state == "fail") {
+                            renderBadgeCount("count_fail", data.content["Node fail"]);
+                            $("#statistic_fail").text(data.content["Node fail"]);
+                        };
+
+                    };
+                };
+            };
+        };
+    });
+</script>
 
 {% endblock %}

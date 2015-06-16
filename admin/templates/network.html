@@ -1,0 +1,74 @@
+{% block content %}
+  
+<div class='container'> 
+    <h3>{% trans %}Zwave Controller administration{% endtrans %}
+        <div class="btn-group pull-right">
+            <button id="ctrl-status" type="button" class="btn btn-info btn-xs dropdown-toggle status-label status-{{ network_state.state }}" data-toggle="dropdown" aria-expanded="false">
+                <span class="status">{{ network_state['init'] }}</span>
+            </button> 
+        </div>
+    </h3>
+    <div class='row'> 
+        <div class='col-md-6'> 
+            <div class='panel panel-default'> 
+                <div class='panel-heading'>
+                    <a class="bg-info" href="#" onclick="toggleVisible('caracCTRL', 'toggle-caracCTRL');return false;"> 
+                        <h4>
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-caracCTRL" aria-hidden="true" data-target="caracCTRL"></span> 
+                            <span>&nbsp;&nbsp;{% trans %}Characteristic{% endtrans %}</span>
+                            <div class="pull-right"><small>{{ network_state['Model'] }}</small></div>
+                        </h4> 
+                    </a> 
+                </div>
+                <div class='panel-body' id="caracCTRL" style="width: 95%; display: none;" hidden> 
+                    <h4>{% trans %}Identification{% endtrans %}</h4> 
+                    <ul> 
+                        <li>{% trans %}Network ID{% endtrans %} : <b>{{ network_active }}</b></li> 
+                        <li>{% trans %}Home ID{% endtrans %} : <b>{{ network_state.HomeID }}</b></li>
+                        <li>{% trans %}Primary controller{% endtrans %} : <b>{{ network_state['Primary controller'] }}</b></li>
+                        <li>{% trans %}Model{% endtrans %} : <b>{{ network_state['Model'] }}</b></li>
+                        <li>{% trans %}Node ID{% endtrans %} : <b>{{ network_state['Node'] }}</b></li>
+                    </ul> 
+                    <h4>{% trans %}Type{% endtrans %}</h4> 
+                    <ul> 
+                        <li>{% trans %}Protocol{% endtrans %} : <b>{{ network_state.Protocol }}</b></li> 
+                        <li>{% trans %}Library{% endtrans %} : <b>{{ network_state.Library }}</b></li> 
+                        <li>{% trans %}Version{% endtrans %} : <b>{{ network_state.Version }}</b></li> 
+                    </ul> 
+                </div> 
+            </div> 
+        </div> 
+        <div class='col-md-6'> 
+            <div class='panel panel-default'> 
+                <div class='panel-heading'>
+                    <a class="bg-info" href="#" onclick="toggleVisible('nodesCTRL', 'toggle-nodesCTRL');return false;"> 
+                        <h4>
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-nodesCTRL" aria-hidden="true" data-target="nodesCTRL"></span> 
+                            <span>&nbsp;&nbsp;{% trans %}Nodes{% endtrans %}</span>
+                            &nbsp;&nbsp;<span id="count_sleep" class="badge progress-bar-warning {% if network_state['Node sleeping'] == 0 %}hidden{% endif %}" title="Sleep">
+                            {{ network_state['Node sleeping'] }}</span>
+                            &nbsp;&nbsp;<span  id="count_fail" class="badge progress-bar-danger {% if network_state['Node fail'] == 0 %}hidden{% endif %}" title="Fail">
+                            {{ network_state['Node fail'] }}</span>
+                            <span class="pull-right badge" title="Count">{{ network_state['Node count'] }}</span>
+                        </h4>
+                    </a>
+                </div>
+                <div class='panel-body' id="nodesCTRL" style="width: 95%; display: none;" hidden> 
+                    <h4>{% trans %}Statistic{% endtrans %}</h4>
+                    <ul>
+                        <li>{% trans %}Number of nodes{% endtrans %} : <b id="statistic_count">{{ network_state['Node count'] }}</b></li>
+                        <li>{% trans %}Node sleeping{% endtrans %} : <b id="statistic_sleep">{{ network_state['Node sleeping'] }}</b></li>
+                        <li>{% trans %}Node failled{% endtrans %} : <b id="statistic_fail">{{ network_state['Node fail'] }}</b></li>
+                        <li>{% trans %}Nodes{% endtrans %} : <b>{{ network_state['ListNodeId'] }}</b></li>
+                    </ul>
+                    <h4>{% trans %}Parameters{% endtrans %}</h4>
+                    <ul>
+                        <li>{% trans %}Pool interval{% endtrans %} : <b>{{ network_state['Poll interval'] }}</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+ </div>
+
+ {% endblock %}

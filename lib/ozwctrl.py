@@ -152,7 +152,8 @@ controller to learn new data.
  
 # On accède aux attributs uniquement depuis les property
     isPrimaryCtrl = property(lambda self: self._isPrimaryCtrl)
-        
+    getNetworkCtrl = property(lambda self: self._ozwmanager.getCtrlOfNetwork(self._homeId))
+    
     def __str__(self):
         """
         The string representation of the node.
@@ -169,11 +170,12 @@ controller to learn new data.
         """Envois un report de changement/notification du réseau zwave en générant un evénement
             à destination de l'UI a travers la MQ.
         """
-        msg = report
-        msg['ctrldevice'] = self.networkID
+        msg = report.copy()
+        msg["networkid"] = self.networkID
+        msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
         print 'Send report to MQ: '
    #     print msg
-        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg.copy())
+        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg)
         print '**************************************'
         
     def stats(self):

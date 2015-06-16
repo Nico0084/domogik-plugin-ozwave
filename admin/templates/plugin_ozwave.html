@@ -6,9 +6,9 @@
 {% include "plugin_ozwave_menu.html" %}
 <div class="container">
 <h2>{% trans %}ZWave Controller(s){% endtrans %}</H2>
-<p>{% trans %}Network_state{% endtrans %}: {{ zw_networks }}</p>
-<p>{% trans %}State {% endtrans %} : {{ zw_networks['Init state'] }}</p>
-<pre>{{ zw_networks.Controllers }}</pre>
+<p>{% trans %}managerState{% endtrans %}: {{ managerState }}</p>
+<p>{% trans %}State {% endtrans %} : {{ managerState['Init state'] }}</p>
+<pre>{{ managerState.Controllers }}</pre>
 </div>
 
 {% endblock %}

@@ -110,51 +110,51 @@ class OZwave(XplPlugin):
         Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic','xpltype': 'xpl-cmnd'})
         # Validation avant l'ouverture du controleur, la découverte du réseaux zwave prends trop de temps -> RINOR Timeout
         self.add_stop_cb(self.myzwave.stop)
-        if self._waitForRest() :
-            self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
-            self._ctrlHBeat.start()
-            #lancement du thread de démarrage des sercices ozwave
-            self.myzwave.starter.start()
-            self.log.info('****** Init OZWave xPL manager completed ******')
-            self.ready()        
-        else : self.force_leave()
+#        if self._waitForRest() :
+        self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
+        self._ctrlHBeat.start()
+        #lancement du thread de démarrage des sercices ozwave
+        self.myzwave.starter.start()
+        self.log.info('****** Init OZWave xPL manager completed ******')
+        self.ready()        
+#        else : self.force_leave()
 
-        
-    def _waitForRest(self):
-        """Attends  que le serveur rest http soit disponible, timeout de sortie = 60s"""
-        import urllib2
-        from domogik.common.configloader import Loader
-
-        cfg_rest = Loader('rest')
-        config_rest = cfg_rest.load()
-        conf_rest = dict(config_rest[1])
-        if conf_rest['use_ssl'] == 'False' : protocol = 'http'
-        else : protocol = 'https'
-        rest = "%s://%s:%s" % (protocol, config_rest[0]['bind_interface'], conf_rest['port'])
-        the_url = "%s" % (rest) #/base/device/list
-        rest_ok = False
-        time_out = False
-        t = time.time()
-        while not self.get_stop().isSet() and not time_out and not rest_ok:
-            self.log.debug("Try to join rest at :{0}".format(the_url))
-            try :
-                req = urllib2.Request(the_url)
-                handle = urllib2.urlopen(req)
-                devices = handle.read()
-            except IOError,  e:
-                if time.time() - t >= 60 : time_out = True
-                else : 
-                    self.log.debug("Rest no response, wait 3s for next try. {0}".format(e.reason))
-                    self.get_stop().wait(3)
-            else : rest_ok = True
-        if rest_ok : return True
-        else:
-            if time_out :
-                self.log.error("Rest not response (by timeout) quit plugin :(")
-                return False
-            else :
-                self.log.error("Rest not response (by stop plugin) quit plugin :(")
-                return False
+# TODO: A supprimer si test concluant
+#    def _waitForRest(self):
+#        """Attends  que le serveur rest http soit disponible, timeout de sortie = 60s"""
+#        import urllib2
+#        from domogik.common.configloader import Loader
+#
+#        cfg_rest = Loader('rest')
+#        config_rest = cfg_rest.load()
+#        conf_rest = dict(config_rest[1])
+#        if conf_rest['use_ssl'] == 'False' : protocol = 'http'
+#        else : protocol = 'https'
+#        rest = "%s://%s:%s" % (protocol, config_rest[0]['bind_interface'], conf_rest['port'])
+#        the_url = "%s" % (rest) #/base/device/list
+#        rest_ok = False
+#        time_out = False
+#        t = time.time()
+#        while not self.get_stop().isSet() and not time_out and not rest_ok:
+#            self.log.debug("Try to join rest at :{0}".format(the_url))
+#            try :
+#                req = urllib2.Request(the_url)
+#                handle = urllib2.urlopen(req)
+#                devices = handle.read()
+#            except IOError,  e:
+#                if time.time() - t >= 60 : time_out = True
+#                else : 
+#                    self.log.debug("Rest no response, wait 3s for next try. {0}".format(e.reason))
+#                    self.get_stop().wait(3)
+#            else : rest_ok = True
+#        if rest_ok : return True
+#        else:
+#            if time_out :
+#                self.log.error("Rest not response (by timeout) quit plugin :(")
+#                return False
+#            else :
+#                self.log.error("Rest not response (by stop plugin) quit plugin :(")
+#                return False
    
     def getsize(self):
         return sys.getsizeof(self) + sum(sys.getsizeof(v) for v in self.__dict__.values())
@@ -222,19 +222,21 @@ class OZwave(XplPlugin):
         print action
         if action[0] == 'ozwave' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
-            if action[1] == "networks" :# "ozwave.networks.get":
-                if action[2] == "get" :
-                    handled = True
-                    req = {'header':{'type': 'req'}, 'request': 'GetNetworkID'} # TODO remove header key it's just for starting with less modif
-                    report = self.myzwave.cb_ServerWS(req)
-                    print report
-                    # send the reply
-                    msg = MQMessage()
-                    msg.set_action('ozwave.networks.get')
-                    for k, item in report.items():
-                        msg.add_data(k, item)
-                    print msg.get()
-                    self.reply(msg.get())
+            if action[1] in ["openzwave", "manager", "controller"] :# "ozwave.networks.get":
+                handled = True
+                report = self.myzwave.cb_ServerWS("{0}.{1}".format(action[1], action[2]),  msg.get_data())
+                print "*** Report : ",  report
+                # send the reply
+                msg = MQMessage()
+                msg.set_action("{0}.{1}.{2}".format(action[0], action[1], action[2]))
+                print "*** Action {0}".format(msg.get_action())
+                for k, item in report.items():
+                    msg.add_data(k, item)
+                    print "               Item {0}, {1}".format(k, item)
+                print "********* message formated ********"
+                print "*** Full msg : {0}".format(msg.get())
+                print "********* reply message ********"
+                self.reply(msg.get())
             if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
 

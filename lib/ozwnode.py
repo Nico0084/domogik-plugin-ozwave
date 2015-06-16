@@ -35,6 +35,8 @@ Implements
 @organization: Domogik
 """
 
+from __future__ import unicode_literals
+
 from libopenzwave import PyManager
 from ozwvalue import ZWaveValueNode
 from ozwdefs import *
@@ -157,7 +159,7 @@ class ZWaveNode:
         """Une notification d'état du node à été recue, awake ou sleep."""
         self._sleeping = state;
         m = 'Device goes to sleep.' if state else 'Sleeping device wakes up.'
-        self.reportToUI({'notifytype': 'node-state-changed', 'usermsg' : m,  'data': {'typestate': 'sleep', 'state sleeping': state}})
+        self.reportToUI({'type': 'node-state-changed', 'usermsg' : m,  'data': {'state': 'sleep', 'value': state}})
         if state : 
             # le node est réveillé, fait une request, pour le prochain réveille, de niveau de battery si la command class existe.
             values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
@@ -432,8 +434,8 @@ class ZWaveNode:
         
     def _updateInfos(self):
         """Mise à jour des informations générales du node"""
-        self._name = self._manager.getNodeName(self._homeId, self._nodeId)
-        self._location = self._manager.getNodeLocation(self._homeId, self._nodeId)
+        self._name = self._manager.getNodeName(self._homeId, self._nodeId).decode('utf8')
+        self._location = self._manager.getNodeLocation(self._homeId, self._nodeId).decode('utf8')
         self._manufacturer = NamedPair(id=self._manager.getNodeManufacturerId(self._homeId, self._nodeId), name=self._manager.getNodeManufacturerName(self._homeId, self._nodeId))
         self._product = NamedPair(id=self._manager.getNodeProductId(self._homeId, self._nodeId), name=self._manager.getNodeProductName(self._homeId, self._nodeId))
         self._productType = NamedPair(id=self._manager.getNodeProductType(self._homeId, self._nodeId), name=self._manager.getNodeType(self._homeId, self._nodeId))
@@ -660,14 +662,14 @@ class ZWaveNode:
         self._updateInfos() # mise à jour selon OZW
         self._updateCommandClasses()
         retval["HomeID"] = self._ozwmanager.getHomeID(self.homeId)
-        retval["Model"]= self.manufacturer + " -- " + self.product
+        retval["Model"]=self.manufacturer + " -- " + self.product
         retval["State sleeping"] = self.isSleeping
-        retval["Node"] = self.nodeId
+        retval["Node"] =self.nodeId
         retval["Name"] = self.name if self.name else 'Undefined'
         retval["Location"] = self.location if self.location else 'Undefined'
         retval["Type"] = self.productType
         retval["Last update"] = time.ctime(self.lastUpdate)
-        retval["Neighbors"] = list(self.neighbors) if  self.neighbors else 'No one'
+        retval["Neighbors"] =  list(self.neighbors) if  self.neighbors else 'No one'
         retval["Groups"] = self._getGroupsDict()
         retval["Capabilities"] = list(self._capabilities) if  self._capabilities else list(['No one'])
         retval["InitState"] = self.GetNodeStateNW()

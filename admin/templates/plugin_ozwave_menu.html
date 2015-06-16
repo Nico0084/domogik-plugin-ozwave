@@ -1,7 +1,7 @@
 {% block content %}
 
 <!-- Sidebar CSS -->
-    <link rel="stylesheet" type="text/css" href="static/css/bootstrap-sidebar.css">
+    <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/css/bootstrap-sidebar.css">
 
 <div class="container">
     <div class="list-group">
@@ -9,12 +9,34 @@
            <a class="list-group-item bg-info" href="#" onclick="toggleVisible('detailOZWconfig', 'toggle-OZWconfig');return false;">
                <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span> 
                <span><strong >&nbsp;&nbsp;{% trans %}Openzwave config{% endtrans %}</strong></span>
-               <div class="pull-right"><small>{{ zw_networks.PYOZWLibVers }}</small></div>
+               <div class="pull-right"><small>{{ openzwaveInfo.PYOZWLibVers }}</small></div>
             </a>        
         </h4>
         <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
-            <li><b>{% trans %}Openzwave path{% endtrans %} : </b>{{ zw_networks.ConfigPath }}</li>
-            <li><b>{% trans %}User path{% endtrans %} : </b>{{ zw_networks.UserPath }}</li>
+            <li><b>{% trans %}Openzwave path{% endtrans %} : </b>{{ openzwaveInfo.ConfigPath }}</li>
+            <li><b>{% trans %}User path{% endtrans %} : </b>{{ openzwaveInfo.UserPath }}</li>
+            <div class="container-fluid">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{% trans %}Option{% endtrans %}</th>
+                            <th>{% trans %}Value{% endtrans %}</th>
+                            <th>{% trans %}Information{% endtrans %}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for option in openzwaveInfo['Options'] %}
+                        {% if option not in ["UserPath", "ConfigPath"] %}
+                        <tr>
+                            <td><b>{{option }}</b></td>
+                            <td>{{ openzwaveInfo['Options'][option]['value'] }}</td>
+                            <td>{{ openzwaveInfo['Options'][option]['doc'] }}</td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -30,74 +52,85 @@
             </button>
         </div>
     {% if not network_active %}
-        {% if zw_networks.Controllers|length > 0 %}
-            {% set network_active = zw_networks.Controllers[0].NetworkID %}
+        {% if managerState.Controllers|length > 0 %}
+            {% set network_active = managerState.Controllers[0].NetworkID %}
         {% endif %}
     {% endif %}
     
     <div class="tabbable">
         <ul  id="ozwave-navbar" class="nav nav-tabs ">
-        {% for network in zw_networks.Controllers %}
+        {% for network in managerState.Controllers %}
             <li {% if network_active == network.NetworkID %}class="active"{% endif %}>
-                <a data-toggle="tab" href="#{{ network.NetworkID }}">{{ network.NetworkID }} - {{ network.HomeID }}</a></li>
+                <a data-toggle="tab" href="#{{ network.NetworkID }}" onclick="sidebarVisible('network-menu', true);return true;">{{ network.NetworkID }} - {{ network.HomeID }}</a></li>
         {% endfor %}
-            <li><a data-toggle="tab" href="#testtab"> a test tab</a></li>
+            <li><a data-toggle="tab" href="#debugtab" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a></li>
         </ul>
     </div>
     </nav>
 </div>
-<nav class="navbar navbar-default sidebar" role="navigation">
+<nav class="navbar navbar-default sidebar" role="navigation" id="network-menu">
     <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>      
-    </div>
-    <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
-      <ul class="nav navbar-nav">
-        <li{% if plugin_active == "controller" %} class="active" {% endif %}>
-            <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller">{% trans %}Controller{% endtrans %}
-                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
-            </a>
-        </li>
-        <li{% if plugin_active == "node" %} class="active" {% endif %}>
-            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Nodes{% endtrans %}
-                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tree-deciduous"></span>
-            </a>
-        </li>
-        <li{% if plugin_active == "network" %} class="active" {% endif %}>
-            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
-                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span>
-            </a>
-        </li>
-        <li{% if plugin_active == "tools" %} class="active" {% endif %}>
-            <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
-                <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-wrench"></span>
-            </a>
-        </li>
-    </ul>
-    </div>
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>      
+        </div>
+        <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li{% if plugin_active == "controller" %} class="active" {% endif %}>
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller">{% trans %}Controller{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
+                </a>
+            </li>
+            <li{% if plugin_active == "nodes" %} class="active" {% endif %}>
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes">{% trans %}Nodes{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tree-deciduous"></span>
+                </a>
+            </li>
+            <li{% if plugin_active == "network" %} class="active" {% endif %}>
+                <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span>
+                </a>
+            </li>
+            <li{% if plugin_active == "tools" %} class="active" {% endif %}>
+                <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-wrench"></span>
+                </a>
+            </li>
+          </ul>
+        </div>
   </div>
 </nav>
 <div class="container">
     <div class="tab-content">
-    {% for network in zw_networks.Controllers %}
+    {% for network in managerState.Controllers %}
         <div class="tab-pane{% if network_active == network.NetworkID %} active{% endif %}" id="{{ network.NetworkID }}">
-            <h3>{% trans %}Zwave Controller{% endtrans %} {{network.Model }}, {% trans %}protocol{% endtrans %} : {{ network.Protocol }}
-            <div id="node-status" class="btn-group navbar-brand pull-right">
-              <button type="button" class="btn btn-info btn-xs dropdown-toggle status-label status-{{ zw_networks.state }}" data-toggle="dropdown" aria-expanded="false">
-                <span class="status">{{ zw_networks['Init state'] }}</span>
-              </button> 
-            </div> </h3>
-            <p>{{ network }}</p>
+        <!-- Page is insered after -->
         </div>
     {% endfor %}
-        <div class="tab-pane" id="testtab">
-            <h3>Test Multi  Controllers</h3>
-            <p> {{ client_detail }}</p>
+        <div class="tab-pane" id="debugtab">
+            <h3>Raw data page selection :</h3>
+                <li><b>{% trans %}network_active{% endtrans %} : </b>{{ network_active }}</li>
+                <li><b>{% trans %}plugin_active{% endtrans %} : </b>{{ plugin_active }}</li>
+            <h3>Raw data Openzwave :</h3>
+                <li><b>{% trans %}openzwaveInfo{% endtrans %} : </b></li>
+                <pre>{{ openzwaveInfo }}</pre>
+            <h3>Raw data Manager :</h3>
+                <li><b>{% trans %}managerState{% endtrans %} : </b></li>
+                <pre>{{ managerState }}</pre>
+            <h3>Raw data Controller :</h3>
+                <li><b>{% trans %}zw_network{% endtrans %} : </b></li>
+                <pre>{{ network_state }}</pre>
+            <h3>Raw data Nodes :</h3>
+                <li><b>{% trans %}nodes_state{% endtrans %} : </b></li>
+                <pre>{{ nodes_state }}</pre>
+            <h3>Raw data ozwave plugin client detail :</h3>
+                <li><b>{% trans %}client_detail{% endtrans %} : </b></li>
+                <pre>{{ client_detail }}</pre>
         </div>
     </div>
 </div>
@@ -119,6 +152,15 @@
           } else {
             $target.hide( "fast" );
             $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+          };
+        };
+        
+        function sidebarVisible(target_selector, state) {
+          var $target = $("[id^='"+target_selector+"']" );
+          if (state) {
+            $target.show("fast" );
+          } else {
+            $target.hide( "fast" );
           };
         };
 </script>

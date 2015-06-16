@@ -39,7 +39,7 @@ from domogik.common.configloader import Loader
 
 import threading
 import libopenzwave
-from libopenzwave import PyManager
+from libopenzwave import PyManager 
 from ozwvalue import ZWaveValueNode
 from ozwnode import ZWaveNode
 from ozwctrl import ZWaveController
@@ -91,10 +91,10 @@ class OZWavemanager():
         self._stop = stop
         self.pluginVers = self._xplPlugin.json_data['identity']['version']
         # Get config rest domogik
-        self.conf_rest = {'rest_ssl_certificate': '', 'rest_server_ip': '127.0.0.1', 'rest_server_port': '40405', 'rest_use_ssl': 'False'}
-        cfg_rest = Loader('rest')
-        config_rest = cfg_rest.load()
-        self.conf_rest = dict(config_rest[1])
+#        self.conf_rest = {'rest_ssl_certificate': '', 'rest_server_ip': '127.0.0.1', 'rest_server_port': '40405', 'rest_use_ssl': 'False'}
+#        cfg_rest = Loader('rest')
+#        config_rest = cfg_rest.load()
+#        self.conf_rest = dict(config_rest[1])
         self._nodes = dict()
         self._pyOzwlibVersion =  'Unknown'
         self._configPath = configPath
@@ -176,8 +176,8 @@ class OZWavemanager():
         """"Retourne True si toutes les conditions sont réunies pour faire des actions dans openzwave.
             Règle : au moins un controleur est ready avec sont node enregistré mais le _initFully pas obligatoirement"""
         ready =False
-        for device in self._devicesCtrl:
-            if device.ready and device.node is not None : 
+        for ctrl in self._devicesCtrl:
+            if ctrl.ready and ctrl.node is not None : 
                 ready = True
                 break
         return ready
@@ -318,14 +318,17 @@ class OZWavemanager():
 
     def sendXplCtrlState(self):
         """Envoi un hbeat de l'état des controleurs zwave sur le hub xPl"""
-        for device in self._devicesCtrl:
-            if device.status == 'open':
-                if device.node is None : st = 'opening...'
-                elif device.ctrlActProgress and device.ctrlActProgress.has_key('state') and device.ctrlActProgress['state'] == device.node.SIGNAL_CTRL_WAITING : st ='locked'
-                elif device.ready : st= 'ok'
+        for ctrl in self._devicesCtrl:
+            if ctrl.status == 'open':
+                if ctrl.node is None : st = 'opening...'
+                elif ctrl.ctrlActProgress and ctrl.ctrlActProgress.has_key('state') and ctrl.ctrlActProgress['state'] == ctrl.node.SIGNAL_CTRL_WAITING : st ='locked'
+                elif ctrl.ready : st= 'ok'
                 else : st = 'init...'
+                data = {'networkid': ctrl.networkID, 'type': 'status'}
+                data.update(ctrl.getStatus())
+                self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
                 self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-                                    'data': {'type': 'status', 'networkid': device.networkID, 'status':st, 'usermsg': "None", 'data': "None"}})
+                                    'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':st, 'usermsg': "None", 'data': "None"}})
 
     def getPluginInfo(self):
         """Renvoi les informations d'état et de connection du plugin."""
@@ -584,12 +587,14 @@ class OZWavemanager():
             ctrl.libraryVersion = self._manager.getLibraryVersion(ctrl.homeId)
             ctrl.libraryTypeName = self._manager.getLibraryTypeName(ctrl.homeId)
             ctrl.timeStarted = time.time()
+            ctrl.ready = True
             self._openingDriver = ""
             self._log.info(u"Driver {0} ready. homeId is {1}, controller node id is {2}, using {3} library version {4}".format(ctrl.driver,
                                                                                                                                                                                            self.matchHomeID(ctrl.homeId), 
                                                                                                                                                                                            ctrl.nodeID, ctrl.libraryTypeName, ctrl.libraryVersion))
-            self._log.info(u"OpenZWave Initialization Begins.")
-            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-ready', 'usermsg' : 'Driver is ready.', 'data': True})
+            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
+            data.update(ctrl.getStatus())
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                            'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'init...', 'usrmsg': "Openzwave opening driver, init process ...",  'data': "None"}})
 
@@ -597,18 +602,21 @@ class OZWavemanager():
         """ Le driver à été recu un reset, tous les nodes, sauf le controlleur, sont détruis."""
         ctrl = self.getDeviceCtrl('homeID', args['homeId']) # TODO: vérifier si args retourne le driver ou homeId
         if ctrl is not None :
-            ctrl.ready = false
+            ctrl.ready = False
+            ctrl.initFully = False
             for n in self._nodes:
                 if (self._nodes[n] != ctrl.node) and (self._nodes[n].homeId == ctrl.homeId) :
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is reset, all network nodes deleted".format(ctrl.driver, args))
-            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.', 'data': False})
+            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.'}
+            data.update(ctrl.getStatus())
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'reseted', 'usrmsg': "Openzwave driver reseted, All nodes must be recovered.",'data': "None"}})
         else :
             self._log.warning(u"A driver reset is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
-            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-reset', 'usermsg' : 'Driver reseted but not registered, All nodes must be recovered.', 'data': args})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted but not registered, All nodes must be recovered.', 'state' : 'dead', 'init': NodeStatusNW[6]})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': 'unknown', 'status':'reseted', 'usrmsg': "Driver reseted but not registered, All nodes must be recovered.",'data': "None"}})
             self._nodes = None
@@ -617,21 +625,24 @@ class OZWavemanager():
         """ Le driver à été arrêter et supprimer, tous les nodes sont détruis."""
         ctrl = self.getDeviceCtrl('homeID', args['homeId']) # TODO: vérifier si args retourne le driver ou homeId
         if ctrl is not None :
-            ctrl.ready = false
+            ctrl.ready = False
+            ctrl.initFully = False
             ctrl.status = 'close'
             for n in self._nodes:
                 if self._nodes[n].homeId == ctrl.homeId :
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is removed, all network nodes deleted".format(ctrl.driver, args))
-            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.', 'data': False})
+            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
+            data.update(ctrl.getStatus())
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'removed', 'usrmsg': "Openzwave driver removed, All nodes deleted.",'data': "None"}})
             self._devicesCtrl.pop(ctrl)
             del (ctrl)
         else :
             self._log.warning(u"A driver removed is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
-            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'data': args})
+            self._xplPlugin.publishMsg('ozwave.ctrl.state', {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'state' : 'dead', 'init': NodeStatusNW[6]})
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                             'data': {'type': 'status', 'networkid': 'unknown', 'status':'removed', 'usrmsg': "Driver removed but not registered, All nodes deleted.",'data': "None"}})
             self._devicesCtrl = None
@@ -641,10 +652,13 @@ class OZWavemanager():
         """L'ouverture du driver à échoué.."""
         ctrl = self.getDeviceCtrl('driver', self._openingDriver)
         self._openingDriver = ""
-        ctrl.status = 'close'
+        ctrl.status = 'fail'
         ctrl.ready = False
+        ctrl.initFully = False
         self._log.error(u"Openzwave fail to open driver {0}, ozw message : {1}".format(ctrl.driver, args))
-        self._xplPlugin.publishMsg('ozwave.ctrl.state', {'node': 'controller', 'type': 'driver-failed', 'usermsg' : "Openzwave opening driver {0} fail.".format(ctrl.driver), 'data': True})
+        data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-failed', 'usermsg' : 'Openzwave opening driver {0} fail.'.format(ctrl.driver)}
+        data.update(ctrl.getStatus())
+        self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
         self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                        'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'fail', 'usrmsg': "Openzwave opening driver {0} fail.".format(ctrl.driver),  'data': "None"}})
 
@@ -665,8 +679,11 @@ class OZWavemanager():
                 node._updateConfig()
         self._log.debug(u"End of process initialization complete")
         ctrl.ready = True
-        self._initFully = True
-        ctrl.node.reportChangeToUI({'node': 'controller', 'type': 'init-process', 'usermsg' : 'Zwave network Initialized.', 'data': NodeStatusNW[2]})
+        ctrl.initFully = True
+        self._initFully = True # TODO: Verifier tous les controleurs
+        data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-init', 'usermsg' :'Zwave network Initialized.'}
+        data.update(ctrl.getStatus())
+        self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
         self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                     'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'ok'}})
         self._log.info("OpenZWave initialization completed for driver {0}. Found {1} Z-Wave Device Nodes ({2} sleeping, {3} Dead)".format(ctrl.driver, ctrl.getNodeCount(), ctrl.getSleepingNodeCount(), ctrl.getFailedNodeCount()))
@@ -712,6 +729,9 @@ class OZWavemanager():
             ctrl = self.isNodeDeviceCtrl(node)
             if ctrl and not ctrl.ready :
                 ctrl.ready = True
+                data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
+                data.update(ctrl.getStatus())
+                self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
                 self._log.info('Z-Wave Controller Node {0} is ready, UI dialogue autorised.'.format(self.refNode(ctrl.homeId, node.nodeId)))
         else :
             if args['nodeId'] == 255 and not self._initFully :
@@ -915,49 +935,93 @@ class OZWavemanager():
                 retval['error'] = 'No reset for secondary controller'
         else : retval['error'] = 'Controller node ready'
         return retval
-       
-    def getNetworkInfo(self, networkId):
-        """ Retourne les infos principales du réseau zwave (dict) """
+
+    def getOpenzwaveInfo(self):
+        """ Retourne les infos de config d' openzwave (dict) """
         retval = {}
         retval["ConfigPath"] = self._configPath
         retval["UserPath"] = self._userPath
         retval["PYOZWLibVers"] = self.pyOZWLibVersion
+        # TODO: Gére plusieurs networdID dans les fonction qui appellent.
+        retval["Options"] = {}
+        
+        if self.options.areLocked() :
+            for option in libopenzwave.PyOptionList :
+                retval["Options"] [option] = libopenzwave.PyOptionList[option]
+                retval["Options"] [option]['value']  = self.options.getOption(option)
+            retval["error"] = ""
+            print'**** getOpenzwaveInfo : ',  retval
+        return retval
+
+    def getManagerInfo(self):
+        """ Retourne les infos du manager ozwave (dict) """
+        retval = {}
+        state = NodeStatusNW[2]
         retval["OZWPluginVers"] = self.pluginVers
         # TODO: Gére plusieurs networdID dans les fonction qui appellent.
         retval["Controllers"] = []
-        if self.isReady:
-            for ctrl in self._devicesCtrl:
-                ctrlInfos = dict()
-                ctrlInfos["NetworkID"] = ctrl.networkID
-                ctrlInfos["HomeID"] = self.matchHomeID(ctrl.homeId)
-                if ctrl.ready :
-                    ctrlInfos["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
-                    ctrlInfos["Protocol"] = self._manager.getControllerInterfaceType(ctrl.homeId)
-                    ctrlInfos["Primary controller"] = ctrl.getControllerDescription()
-                    ctrlInfos["Node"] = ctrl.node.nodeId
-                    ctrlInfos["Library"] = ctrl.libraryTypeName
-                    ctrlInfos["Version"] = ctrl.libraryVersion
-                    ctrlInfos["Node count"] = ctrl.getNodeCount()
-                    ctrlInfos["Node sleeping"] = ctrl.getSleepingNodeCount()
-                    ctrlInfos["Poll interval"] = ctrl.node.getPollInterval()
-                    ctrlInfos["ListNodeId"] = ctrl.getNodesId()
-                else:
-                    ctrlInfos["Model"] = "Controller not find, wait or check configuration and hardware."
-                retval["Controllers"].append(ctrlInfos)
-            if self._initFully :
-                retval["Init state"] = NodeStatusNW[2] #Completed
+        for ctrl in self._devicesCtrl:
+            ctrlInfos = dict()
+            ctrlInfos["NetworkID"] = ctrl.networkID
+            ctrlInfos["HomeID"] = self.matchHomeID(ctrl.homeId)
+            if ctrl.ready :
+                ctrlInfos["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
+            else:
+                ctrlInfos["Model"] = "Zwave controller not ready, be patient..."
+            if ctrl.initFully : # TODO : ajouter la méthode dans l'objet ctrl
+                ctrlInfos["Init"] = NodeStatusNW[2] #Completed
+                ctrlInfos["state"] = "alive"
+            else :
+                ctrlInfos["Init"] = NodeStatusNW[3] #In progress - Devices initializing
+                ctrlInfos["state"] = "starting"
+                if state == NodeStatusNW[2]: state ="Controller(s) initializing"
+            retval["Controllers"].append(ctrlInfos)
+        if state == NodeStatusNW[2] :
+            retval["init"] = NodeStatusNW[2] #Completed
+            retval["state"] = "alive"
+        else :
+            retval["Init"] = state
+            retval["state"] = "starting"
+        retval["error"] = ""
+        print'**** getManagerInfo : ',  retval
+        return retval
+            
+    def getNetworkInfo(self, networkId):
+        """ Retourne les infos principales du réseau zwave (dict) """
+        retval = {}
+        ctrl = self.getCtrlOfNetwork(networkId)
+        if ctrl is not None :
+            retval = dict()
+            retval["NetworkID"] = ctrl.networkID
+            retval["HomeID"] = self.matchHomeID(ctrl.homeId)
+            if ctrl.ready :
+                retval["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
+                retval["Protocol"] = self._manager.getControllerInterfaceType(ctrl.homeId)
+                retval["Primary controller"] = ctrl.getControllerDescription()
+                retval["Node"] = ctrl.node.nodeId
+                retval["Library"] = ctrl.libraryTypeName
+                retval["Version"] = ctrl.libraryVersion
+                retval["Node count"] = ctrl.getNodeCount()
+                retval["Node sleeping"] = ctrl.getSleepingNodeCount()
+                retval["Node fail"] = ctrl.getFailedNodeCount()
+                retval["Poll interval"] = ctrl.node.getPollInterval()
+                retval["ListNodeId"] = ctrl.getNodesId()
+            else:
+                retval["Model"] = "Zwave network not ready, be patient..."
+            if ctrl.initFully :
+                retval["init"] = NodeStatusNW[2] #Completed
                 retval["state"] = "alive"
             else :
-                retval["Init state"] = NodeStatusNW[3] #In progress - Devices initializing
-                retval["state"] = "starting "
+                retval["init"] = NodeStatusNW[3] #In progress - Devices initializing
+                retval["state"] = "starting"
             retval["error"] = ""
-            print'**** getNetworkinfo : ',  retval
+            print'**** getNetworkInfo : ',  retval
             return retval
-        else : 
-            retval["error"] = "Zwave network not ready, be patient..."
-            retval["Init state"] = NodeStatusNW[0] # Uninitialized
-            retval["state"] = "not-configured"
-            return retval
+        else :
+            retval["error"] = "Network ID <{0}> not registered, wait or check configuration and hardware.".format(networkId)
+            retval["init"] = NodeStatusNW[0] # Uninitialized
+            retval["state"] = "unknown"
+            return retval            
         
     def getZWRefFromxPL(self, xplParams):
         """ Retourne  les références Zwave envoyées depuis le xPL domogik 
@@ -1193,179 +1257,168 @@ class OZWavemanager():
             else : return {"error" : "Unknown Node : %d" % nodeId}
         else : return {"error" : "Zwave network not ready, can't find node %d" % nodeId}
 
-    def cb_ServerWS(self, message):
+    def cb_ServerWS(self, request, data):
         """Callback en provenance de l'UI via server Websocket (resquest avec ou sans ack)"""
-        blockAck = False
-        report = {'error':  'Message not handle.'}
+        report = {}
         ackMsg = {}
-        print "WS - Requete UI",  message
-        if message.has_key('header') :
-            if message['header']['type'] in ('req', 'req-ack'):
-            # TODO: Pour l'instant la requete ne contient pas l'ID du controleur, On lance l'action sur le premier. Mettre l'ID dans la requete
-                if not 'homeId' in message : message['homeId'] = self._devicesCtrl[0].homeId                
-                if not 'networkId' in message : message['networkId'] = self.getNetworkID(message['homeId'])
-            # Fin solution temporaire
-                ctrl = self.getCtrlOfNetwork(message['networkId'])
-                if message['request'] == 'ctrlAction' :
-                    report = self.handle_ControllerAction(message['networkId'],  message['action'])
-             #       if message['action']['cmd'] =='getState' and report['cmdstate'] != 'stop' : blockAck = True
-                elif message['request'] == 'ctrlSoftReset' :
-                    report = self.handle_ControllerSoftReset(message['networkId'])
-                elif message['request'] == 'ctrlHardReset' :
-                    report = self.handle_ControllerHardReset(message['networkId'])
-                elif message['request'] == 'GetNetworkID' :
-                    report = self.getNetworkInfo(message['networkId'])
-                elif message['request'] == 'GetNodeInfo' :
-                    if self._IsNodeId(message['node']):
-                        report = self.getNodeInfos(message['homeId'], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                    print "Refresh node :", report
-                elif message['request'] == 'RefreshNodeDynamic' :
-                    if self._IsNodeId(message['node']):
-                        report = self.refreshNodeDynamic(message['homeId'], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'RefreshNodeInfo' :
-                    if self._IsNodeId(message['node']):
-                        report = self.refreshNodeInfo(message['homeId'], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'RefreshNodeState' :
-                    if self._IsNodeId(message['node']):
-                        report = self.refreshNodeState(message['homeId'], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                    print "Refresh node :", report
-                elif message['request'] == 'HealNode' :
-                    if self._IsNodeId(message['node']):
-                        self.healNetworkNode(message['networkId'],  message['node'],  message['forceroute'])
-                        report = {'usermsg':'Command sended, please wait for result...'}
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'HealNetwork' :
-                    self.healNetwork(message['networkId'], message['forceroute'])
-                    report = {'usermsg':'Command sended node by node, please wait for each result...'}
-                elif message['request'] == 'SaveConfig':
-                    report = self.saveNetworkConfig()
-                elif message['request'] == 'GetMemoryUsage':
-                    report = self.getMemoryUsage()
-                elif message['request'] == 'GetAllProducts':
-                    report = self.getAllProducts()
-                elif message['request'] == 'SetNodeNameLoc':
-                    report = self.setUINodeNameLoc(message['homeId'], message['node'], message['newname'],  message['newloc'])
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'GetNodeValuesInfo':
-                    if self._IsNodeId(message['node']):
-                        report =self.getNodeValuesInfos(message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'GetValueInfos':
-                    if self._IsNodeId(message['node']):
-                        valId = long(message['valueid']) # Pour javascript type string
-                        report =self.getValueInfos(message['node'], valId)
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                    ackMsg['valueid'] = message['valueid']
-                    print 'Refresh one Value infos : ', report
-                elif message['request'] == 'SetPollInterval':
-                    ctrl.node.setPollInterval(message['interval'],  False)
-                    ackMsg['interval'] = ctrl.node.getPollInterval()
-                    if  ackMsg['interval'] == message['interval']:
-                        report = {'error':''}
-                    else :
-                        report = {'error':'Setting interval error : keep value %d ms.' %ackMsg['interval']}
-                elif message['request'] == 'EnablePoll':
-                    valId = long(message['valueid']) # Pour javascript type string
-                    report = ctrl.node.enablePoll(message['node'],  valId,  message['intensity']) 
-                    ackMsg['node'] = message['node']
-                    ackMsg['valueid'] = message['valueid']
-                elif message['request'] == 'DisablePoll':
-                    valId = long(message['valueid']) # Pour javascript type string
-                    report = ctrl.node.disablePoll(message['node'],  valId)
-                    ackMsg['node'] = message['node']
-                    ackMsg['valueid'] = message['valueid']
-    
-                elif message['request'] == 'GetValueTypes':
-                    report = self.getValueTypes()  
-                elif message['request'] == 'GetListCmdsCtrl':
-                    report = self.getListCmdsCtrl(message['networkId'])
-                elif message['request'] == 'setValue':
-                    if self._IsNodeId(message['node']):
-                        valId = long(message['valueid']) # Pour javascript type string
-                        report = self.setValue(message['homeId'], message['node'], valId, message['newValue'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                    ackMsg['valueid'] = message['valueid']
-                    print 'Set command_class Value : ',  report
-                elif message['request'] == 'setGroups':
-                    if self._IsNodeId(message['node']):
-                        report = self.setMembersGrps(message['homeId'], message['node'], message['ngrps'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']         
-                    print 'Set Groups association : ',  report
-                elif message['request'] == 'GetGeneralStats':
-                    report = self.getGeneralStatistics(message['networkId'])
-                    print 'Refresh generale stats : ',  report
-                elif message['request'] == 'GetNodeStats':
-                    if self._IsNodeId(message['node']):
-                        report = self.getNodeStatistics(message['homeId'], message['node']) 
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                    print 'Refresh node stats : ',  report
-                elif message['request'] == 'StartCtrl':
-                    if ctrl.status != 'open' :
-                        self.openDeviceCtrl(ctrl)
-                        report = {'error':'',  'running': True}
-                    else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
-                    print 'Start Driver : ',  report
-                elif message['request'] == 'StopCtrl':
-                    if ctrl.status =='open' :
-                        self.closeDeviceCtrl(ctrl)
-                        report = {'error':'',  'running': False}
-                    else : report = {'error':'No Driver knows.',  'running': False}
-                    print 'Stop Driver : ',  report
-                elif message['request'] == 'TestNetwork':
-                    report = self.testNetwork(message["networkId"], message['count'],  10000, True)
-                elif message['request'] == 'TestNetworkNode':
-                    if self._IsNodeId(message['node']):
-                        report = self.testNetworkNode(message["homeId"], message['node'],  message['count'],  10000, True)
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'GetLog':
-                    report = self.getLoglines(message)
-                elif message['request'] == 'GetLogOZW':
-                    report = self.getLogOZWlines(message)
-                elif message['request'] == 'StartMonitorNode':
-                    if self._IsNodeId(message['node']):
-                        report = self.monitorNodes.startMonitorNode(message["homeId"], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                elif message['request'] == 'StopMonitorNode':
-                    if self._IsNodeId(message['node']):
-                        report = self.monitorNodes.stopMonitorNode(message["homeId"], message['node'])
-                    else : report = {'error':  'Invalide nodeId format.'}
-                    ackMsg['node'] = message['node']
-                else :
-                    report['error'] ='Unknown request.'
-                    print "commande inconnue"
-            # probablement  a supprimer
-#            if message['header']['type'] == 'req-ack' and not blockAck :
-#                ackMsg['header'] = {'type': 'ack',  'idws' : message['header']['idws'], 'idmsg' : message['header']['idmsg'],
-#                                               'ip' : message['header']['ip'] , 'timestamp' : long(time.time()*100)}
-#                ackMsg['request'] = message['request']
-#                if report :
-#                    if 'error' in report :
-#                        ackMsg['error'] = report['error']
-#                    else :
-#                        ackMsg['error'] = ''
-#                    ackMsg['data'] = report
-#                else : 
-#                    ackMsg['error'] = 'No data report.'
-#                self.serverUI.sendAck(ackMsg)   TODO: A supprimer après implantation de la MQ qui utilise le contenu de report
-            return report
+        print "WS - Requete UI",  data
+    # TODO: Pour l'instant la requete ne contient pas l'ID du controleur, On lance l'action sur le premier. Mettre l'ID dans la requete
+        if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId                
+        if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
+    # Fin solution temporaire
+        ctrl = self.getCtrlOfNetwork(data['networkId'])
+        if request == 'ctrlAction' :
+            report = self.handle_ControllerAction(data['networkId'],  data['action'])
+     #       if data['action']['cmd'] =='getState' and report['cmdstate'] != 'stop' : blockAck = True
+        elif request == 'ctrlSoftReset' :
+            report = self.handle_ControllerSoftReset(data['networkId'])
+        elif request == 'ctrlHardReset' :
+            report = self.handle_ControllerHardReset(data['networkId'])
+        elif request == 'openzwave.get' :
+            report = self.getOpenzwaveInfo()
+        elif request == 'manager.get' :
+            report = self.getManagerInfo()
+        elif request == 'controller.get' :
+            report = self.getNetworkInfo(data['networkId'])
+        elif request == 'controller.nodes' :
+            for nodeId in ctrl.getNodesId():
+                report[nodeId] = self.getNodeInfos(data['homeId'], nodeId)
+        elif request == 'GetNodeInfo' :
+            if self._IsNodeId(data['node']):
+                report = self.getNodeInfos(data['homeId'], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+            print "Refresh node :", report
+        elif request == 'RefreshNodeDynamic' :
+            if self._IsNodeId(data['node']):
+                report = self.refreshNodeDynamic(data['homeId'], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'RefreshNodeInfo' :
+            if self._IsNodeId(data['node']):
+                report = self.refreshNodeInfo(data['homeId'], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'RefreshNodeState' :
+            if self._IsNodeId(data['node']):
+                report = self.refreshNodeState(data['homeId'], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+            print "Refresh node :", report
+        elif request == 'HealNode' :
+            if self._IsNodeId(data['node']):
+                self.healNetworkNode(data['networkId'],  data['node'],  data['forceroute'])
+                report = {'usermsg':'Command sended, please wait for result...'}
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'HealNetwork' :
+            self.healNetwork(data['networkId'], data['forceroute'])
+            report = {'usermsg':'Command sended node by node, please wait for each result...'}
+        elif request == 'SaveConfig':
+            report = self.saveNetworkConfig()
+        elif request == 'GetMemoryUsage':
+            report = self.getMemoryUsage()
+        elif request == 'GetAllProducts':
+            report = self.getAllProducts()
+        elif request == 'SetNodeNameLoc':
+            report = self.setUINodeNameLoc(data['homeId'], data['node'], data['newname'],  data['newloc'])
+            ackMsg['node'] = data['node']
+        elif request == 'GetNodeValuesInfo':
+            if self._IsNodeId(data['node']):
+                report =self.getNodeValuesInfos(data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'GetValueInfos':
+            if self._IsNodeId(data['node']):
+                valId = long(data['valueid']) # Pour javascript type string
+                report =self.getValueInfos(data['node'], valId)
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+            ackMsg['valueid'] = data['valueid']
+            print 'Refresh one Value infos : ', report
+        elif request == 'SetPollInterval':
+            ctrl.node.setPollInterval(data['interval'],  False)
+            ackMsg['interval'] = ctrl.node.getPollInterval()
+            if  ackMsg['interval'] == data['interval']:
+                report = {'error':''}
+            else :
+                report = {'error':'Setting interval error : keep value %d ms.' %ackMsg['interval']}
+        elif request == 'EnablePoll':
+            valId = long(data['valueid']) # Pour javascript type string
+            report = ctrl.node.enablePoll(data['node'],  valId,  data['intensity']) 
+            ackMsg['node'] = data['node']
+            ackMsg['valueid'] = data['valueid']
+        elif request == 'DisablePoll':
+            valId = long(data['valueid']) # Pour javascript type string
+            report = ctrl.node.disablePoll(data['node'],  valId)
+            ackMsg['node'] = data['node']
+            ackMsg['valueid'] = data['valueid']
+
+        elif request == 'GetValueTypes':
+            report = self.getValueTypes()  
+        elif request == 'GetListCmdsCtrl':
+            report = self.getListCmdsCtrl(data['networkId'])
+        elif request == 'setValue':
+            if self._IsNodeId(data['node']):
+                valId = long(data['valueid']) # Pour javascript type string
+                report = self.setValue(data['homeId'], data['node'], valId, data['newValue'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+            ackMsg['valueid'] = data['valueid']
+            print 'Set command_class Value : ',  report
+        elif request == 'setGroups':
+            if self._IsNodeId(data['node']):
+                report = self.setMembersGrps(data['homeId'], data['node'], data['ngrps'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']         
+            print 'Set Groups association : ',  report
+        elif request == 'GetGeneralStats':
+            report = self.getGeneralStatistics(data['networkId'])
+            print 'Refresh generale stats : ',  report
+        elif request == 'GetNodeStats':
+            if self._IsNodeId(data['node']):
+                report = self.getNodeStatistics(data['homeId'], data['node']) 
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+            print 'Refresh node stats : ',  report
+        elif request == 'StartCtrl':
+            if ctrl.status != 'open' :
+                self.openDeviceCtrl(ctrl)
+                report = {'error':'',  'running': True}
+            else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
+            print 'Start Driver : ',  report
+        elif request == 'StopCtrl':
+            if ctrl.status =='open' :
+                self.closeDeviceCtrl(ctrl)
+                report = {'error':'',  'running': False}
+            else : report = {'error':'No Driver knows.',  'running': False}
+            print 'Stop Driver : ',  report
+        elif request == 'TestNetwork':
+            report = self.testNetwork(data["networkId"], data['count'],  10000, True)
+        elif request == 'TestNetworkNode':
+            if self._IsNodeId(data['node']):
+                report = self.testNetworkNode(data["homeId"], data['node'],  data['count'],  10000, True)
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'GetLog':
+            report = self.getLoglines(data)
+        elif request == 'GetLogOZW':
+            report = self.getLogOZWlines(data)
+        elif request == 'StartMonitorNode':
+            if self._IsNodeId(data['node']):
+                report = self.monitorNodes.startMonitorNode(data["homeId"], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
+        elif request == 'StopMonitorNode':
+            if self._IsNodeId(data['node']):
+                report = self.monitorNodes.stopMonitorNode(data["homeId"], data['node'])
+            else : report = {'error':  'Invalide nodeId format.'}
+            ackMsg['node'] = data['node']
         else :
-            raise OZwaveManagerException("WS request bad format : {0}".format(message))
+            report['error'] ='Unknown request.'
+        return report
+#        else :
+#            raise OZwaveManagerException("WS request bad format : {0}".format(data))
 
     def reportCtrlMsg(self, networkId, ctrlmsg):
         """Un message de changement d'état a été recu, il est reporté au besoin sur le hub xPL pour l'UI
@@ -1432,6 +1485,7 @@ class PrimaryController():
         self.homeId = homeId
         self.status = 'close'
         self.ready = False
+        self.initFully = False
         self.ctrlActProgress = None
         self.node = None
         self.nodeId = 0
@@ -1483,7 +1537,26 @@ class PrimaryController():
             return '{0} Library Version {1}'.format(self._libraryTypeName, self._libraryVersion)
         else:
             return 'Unknown'
-
+            
+    def getStatus(self):
+        """Renvoi l'état du controleur."""
+        retval = {}
+        retval["init"] = NodeStatusNW[0] # Uninitialized
+        retval["status"] = 'unknown'
+        if self.status == 'open' : 
+            retval["status"] = 'alive'
+            if self.ready :
+                if self.initFully :
+                    retval["init"] = NodeStatusNW[2] # Completed
+                else :
+                    retval["init"] = NodeStatusNW[3] # In progress - Devices initializing
+                    retval["status"] = 'starting'
+        elif self.status == 'close' : retval["status"] = 'stopped'
+        elif self.status == 'fail' : 
+            retval["status"] = 'dead'
+            retval["init"] = 'Out of operation'
+        return retval
+        
     def getNodes(self):
         """ Renvoi la liste des nodes du reseaux."""
         retval = []
