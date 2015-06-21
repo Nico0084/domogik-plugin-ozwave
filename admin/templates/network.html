@@ -1,11 +1,12 @@
 {% block content %}
   
-<div class='container'> 
+<div class='container-fluid'> 
     <h3>{% trans %}Zwave Controller administration{% endtrans %}
-        <div class="btn-group pull-right">
-            <button id="ctrl-status" type="button" class="btn btn-info btn-xs dropdown-toggle status-label status-{{ network_state.state }}" data-toggle="dropdown" aria-expanded="false">
-                <span class="status">{{ network_state['init'] }}</span>
-            </button> 
+        <div class="pull-right">
+            <h4>
+                <span id="ctrl-status" class="label status-{{ network_state.state }}">
+                {{ network_state['init'] }}
+            </h4>
         </div>
     </h3>
     <div class='row'> 

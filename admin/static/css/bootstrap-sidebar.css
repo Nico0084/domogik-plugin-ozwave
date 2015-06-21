@@ -117,3 +117,10 @@ body,html{
     padding-left: 15px;
   }
   
+  table.dataTable {
+     clear : none !important;
+  }
+  
+  .dataTables_wrapper {
+     clear : none !important;
+  }

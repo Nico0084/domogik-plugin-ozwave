@@ -27,13 +27,16 @@ def index(client_id):
     detail = get_client_detail(client_id)
     if detail["status"] == "alive" :
         openzwaveInfo = get_openzwave_info()
-        managerState = get_manager_state()
+        if openzwaveInfo['status'] != 'dead':
+            managerState = get_manager_state()
+        else:
+            managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
     elif detail["status"] == "starting" :
-        openzwaveInfo = {u'PYOZWLibVers': u'Plugin starting, please wait...', u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
-        managerState = {u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
+        openzwaveInfo = {u'status': u'dead', u'PYOZWLibVers': u'Plugin starting, please wait...', u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
+        managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
     else :
-        openzwaveInfo = {u'PYOZWLibVers': u"Plugin not running, can't get informations.", u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
-        managerState = {u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
+        openzwaveInfo = {u'status': u'dead', u'PYOZWLibVers': u"Plugin not running, can't get informations.", u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
+        managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
     try:
         #return render_template('{0}.html'.format(page))
         return render_template('plugin_ozwave.html',

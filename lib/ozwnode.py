@@ -434,7 +434,10 @@ class ZWaveNode:
         
     def _updateInfos(self):
         """Mise à jour des informations générales du node"""
+        n = self._manager.getNodeName(self._homeId, self._nodeId)
+        print "getNodeName raw : ", n,  type(n)
         self._name = self._manager.getNodeName(self._homeId, self._nodeId).decode('utf8')
+        print "getNodeName unicode : ", self._name,  type(self._name)
         self._location = self._manager.getNodeLocation(self._homeId, self._nodeId).decode('utf8')
         self._manufacturer = NamedPair(id=self._manager.getNodeManufacturerId(self._homeId, self._nodeId), name=self._manager.getNodeManufacturerName(self._homeId, self._nodeId))
         self._product = NamedPair(id=self._manager.getNodeProductId(self._homeId, self._nodeId), name=self._manager.getNodeProductName(self._homeId, self._nodeId))

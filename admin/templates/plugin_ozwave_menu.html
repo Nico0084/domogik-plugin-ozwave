@@ -5,16 +5,18 @@
 
 <div class="container">
     <div class="list-group">
-        <h4> 
+        <h4>
            <a class="list-group-item bg-info" href="#" onclick="toggleVisible('detailOZWconfig', 'toggle-OZWconfig');return false;">
-               <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span> 
-               <span><strong >&nbsp;&nbsp;{% trans %}Openzwave config{% endtrans %}</strong></span>
-               <div class="pull-right"><small>{{ openzwaveInfo.PYOZWLibVers }}</small></div>
+               <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span>&nbsp;&nbsp; 
+               <span id="ozw-status" class="label status-{{ openzwaveInfo.status }}">{% trans %}Openzwave config{% endtrans %}</span>
+               <span id="manager-status" class="label status-{{ managerState.status }}">{% trans %}Manager{% endtrans %}</span>&nbsp;&nbsp; 
+               <small id="manager-init">{{ managerState.init }}</small>
+               <div class="pull-right"><small id="ozw-version">{{ openzwaveInfo.PYOZWLibVers }}</small></div>
             </a>        
         </h4>
         <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
-            <li><b>{% trans %}Openzwave path{% endtrans %} : </b>{{ openzwaveInfo.ConfigPath }}</li>
-            <li><b>{% trans %}User path{% endtrans %} : </b>{{ openzwaveInfo.UserPath }}</li>
+            <li><b>{% trans %}Openzwave path{% endtrans %} : </b><span id="ozw-config">{{ openzwaveInfo.ConfigPath }}</span></li>
+            <li><b>{% trans %}User path{% endtrans %} : </b><span id="ozw-user">{{ openzwaveInfo.UserPath }}</span></li>
             <div class="container-fluid">
                 <table class="table table-striped">
                     <thead>
@@ -24,7 +26,7 @@
                             <th>{% trans %}Information{% endtrans %}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="ozw-options">
                     {% for option in openzwaveInfo['Options'] %}
                         {% if option not in ["UserPath", "ConfigPath"] %}
                         <tr>
@@ -41,6 +43,7 @@
     </div>
 </div>
 <div class="container">
+    <h4>
     <nav id="ozwave2-navbar" class="nav navbar-tab" role="navigation">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -56,14 +59,20 @@
             {% set network_active = managerState.Controllers[0].NetworkID %}
         {% endif %}
     {% endif %}
-    
     <div class="tabbable">
         <ul  id="ozwave-navbar" class="nav nav-tabs ">
         {% for network in managerState.Controllers %}
             <li {% if network_active == network.NetworkID %}class="active"{% endif %}>
-                <a data-toggle="tab" href="#{{ network.NetworkID }}" onclick="sidebarVisible('network-menu', true);return true;">{{ network.NetworkID }} - {{ network.HomeID }}</a></li>
+                <a data-toggle="tab" href="#{{ network.NetworkID }}" onclick="selectActiveNetwork('{{ network.NetworkID }}');return true;">
+                <h4 style="margin-top: 0px; margin-bottom: 0px;">
+                    <span id="ctrl-tab_{{ network.NetworkID }}" class="label status-{{ network.state }}" title="{{ network.init }}">
+                        {{ network.NetworkID }} - {{ network.HomeID }}
+                    </span>
+               </h4> 
+                </a>
+            </li>
         {% endfor %}
-            <li><a data-toggle="tab" href="#debugtab" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a></li>
+            <li id="debug-tab" {% if network_active == "" %}class="active"{% endif %}><a data-toggle="tab" href="#debug-pane" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a></li>
         </ul>
     </div>
     </nav>
@@ -82,7 +91,7 @@
         <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
           <ul class="nav navbar-nav">
             <li{% if plugin_active == "controller" %} class="active" {% endif %}>
-                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller">{% trans %}Controller{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller" id="ctrl-href">{% trans %}Controller{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
                 </a>
             </li>
@@ -112,32 +121,34 @@
         <!-- Page is insered after -->
         </div>
     {% endfor %}
-        <div class="tab-pane" id="debugtab">
+        <div class="tab-pane" id="debug-pane">
             <h3>Raw data page selection :</h3>
-                <li><b>{% trans %}network_active{% endtrans %} : </b>{{ network_active }}</li>
-                <li><b>{% trans %}plugin_active{% endtrans %} : </b>{{ plugin_active }}</li>
+                <li><b>{% trans %}network_active{% endtrans %} : </b><span id="debug-networkactive">{{ network_active }}</span></li>
+                <li><b>{% trans %}plugin_active{% endtrans %} : </b><span id="degub-pluginactive">{{ plugin_active }}</span></li>
             <h3>Raw data Openzwave :</h3>
                 <li><b>{% trans %}openzwaveInfo{% endtrans %} : </b></li>
-                <pre>{{ openzwaveInfo }}</pre>
+                <pre id="debug-ozw">{{ openzwaveInfo }}</pre>
             <h3>Raw data Manager :</h3>
                 <li><b>{% trans %}managerState{% endtrans %} : </b></li>
-                <pre>{{ managerState }}</pre>
+                <pre id="debug-manager">{{ managerState }}</pre>
             <h3>Raw data Controller :</h3>
                 <li><b>{% trans %}zw_network{% endtrans %} : </b></li>
-                <pre>{{ network_state }}</pre>
+                <pre id="debug-ctrl">{{ network_state }}</pre>
             <h3>Raw data Nodes :</h3>
                 <li><b>{% trans %}nodes_state{% endtrans %} : </b></li>
-                <pre>{{ nodes_state }}</pre>
+                <pre id="debug-nodes">{{ nodes_state }}</pre>
             <h3>Raw data ozwave plugin client detail :</h3>
                 <li><b>{% trans %}client_detail{% endtrans %} : </b></li>
-                <pre>{{ client_detail }}</pre>
+                <pre id="debug-client">{{ client_detail }}</pre>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+
+        var activeNetwork = "{{ network_active }}";
         
-        /* Action which shows and hides div with a id of "Specific command class details" */
+        /* Action which shows and hides div with a id */
         $("[id^='toggle-OZWconfig']").click(function() {
           var target_selector = $(this).attr('data-target');
           toggleVisible(target_selector, this.id);
@@ -163,15 +174,70 @@
             $target.hide( "fast" );
           };
         };
-</script>
-<script type="text/javascript">
+        
+        function selectActiveNetwork(networkId) {
+            sidebarVisible('network-menu', true);
+            activeNetwork = networkId;
+            $("#debug-networkactive").text(networkId);
+            $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + networkId + "/controller");
+        };
     $( document ).ready(function() {
+        var ws_onmessage_menu = ws.onmessage;
         ws.onmessage = function(e) {
+            ws_onmessage_menu(e);
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave") {
                 console.log("Zwave menu publish receive :)", data.msgid);
                 console.log(data);
+                if (msgId[1] == "ctrl") {
+                    if (msgId[2] == "state") {
+                        if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                            $("#ctrl-tab_"+data.content.networkid).removeClass().addClass("label status-" + data.content.status).attr("title",data.content.init);
+                            $("#ctrl-tab_"+data.content.networkid).text(data.content.networkid + " - " + data.content.homeid );
+                            <!-- debug infos -->
+                            $("#debug-ctrl").text(JSON.stringify(data.content));
+                        };
+                    };
+                };
+                if (msgId[1] == "lib") {
+                    if (msgId[2] == "state") {
+                        $("#ozw-status").removeClass().addClass("label status-" + data.content.status);
+                        $("#ozw-version").text(data.content.PYOZWLibVers);
+                        $("#ozw-config").text(data.content.ConfigPath);
+                        $("#ozw-user").text(data.content.UserPath);
+                        var options = '';
+                        for (option in data.content.Options) {
+                            if ((option != "UserPath") && (option != "ConfigPath")) {;
+                                options = options + '<tr> <td><b>' + option +'</b></td> <td>' + data.content.Options[option]['value'] + '</td> <td>' +  data.content.Options[option]['doc'] + '</td> </tr>'
+                            };
+                        };
+                        $("#ozw-options").html(options);
+                        <!-- debug infos -->
+                        $("#debug-ozw").text(JSON.stringify(data.content));
+                    };
+                };
+                if (msgId[1] == "manager") {
+                    if (msgId[2] == "state") {
+                        $("#manager-status").removeClass().addClass("label status-" + data.content.status);
+                        $("#manager-init").text(data.content.init);
+                        var tabNew = "";
+                        for (item in data.content.Controllers) {
+                            if ($("#ctrl-tab_" + data.content.Controllers[item].NetworkID).length == 0) {
+                                 tabNew = "<li> <a data-toggle='tab' href='#" + data.content.Controllers[item].NetworkID +"' onclick=" +
+                                        "'selectActiveNetwork(" + '"' + data.content.Controllers[item].NetworkID + '"' + ");return true;'" +
+                                        "'> <h4 style='margin-top: 0px; margin-bottom: 0px;'> <span id='ctrl-tab_" + data.content.Controllers[item].NetworkID +
+                                        "' class='label status-" + data.content.Controllers[item].state + "' title='" + data.content.Controllers[item].init + "'>" +
+                                        data.content.Controllers[item].NetworkID + " - " + data.content.Controllers[item].HomeID + "</span></h4> </a> </li>";
+                                 $(tabNew).insertBefore("#debug-tab");
+                                 tabNew = "<div class='tab-pane' id='" + data.content.Controllers[item].NetworkID + "'></div>";
+                                 $(tabNew).insertBefore("#debug-pane");
+                            };
+                        };
+                        <!-- debug infos -->
+                        $("#debug-manager").text(JSON.stringify(data.content));
+                    };
+                };
             };
         };
     });

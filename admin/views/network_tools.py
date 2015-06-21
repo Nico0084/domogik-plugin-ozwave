@@ -13,7 +13,7 @@ def get_openzwave_info():
     if res is not None:
         data = res.get_data()
     else:
-        data = {'PYOZWLibVers':'unknown', 'ConfigPath': 'undefined', 'UserPath': 'not init', 'Options' : {}, 'error': 'Plugin timeout response.'}
+        data = {u'status': u'dead', u'PYOZWLibVers':u'unknown', u'ConfigPath': u'undefined', 'uUserPath': u'not init', u'Options' : {}, u'error': u'Plugin timeout response.'}
     return data
     
 def get_manager_state():
@@ -24,7 +24,7 @@ def get_manager_state():
     if res is not None:
         data = res.get_data()
     else:
-        data = {u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u'Plugin timeout response.'}
+        data = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u'Plugin timeout response.'}
     return data
 
 def get_controller_state(networkId):

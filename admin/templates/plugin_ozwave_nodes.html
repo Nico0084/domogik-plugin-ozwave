@@ -17,13 +17,14 @@
 
 
 <div class="container" id="test-move">
-<h5>ttootototot</h5>
 {% include "nodes.html" %}
 </div>
 <script type="text/javascript">
     $( document ).ready(function() {
         $('#test-move').appendTo("#{{ network_active }}");
+        var ws_onmessage_nodes = ws.onmessage;
         ws.onmessage = function(e) {
+            ws_onmessage_nodes(e);
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {

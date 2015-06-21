@@ -15,7 +15,9 @@
     $( document ).ready(function() {
         var container = document.getElementById("{{ network_active }}");
         $('#test-move').appendTo("#{{ network_active }}");
+        var ws_onmessage_ctrl = ws.onmessage;
         ws.onmessage = function(e) {
+            ws_onmessage_ctrl(e);
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
@@ -23,8 +25,8 @@
                 console.log(data.content);
                 if (msgId[2] == "state" && data.content.networkid == "{{ network_active }}") {
                     if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                        $("#ctrl-status").removeClass().addClass("btn btn-info btn-xs dropdown-toggle status-label status-" + data.content.status);
-                        $("#ctrl-status").html('<span class="status">'+data.content.init+'</span>');
+                        $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
+                        $("#ctrl-status").text(data.content.init);
                     };
                 } else {
                     if (data.content.type == 'node-state-changed') {

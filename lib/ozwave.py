@@ -85,6 +85,8 @@ class OZWavemanager():
         self._xplPlugin = xplPlugin
         self._device = None
         self.monitorNodes = None
+        self.options = None
+        self._manager = None
         self._log = log
         self._cb_send_xPL = cb_send_xPL
         self._cb_sendxPL_trig = cb_sendxPL_trig
@@ -102,11 +104,14 @@ class OZWavemanager():
         self._initFully = False
         self._ctrlActProgress = None
         self.lastTest = 0
+        self._devicesCtrl = []
+        self._openingDriver = None
         self._completMsg = self._xplPlugin.get_config('cpltmsg')
-        self._wsPort = int(self._xplPlugin.get_config('wsportserver'))
         self._device = self._xplPlugin.get_config('device')
         autoPath = self._xplPlugin.get_config('autoconfpath')
         user = pwd.getpwuid(os.getuid())[0]
+        self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
+        self._xplPlugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         # Spécification du chemain d'accès à la lib open-zwave
         if autoPath :
             self._configPath = libopenzwave.configPath()
@@ -139,9 +144,11 @@ class OZWavemanager():
         opts = "--logging true" if self._ozwLog else "--logging false"
         self._log.info(u"Try to run openzwave manager")
         self.options = libopenzwave.PyOptions(config_path =str(self._configPath), user_path=str(self._userPath))
+        self._xplPlugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         self.options.create(self._configPath, self._userPath,  opts)
         if self._completMsg: self.options.addOptionBool('NotifyTransactions',  self._completMsg)
         self.options.lock() # nécessaire pour bloquer les options et autoriser le PyManager à démarrer
+        self._xplPlugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         self._configPath = self.options.getOption('ConfigPath')  # Get real path through openzwave lib
         self._userPath = self.options.getOption('UserPath')        # Get real path through openzwave lib
         self._manager = libopenzwave.PyManager()
@@ -152,10 +159,9 @@ class OZWavemanager():
         self._log.info(u"   - Openzwave User path : {0}".format(self._userPath))
         self._log.debug(u"   - Openzwave options : ")
         for opt in libopenzwave.PyOptionList.keys(): self._log.debug(u"       - {0} : {1}".format(opt, self.options.getOption(opt)))
+        self._xplPlugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         self.getManufacturers()
         # "List les devices de type primary.controler.""
-        self._devicesCtrl = []
-        self._openingDriver = None
         
         for a_device in self._xplPlugin.devices:
             self.addDeviceCtrl(a_device)
@@ -189,6 +195,7 @@ class OZWavemanager():
         self._stop.wait(0.1) # s'assurer que l'init du pluginmanager est achevé
         self.monitorNodes = ManageMonitorNodes(self)
         self.monitorNodes.start()  # demarrer la surveillance des nodes pour helper log
+        self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
         # Ouverture du ou des controleurs principaux
         thOpen = threading.Thread(None, self.startOpenDevicesCtrl, "th_Start_open_drivers", (), {})
         thOpen.start()
@@ -200,6 +207,8 @@ class OZWavemanager():
         for device in self._devicesCtrl:
             while self._openingDriver and not self._stop.isSet(): self._stop.wait(0.1)
             self.openDeviceCtrl(device)
+        self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
+
         
     def getDeviceCtrl(self, key, value ):
         """Retourne le device ctrl de type primary.controler.
@@ -324,26 +333,26 @@ class OZWavemanager():
                 elif ctrl.ctrlActProgress and ctrl.ctrlActProgress.has_key('state') and ctrl.ctrlActProgress['state'] == ctrl.node.SIGNAL_CTRL_WAITING : st ='locked'
                 elif ctrl.ready : st= 'ok'
                 else : st = 'init...'
-                data = {'networkid': ctrl.networkID, 'type': 'status'}
+                data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'status'}
                 data.update(ctrl.getStatus())
                 self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
                 self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
                                     'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':st, 'usermsg': "None", 'data': "None"}})
 
-    def getPluginInfo(self):
-        """Renvoi les informations d'état et de connection du plugin."""
-        ctrlReady = False
-        for device in self._devicesCtrl:
-        	if device.ready :
-        		ctrlReady = True
-        		break
-        retval = {"hostport": self._wsPort, "ctrlready": ctrlReady}
-        if self._initFully :
-            retval["Init state"] = NodeStatusNW[2] # Completed
-        else :
-            retval["Init state"] = NodeStatusNW[3] # In progress - Devices initializing
-        retval["error"] = ""
-        return retval
+#    def getPluginInfo(self):
+#        """Renvoi les informations d'état et de connection du plugin."""
+#        ctrlReady = False
+#        for device in self._devicesCtrl:
+#        	if device.ready :
+#        		ctrlReady = True
+#        		break
+#        retval = {"ctrlready": ctrlReady}
+#        if self._initFully :
+#            retval["Init state"] = NodeStatusNW[2] # Completed
+#        else :
+#            retval["Init state"] = NodeStatusNW[3] # In progress - Devices initializing
+#        retval["error"] = ""
+#        return retval
     
     def getManufacturers(self):
         """"Renvoi la list (dict) de tous le fabriquants et produits reconnus par la lib openzwave."""
@@ -589,10 +598,11 @@ class OZWavemanager():
             ctrl.timeStarted = time.time()
             ctrl.ready = True
             self._openingDriver = ""
+            self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
             self._log.info(u"Driver {0} ready. homeId is {1}, controller node id is {2}, using {3} library version {4}".format(ctrl.driver,
                                                                                                                                                                                            self.matchHomeID(ctrl.homeId), 
                                                                                                                                                                                            ctrl.nodeID, ctrl.libraryTypeName, ctrl.libraryVersion))
-            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
+            data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
             data.update(ctrl.getStatus())
             self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
@@ -609,7 +619,7 @@ class OZWavemanager():
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is reset, all network nodes deleted".format(ctrl.driver, args))
-            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.'}
+            data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.'}
             data.update(ctrl.getStatus())
             self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
@@ -633,7 +643,7 @@ class OZWavemanager():
                     node = self._nodes.pop(n)
                     del(node)
             self._log.info(u"Driver {0}, homeId {1} is removed, all network nodes deleted".format(ctrl.driver, args))
-            data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
+            data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
             data.update(ctrl.getStatus())
             self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
             self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
@@ -656,7 +666,7 @@ class OZWavemanager():
         ctrl.ready = False
         ctrl.initFully = False
         self._log.error(u"Openzwave fail to open driver {0}, ozw message : {1}".format(ctrl.driver, args))
-        data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-failed', 'usermsg' : 'Openzwave opening driver {0} fail.'.format(ctrl.driver)}
+        data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-failed', 'usermsg' : 'Openzwave opening driver {0} fail.'.format(ctrl.driver)}
         data.update(ctrl.getStatus())
         self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
         self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
@@ -681,7 +691,7 @@ class OZWavemanager():
         ctrl.ready = True
         ctrl.initFully = True
         self._initFully = True # TODO: Verifier tous les controleurs
-        data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-init', 'usermsg' :'Zwave network Initialized.'}
+        data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-init', 'usermsg' :'Zwave network Initialized.'}
         data.update(ctrl.getStatus())
         self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
         self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
@@ -729,7 +739,7 @@ class OZWavemanager():
             ctrl = self.isNodeDeviceCtrl(node)
             if ctrl and not ctrl.ready :
                 ctrl.ready = True
-                data = {'networkid': ctrl.networkID, 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
+                data = {'networkid': ctrl.networkID, 'homeid': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
                 data.update(ctrl.getStatus())
                 self._xplPlugin.publishMsg('ozwave.ctrl.state', data)
                 self._log.info('Z-Wave Controller Node {0} is ready, UI dialogue autorised.'.format(self.refNode(ctrl.homeId, node.nodeId)))
@@ -938,52 +948,52 @@ class OZWavemanager():
 
     def getOpenzwaveInfo(self):
         """ Retourne les infos de config d' openzwave (dict) """
-        retval = {}
+        retval = {"status": "dead", "Options": {}}
+        if self.options is not None:
+            if self.options.areLocked : 
+                if self._manager is not None : retval["status"] = "alive"
+                else : retval["status"] = "starting"
+                for option in libopenzwave.PyOptionList :
+                    retval["Options"] [option] = libopenzwave.PyOptionList[option]
+                    retval["Options"] [option]['value']  = self.options.getOption(option)
+                retval["error"] = ""
+            else : retval["status"] = "stopped"
         retval["ConfigPath"] = self._configPath
         retval["UserPath"] = self._userPath
         retval["PYOZWLibVers"] = self.pyOZWLibVersion
         # TODO: Gére plusieurs networdID dans les fonction qui appellent.
-        retval["Options"] = {}
         
-        if self.options.areLocked() :
-            for option in libopenzwave.PyOptionList :
-                retval["Options"] [option] = libopenzwave.PyOptionList[option]
-                retval["Options"] [option]['value']  = self.options.getOption(option)
-            retval["error"] = ""
-            print'**** getOpenzwaveInfo : ',  retval
         return retval
 
     def getManagerInfo(self):
         """ Retourne les infos du manager ozwave (dict) """
-        retval = {}
-        state = NodeStatusNW[2]
+        retval = {"status": "dead"}
+        if self.monitorNodes is None :
+            retval["status"] = "starting"
+        else : retval["status"] = "alive"
         retval["OZWPluginVers"] = self.pluginVers
+        retval['init'] = ""
         # TODO: Gére plusieurs networdID dans les fonction qui appellent.
         retval["Controllers"] = []
-        for ctrl in self._devicesCtrl:
-            ctrlInfos = dict()
-            ctrlInfos["NetworkID"] = ctrl.networkID
-            ctrlInfos["HomeID"] = self.matchHomeID(ctrl.homeId)
-            if ctrl.ready :
-                ctrlInfos["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
-            else:
-                ctrlInfos["Model"] = "Zwave controller not ready, be patient..."
-            if ctrl.initFully : # TODO : ajouter la méthode dans l'objet ctrl
-                ctrlInfos["Init"] = NodeStatusNW[2] #Completed
-                ctrlInfos["state"] = "alive"
-            else :
-                ctrlInfos["Init"] = NodeStatusNW[3] #In progress - Devices initializing
-                ctrlInfos["state"] = "starting"
-                if state == NodeStatusNW[2]: state ="Controller(s) initializing"
-            retval["Controllers"].append(ctrlInfos)
-        if state == NodeStatusNW[2] :
-            retval["init"] = NodeStatusNW[2] #Completed
-            retval["state"] = "alive"
+        if self._devicesCtrl is not None :
+            for ctrl in self._devicesCtrl:
+                ctrlInfos = dict()
+                ctrlInfos["NetworkID"] = ctrl.networkID
+                ctrlInfos["HomeID"] = self.matchHomeID(ctrl.homeId)
+                if ctrl.ready and ctrl.node is not None:
+                    ctrlInfos["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
+                else:
+                    ctrlInfos["Model"] = "Zwave controller not ready, be patient..."
+                if ctrl.initFully : # TODO : ajouter la méthode dans l'objet ctrl
+                    ctrlInfos["init"] = NodeStatusNW[2] #Completed
+                    ctrlInfos["state"] = "alive"
+                else :
+                    ctrlInfos["init"] = NodeStatusNW[3] #In progress - Devices initializing
+                    ctrlInfos["state"] = "starting"
+                retval["Controllers"].append(ctrlInfos)
         else :
-            retval["Init"] = state
-            retval["state"] = "starting"
+            retval['init'] = "No controllers registered, you must create domogik zwave controller."
         retval["error"] = ""
-        print'**** getManagerInfo : ',  retval
         return retval
             
     def getNetworkInfo(self, networkId):
