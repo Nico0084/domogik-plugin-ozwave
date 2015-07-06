@@ -122,5 +122,29 @@ body,html{
   }
   
   .dataTables_wrapper {
-     clear : none !important;
+    clear : none !important;
+  }
+
+  .input-group-addon {
+    padding : 1px 2px ;
+  }
+  
+  .icon-unknown {
+      color : #8C8C8C;
+  }
+  
+  .icon-info {
+      color : #5BC0DE;
+  }
+  
+  .icon-success {
+      color : #26CB34;
+  }
+  
+  .icon-warning {
+      color : #FFAE00;
+  }
+  
+  .icon-danger {
+      color : #FF0000;
   }

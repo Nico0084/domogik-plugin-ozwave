@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 ### common imports
-from flask import Blueprint, abort
+from flask import Blueprint, jsonify
 from domogik.common.utils import get_packages_directory
 from domogik.admin.application import render_template
 from domogik.admin.views.clients import get_client_detail
 from jinja2 import TemplateNotFound
 
 ### package specific imports
-from domogik_packages.plugin_ozwave.admin.views.network_tools import get_manager_state, get_openzwave_info, get_controller_state, get_controller_nodes
+from domogik_packages.plugin_ozwave.admin.views.network_tools import get_manager_state, get_openzwave_info, get_controller_state, get_controller_nodes, get_node_infos
 
 ### common tasks
 package = "plugin_ozwave"
@@ -25,18 +25,12 @@ plugin_ozwave_adm = Blueprint(package, __name__,
 def index(client_id):
 #    client_id = "plugin-ozwave.vmdomogik0"
     detail = get_client_detail(client_id)
-    if detail["status"] == "alive" :
-        openzwaveInfo = get_openzwave_info()
-        if openzwaveInfo['status'] != 'dead':
-            managerState = get_manager_state()
-        else:
-            managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
-    elif detail["status"] == "starting" :
-        openzwaveInfo = {u'status': u'dead', u'PYOZWLibVers': u'Plugin starting, please wait...', u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
-        managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
-    else :
-        openzwaveInfo = {u'status': u'dead', u'PYOZWLibVers': u"Plugin not running, can't get informations.", u'ConfigPath': u'undefined', u'UserPath': u'not init', u'Options' : {}, u'error': u''}
-        managerState = {u'status': u'dead', u'OZWPluginVers': u'undefined', u'Controllers': [], u'Init': u'unknown', u'state': u'dead', u'error': u''}
+    abort = False
+    if detail["status"] not in ["alive",  "starting"] : abort = True
+    openzwaveInfo = get_openzwave_info(abort)
+    if openzwaveInfo['error'] == 'Plugin timeout response.': abort = True
+    managerState = get_manager_state(abort)
+    if managerState['error'] == 'Plugin timeout response.': abort = True
     try:
         #return render_template('{0}.html'.format(page))
         return render_template('plugin_ozwave.html',
@@ -56,9 +50,13 @@ def index(client_id):
 @plugin_ozwave_adm.route('/<client_id>/<network_id>/controller')
 def network_ctrl(client_id, network_id):
     detail = get_client_detail(client_id)
-    managerState = get_manager_state()
-    openzwaveInfo = get_openzwave_info()
-    networkState = get_controller_state(network_id)
+    abort = False
+    if detail["status"] not in ["alive",  "starting"] : abort = True
+    openzwaveInfo = get_openzwave_info(abort)
+    if openzwaveInfo['error'] == 'Plugin timeout response.': abort = True
+    managerState = get_manager_state(abort)
+    if managerState['error'] == 'Plugin timeout response.': abort = True
+    networkState = get_controller_state(network_id, abort)
     try:
         return render_template('plugin_ozwave_controller.html',
             clientid = client_id,
@@ -77,10 +75,15 @@ def network_ctrl(client_id, network_id):
 @plugin_ozwave_adm.route('/<client_id>/<network_id>/nodes')
 def network_nodes(client_id, network_id):
     detail = get_client_detail(client_id)
-    managerState = get_manager_state()
-    openzwaveInfo = get_openzwave_info()
-    networkState = get_controller_state(network_id)
-    nodesState = get_controller_nodes(network_id)
+    abort = False
+    if detail["status"] not in ["alive",  "starting"] : abort = True
+    openzwaveInfo = get_openzwave_info(abort)
+    if openzwaveInfo['error'] == 'Plugin timeout response.': abort = True
+    managerState = get_manager_state(abort)
+    if managerState['error'] == 'Plugin timeout response.': abort = True
+    networkState = get_controller_state(network_id, abort)
+    if networkState['error'] == 'Plugin timeout response.': abort = True
+    nodesState = get_controller_nodes(network_id,  abort)
     try:
         return render_template('plugin_ozwave_nodes.html',
             clientid = client_id,
@@ -92,7 +95,15 @@ def network_nodes(client_id, network_id):
             openzwaveInfo = openzwaveInfo,
             managerState = managerState, 
             network_state = networkState, 
-            nodes_state = nodesState)
+            nodes_state = nodesState['nodes'])
             
     except TemplateNotFound:
         abort(404)
+
+@plugin_ozwave_adm.route('/<client_id>/<network_id>/<node_id>/infos')
+def node_infos(client_id, network_id, node_id):
+    nodeInfos = get_node_infos(network_id, node_id)
+    if 'error'in nodeInfos and nodeInfos['error'] !="":
+        return jsonify(result='error', data = nodeInfos)
+    else :
+        return jsonify(result='success', data = nodeInfos)

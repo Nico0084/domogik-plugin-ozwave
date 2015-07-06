@@ -17,15 +17,15 @@
                         <tbody>
                         {% for node in nodes_state %}
                             <tr>
-                                <td id="node-{{ nodes_state[node].Node }}" nodeData='{{  nodes_state[node]|tojson}}'>
-                                    {"nodeId": "{{ nodes_state[node].Node }}"}
+                                <td id="node-{{ node.NodeID }}">
+                                    {{ node.NetworkID }}.{{ node.NodeID }}
                                 </td>
-                                <td>{{ nodes_state[node].Name }}</td>
-                                <td>{{ nodes_state[node].Location }}</td>
-                                <td>{{ nodes_state[node].Model }}</td>
-                                <td>{{ nodes_state[node]["State sleeping"] }}</td>
-                                <td>{{ nodes_state[node].Type }}</td>
-                                <td>{{ nodes_state[node]["Last update"] }}</td>
+                                <td>{{ node.Name }}</td>
+                                <td>{{ node.Location }}</td>
+                                <td>{{ node.Model }}</td>
+                                <td>{{ node["State sleeping"] }}</td>
+                                <td>{{ node.Type }}</td>
+                                <td>{{ node["Last update"] }}</td>
                                 <td>Actions...</td>
                             </tr> 
                         {% endfor %}
@@ -36,6 +36,7 @@
 <script type='text/javascript'>
 
     $(document).ready(function(){
+        nodesData = {{ nodes_state|tojson }}
         $("[id^='tabnodes_']").DataTable({
         "paging":   true,
         "ordering": true,
@@ -44,9 +45,23 @@
         "info": true,
         "columnDefs": [{
             "targets": 0,
-            "data": "nodeData",
             "render": function (data, type, full, meta) {return renderNodeStatusCol(data, type, full, meta);}
-            }]
+            },{
+            "targets": 1,
+            "width": "15%",
+            "render": function (data, type, full, meta) {return renderNodeNameCol(data, type, full, meta);}
+            },{
+            "targets": 2,
+            "width": "15%",
+            "render": function (data, type, full, meta) {return renderNodeLocationCol(data, type, full, meta);}
+            },{
+            "targets": 4,
+            "render": function (data, type, full, meta) {return renderNodeAwakeCol(data, type, full, meta);}
+            },{
+            "targets": 5,
+            "render": function (data, type, full, meta) {return renderNodeTypeCol(data, type, full, meta);}
+            }
+          ]
         });
     });
 

@@ -1,5 +1,9 @@
 {% block content %}
 
+<!-- ozwave lib -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwlib.js"></script>
+    <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/css/ui-icons.css">
+
 <!-- Sidebar CSS -->
     <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/css/bootstrap-sidebar.css">
 
@@ -8,7 +12,7 @@
         <h4>
            <a class="list-group-item bg-info" href="#" onclick="toggleVisible('detailOZWconfig', 'toggle-OZWconfig');return false;">
                <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span>&nbsp;&nbsp; 
-               <span id="ozw-status" class="label status-{{ openzwaveInfo.status }}">{% trans %}Openzwave config{% endtrans %}</span>
+               <span id="ozw-status" class="label status-{{ openzwaveInfo.status }}">Openzwave</span>
                <span id="manager-status" class="label status-{{ managerState.status }}">{% trans %}Manager{% endtrans %}</span>&nbsp;&nbsp; 
                <small id="manager-init">{{ managerState.init }}</small>
                <div class="pull-right"><small id="ozw-version">{{ openzwaveInfo.PYOZWLibVers }}</small></div>
@@ -96,7 +100,7 @@
                 </a>
             </li>
             <li{% if plugin_active == "nodes" %} class="active" {% endif %}>
-                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes">{% trans %}Nodes{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes"  id="nodes-href">{% trans %}Nodes{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tree-deciduous"></span>
                 </a>
             </li>
@@ -147,6 +151,7 @@
 <script type="text/javascript">
 
         var activeNetwork = "{{ network_active }}";
+        clientID = "{{ clientid }}";
         
         /* Action which shows and hides div with a id */
         $("[id^='toggle-OZWconfig']").click(function() {
@@ -175,26 +180,39 @@
           };
         };
         
-        function selectActiveNetwork(networkId) {
+        function selectActiveNetwork(NetworkID) {
             sidebarVisible('network-menu', true);
-            activeNetwork = networkId;
-            $("#debug-networkactive").text(networkId);
-            $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + networkId + "/controller");
+            activeNetwork = NetworkID;
+            $("#debug-networkactive").text(NetworkID);
+            $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
+            $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
         };
+        
     $( document ).ready(function() {
         var ws_onmessage_menu = ws.onmessage;
         ws.onmessage = function(e) {
             ws_onmessage_menu(e);
             data = JSON.parse(e.data);
+            if (data.msgid == "plugin.status") {
+                if ( data.content['host'] == 'vmdomogik0' && 'plugin-ozwave' == data.content['type'] + '-'+ data.content['name'] ) {
+                    if (data.content['event'] == "starting" || data.content['event'] == "stopped" || data.content['event'] == "fail") {
+                        if ($('#client-status .status').text() != "starting") {
+                            $("#ozw-status").removeClass().addClass("label status-stopped");
+                            $("#manager-status").removeClass().addClass("label status-stopped");
+                            $("#manager-init").text("Stopped");
+                        };
+                    };
+                }; 
+            };
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave") {
-                console.log("Zwave menu publish receive :)", data.msgid);
-                console.log(data);
+    //            console.log("Zwave menu publish receive :)", data.msgid);
+    //            console.log(data);
                 if (msgId[1] == "ctrl") {
                     if (msgId[2] == "state") {
                         if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                            $("#ctrl-tab_"+data.content.networkid).removeClass().addClass("label status-" + data.content.status).attr("title",data.content.init);
-                            $("#ctrl-tab_"+data.content.networkid).text(data.content.networkid + " - " + data.content.homeid );
+                            $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("title",data.content.init);
+                            $("#ctrl-tab_"+data.content.NetworkID).text(data.content.NetworkID + " - " + data.content.homeid );
                             <!-- debug infos -->
                             $("#debug-ctrl").text(JSON.stringify(data.content));
                         };
