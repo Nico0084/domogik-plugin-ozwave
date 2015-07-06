@@ -42,23 +42,18 @@ try:
     from domogik.xpl.common.xplmessage import XplMessage
     from domogik.xpl.common.xplconnector import XplTimer
     
-#    from domogik.xpl.common.queryconfig import Query
-    from domogik.mq.reqrep.client import MQSyncReq
     from domogik.mq.message import MQMessage
     
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
-    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
-    import threading
+#    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
     import sys
-    import time
+    
 except ImportError as exc :
     import logging
     logging.basicConfig(filename='/var/log/domogik/ozwave_start_error.log',level=logging.DEBUG)
     err = "Error: Plugin Starting failed to import module ({})".format(exc) 
     print err
     logging.error(err)
-
-#from domogik_packages.plugin_ozwave.lib.ozwmqworker import OZWMQRep
 
 class OZwave(XplPlugin):
     """ Implement a listener for Zwave command messages
@@ -72,8 +67,6 @@ class OZwave(XplPlugin):
         # check if the plugin is configured. If not, this will stop the plugin and log an error
         if not self.check_configured():
             return
-        # get the devices list
-        self.devices = self.get_device_list(quit_if_no_device = False)
         # Récupère la config 
         ozwlogConf = self.get_config('ozwlog')
         self.myzwave = None
@@ -100,61 +93,14 @@ class OZwave(XplPlugin):
                 self.force_leave()
                 return
                 
-#        self.log.debug('Opening worker MQ')        
-#        self.serverUI = OZWMQRep(self.myzwave.cb_ServerWS, self.log)
-#        self.log.debug('worker MQ open')        
-#        
-                # get the devices list
-        self.devices = self.get_device_list(quit_if_no_device = False)
         # Crée le listener pour les messages de commande xPL traités par les devices zwave
         Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic','xpltype': 'xpl-cmnd'})
-        # Validation avant l'ouverture du controleur, la découverte du réseaux zwave prends trop de temps -> RINOR Timeout
-        self.add_stop_cb(self.myzwave.stop)
-#        if self._waitForRest() :
         self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
         self._ctrlHBeat.start()
         #lancement du thread de démarrage des sercices ozwave
         self.myzwave.starter.start()
         self.log.info('****** Init OZWave xPL manager completed ******')
         self.ready()        
-#        else : self.force_leave()
-
-# TODO: A supprimer si test concluant
-#    def _waitForRest(self):
-#        """Attends  que le serveur rest http soit disponible, timeout de sortie = 60s"""
-#        import urllib2
-#        from domogik.common.configloader import Loader
-#
-#        cfg_rest = Loader('rest')
-#        config_rest = cfg_rest.load()
-#        conf_rest = dict(config_rest[1])
-#        if conf_rest['use_ssl'] == 'False' : protocol = 'http'
-#        else : protocol = 'https'
-#        rest = "%s://%s:%s" % (protocol, config_rest[0]['bind_interface'], conf_rest['port'])
-#        the_url = "%s" % (rest) #/base/device/list
-#        rest_ok = False
-#        time_out = False
-#        t = time.time()
-#        while not self.get_stop().isSet() and not time_out and not rest_ok:
-#            self.log.debug("Try to join rest at :{0}".format(the_url))
-#            try :
-#                req = urllib2.Request(the_url)
-#                handle = urllib2.urlopen(req)
-#                devices = handle.read()
-#            except IOError,  e:
-#                if time.time() - t >= 60 : time_out = True
-#                else : 
-#                    self.log.debug("Rest no response, wait 3s for next try. {0}".format(e.reason))
-#                    self.get_stop().wait(3)
-#            else : rest_ok = True
-#        if rest_ok : return True
-#        else:
-#            if time_out :
-#                self.log.error("Rest not response (by timeout) quit plugin :(")
-#                return False
-#            else :
-#                self.log.error("Rest not response (by stop plugin) quit plugin :(")
-#                return False
    
     def getsize(self):
         return sys.getsizeof(self) + sum(sys.getsizeof(v) for v in self.__dict__.values())
@@ -222,7 +168,7 @@ class OZwave(XplPlugin):
         print action
         if action[0] == 'ozwave' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
-            if action[1] in ["openzwave", "manager", "controller"] :# "ozwave.networks.get":
+            if action[1] in ["openzwave", "manager", "controller", "node"] :# "ozwave.networks.get":
                 handled = True
                 report = self.myzwave.cb_ServerWS("{0}.{1}".format(action[1], action[2]),  msg.get_data())
                 print "*** Report : ",  report

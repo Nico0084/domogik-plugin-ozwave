@@ -31,4 +31,4 @@ nosetests.xml
 # Openzwave files
 OZW_Log.txt
 zwscene.xml
-
+data/*

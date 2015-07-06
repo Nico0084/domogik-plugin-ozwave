@@ -171,8 +171,8 @@ controller to learn new data.
             à destination de l'UI a travers la MQ.
         """
         msg = report.copy()
-        msg["networkid"] = self.networkID
-        msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
+        msg["NetworkID"] = self.networkID
+        msg["node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
         print 'Send report to MQ: '
    #     print msg
         self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg)
