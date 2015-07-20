@@ -96,6 +96,7 @@ class ZWaveNode:
         
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
+    log = property(lambda self:self._ozwmanager._log)
     networkID = property(lambda self: self._ozwmanager.getNetworkID(self._homeId))
     homeID = property(lambda self: self._ozwmanager.matchHomeID(self._homeId))
     refName = property(lambda self: self._getNodeRefName())

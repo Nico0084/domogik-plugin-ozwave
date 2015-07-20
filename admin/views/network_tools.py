@@ -41,7 +41,7 @@ def get_controller_state(NetworkID, abort = False):
     if not abort : 
         cli = MQSyncReq(app.zmq_context)
         msg = MQMessage()
-        msg.set_action('ozwave.controller.get')
+        msg.set_action('ozwave.ctrl.get')
         msg.add_data('NetworkID', NetworkID)
         res = cli.request('plugin-ozwave.{0}'.format(get_sanitized_hostname()), msg.get(), timeout=10)
         if res is not None:
@@ -55,7 +55,7 @@ def get_controller_nodes(NetworkID, abort = False):
     if not abort : 
         cli = MQSyncReq(app.zmq_context)
         msg = MQMessage()
-        msg.set_action('ozwave.controller.nodes')
+        msg.set_action('ozwave.ctrl.nodes')
         msg.add_data('NetworkID', NetworkID)
         res = cli.request('plugin-ozwave.{0}'.format(get_sanitized_hostname()), msg.get(), timeout=10)
         if res is not None:

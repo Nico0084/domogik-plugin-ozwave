@@ -168,8 +168,9 @@ class OZwave(XplPlugin):
         print action
         if action[0] == 'ozwave' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
-            if action[1] in ["openzwave", "manager", "controller", "node"] :# "ozwave.networks.get":
+            if action[1] in ["openzwave", "manager", "ctrl", "node"] :# "ozwave.networks.get":
                 handled = True
+                data = msg.get_data()
                 report = self.myzwave.cb_ServerWS("{0}.{1}".format(action[1], action[2]),  msg.get_data())
                 print "*** Report : ",  report
                 # send the reply
@@ -183,6 +184,9 @@ class OZwave(XplPlugin):
                 print "*** Full msg : {0}".format(msg.get())
                 print "********* reply message ********"
                 self.reply(msg.get())
+                if "ack" in  data and data['ack'] == "pub":
+                    print "*** Report publish : ",  report
+                    self.publishMsg("{0}.{1}.{2}".format(action[0], action[1], action[2]), report)
             if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
 
