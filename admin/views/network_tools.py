@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from domogik.admin.application import app, render_template
+from domogik.admin.application import app
 from domogik.common.utils import get_sanitized_hostname
 
 from domogikmq.reqrep.client import MQSyncReq
@@ -63,16 +63,17 @@ def get_controller_nodes(NetworkID, abort = False):
         else : data['error'] =  u'Plugin timeout response.'
     return data
 
-def get_node_infos(NetworkID,  nodeId, abort = False):
-    data = {u'error': u'', u'data': {}}
+def get_request(client_id, action, data, abort = False):
+    resData = {u'error': u'', u'data': {}}
     if not abort : 
         cli = MQSyncReq(app.zmq_context)
         msg = MQMessage()
-        msg.set_action('ozwave.node.infos')
-        msg.add_data('NetworkID', NetworkID)
-        msg.add_data('nodeId',  nodeId)
-        res = cli.request('plugin-ozwave.{0}'.format(get_sanitized_hostname()), msg.get(), timeout=10)
+        msg.set_action(action)
+        for key in data:
+            msg.add_data(key, data[key])
+        res = cli.request(client_id, msg.get(), timeout=10)
         if res is not None:
-            data = res.get_data()
-        else : data['error'] =  u'Plugin timeout response.'
-    return data
+            resData = res.get_data()
+            action = res.get_action()
+        else : resData['error'] =  u'Plugin timeout response on request : {0}.'.format(action)
+    return action, resData

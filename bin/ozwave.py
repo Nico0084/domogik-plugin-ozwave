@@ -171,7 +171,7 @@ class OZwave(XplPlugin):
             if action[1] in ["openzwave", "manager", "ctrl", "node"] :# "ozwave.networks.get":
                 handled = True
                 data = msg.get_data()
-                report = self.myzwave.cb_ServerWS("{0}.{1}".format(action[1], action[2]),  msg.get_data())
+                report = self.myzwave.processRequest("{0}.{1}".format(action[1], action[2]),  msg.get_data())
                 print "*** Report : ",  report
                 # send the reply
                 msg = MQMessage()

@@ -81,7 +81,10 @@ class ManageMonitorNodes(threading.Thread):
         while not self._stop.isSet():
             if self.__reports :
                 report = self.__reports.popleft()
-                self.logNode(report['date'], report['type'], report['homeId'], report['nodeId'], report['datas'])
+                try :
+                    self.logNode(report['date'], report['type'], report['homeId'], report['nodeId'], report['datas'])
+                except:
+                    self._pluginLog.warning(u"Monitor node bad report : {0}".format(report))
             else : self._stop.wait(0.01)
         # flush and close list nodes
         for node in self.nodesMonitor :
@@ -158,42 +161,47 @@ class ManageMonitorNodes(threading.Thread):
     def startMonitorNode(self, homeId, nodeId):
         """Demarre la surveillance du node dans un fichier log."""
         retval = {'error': ''}
-        if not self.isMonitored(homeId, nodeId) :
-            fName = self.getFileName(homeId, nodeId)
-            fLog = open(fName,  "w")
-            self._pluginLog.info('Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
-            retval.update({'state': 'started','usermsg':'Start monitor node {0} in log file.'.format(nodeId), 'file': fName})
-            fLog.write("{0} - Started monitor log for node {1}.\n".format(datetime.now(),  nodeId))
-            node = self._ozwManager._getNode(homeId, nodeId)
-            if node : 
+        node = self._ozwManager._getNode(homeId, nodeId)
+        if node is not None : 
+            if not self.isMonitored(homeId, nodeId) :
+                fName = self.getFileName(homeId, nodeId)
+                fLog = open(fName,  "w")
+                self._pluginLog.info('Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
+                retval.update({'state': 'started','usermsg':'Start monitor node {0} in log file.'.format(nodeId), 'file': fName})
+                fLog.write("{0} - Started monitor log for node {1}.\n".format(datetime.now(),  nodeId))
                 infos = node.getInfos()
                 fLog.write("Node is registered in manager, state information : \n ")
                 pprint.pprint(infos, stream=fLog)
                 infos = node.getValuesInfos()
                 pprint.pprint(infos, stream=fLog)
                 fLog.write("===============================================\n")
+                fLog.close()
+                fLog = open(fName,  "a")  # reopen in append mode
+                self.nodesMonitor.update({self.refNode(homeId, nodeId) : fLog})
             else :
-                fLog.write("Node isn't registered in manager.\n")
-            fLog.close()
-            fLog = open(fName,  "a")  # reopen in append mode
-            self.nodesMonitor.update({self.refNode(homeId, nodeId) : fLog})
+                retval.update({'state': 'started','usermsg': 'Monitor node {0} in log already started.'.format(nodeId), 'file': fName})
+                self._pluginLog.debug('Monitor node {0} in log already started.'.format(nodeId))
         else :
-            retval.update({'state': 'started','usermsg': 'Monitor node {0} in log already started.'.format(nodeId), 'file': fName})
-            self._pluginLog.debug('Monitor node {0} in log already started.'.format(nodeId))
+            retval['error'] = u"Can't start Monitor, Node is registered in manager (homeid: {0}, nodeId: {0})".format(homeId,  nodeId)
         return retval
         
     def stopMonitorNode(self, homeId, nodeId):
         """Arrete la surveillance du node"""
         retval = {'error': ''}
-        if self.isMonitored(nodeId) :
-            fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
-            retval.update({'state': 'stopped','usermsg': 'Stop monitor node {0} in log file.'.format(nodeId), 'file': self.getFileName(homeId, nodeId)})
-            self._pluginLog.info('Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(homeId, nodeId)))
-            fLog.write("{0} - Stopped monitor log for node {1}.".format(datetime.now(),  nodeId))
-            fLog.close()
-            del self.nodesMonitor[self.refNode(homeId, nodeId)]
+        node = self._ozwManager._getNode(homeId, nodeId)
+        if node is not None : 
+            if self.isMonitored(homeId, nodeId) :
+                fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
+                retval.update({'state': 'stopped','usermsg': 'Stop monitor node {0} in log file.'.format(nodeId), 'file': self.getFileName(homeId, nodeId)})
+                self._pluginLog.info('Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(homeId, nodeId)))
+                fLog.write("{0} - Stopped monitor log for node {1}.".format(datetime.now(),  nodeId))
+                fLog.close()
+                del self.nodesMonitor[self.refNode(homeId, nodeId)]
+            else :
+                retval.update({'error': 'Monitor node {0}.{1} not running.'.format(homeId, nodeId)})
         else :
-            retval.update({'error': 'Monitor node {0} not running.'.format(nodeId)})
+            retval['error'] = u"Can't stop Monitor, Node is registered in manager (homeid: {0}, nodeId: {0})".format(homeId,  nodeId)
+        return retval
         return retval
             
     def logNode(self, date,  type, homeId, nodeId, args):

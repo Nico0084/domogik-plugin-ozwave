@@ -1255,17 +1255,21 @@ class OZWavemanager():
             else : return {"error" : "Unknown Node : %d" % nodeId}
         else : return {"error" : "Zwave network not ready, can't find node %d" % nodeId}
 
-    def cb_ServerWS(self, request, data):
-        """Callback en provenance de l'UI via server Websocket (resquest avec ou sans ack)"""
+    def processRequest(self, request, data):
+        """Callback come from MQ (request with reply)"""
         report = {}
-        print "WS - Requete UI : ", request, data
-    # TODO: Pour l'instant la requete ne contient pas l'ID du controleur, On lance l'action sur le premier. Mettre l'ID dans la requete
-        if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId                
+        print "WS - Requete MQ : ", request, data
+        reqRef = request.split('.')
+        if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId  
         if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
         else : data['homeId'] = self.getCtrlOfNetwork(data['networkId']).homeId
-    # Fin solution temporaire
+        if 'nodeId' in data : data['nodeId'] =  int(data['nodeId'])
         ctrl = self.getCtrlOfNetwork(data['networkId'])
-        if request == 'ctrlAction' :
+        if reqRef[0] == 'ctrl':
+            report = self._handleControllerRequest(request, data)
+        if reqRef[0] == 'node':
+            report = self._handleNodeRequest(request, data)
+        elif request == 'ctrlAction' :
             report = self.handle_ControllerAction(data['networkId'],  data['action'])
      #       if data['action']['cmd'] =='getState' and report['cmdstate'] != 'stop' : blockAck = True
         elif request == 'ctrlSoftReset' :
@@ -1276,53 +1280,14 @@ class OZWavemanager():
             report = self.getOpenzwaveInfo()
         elif request == 'manager.get' :
             report = self.getManagerInfo()
-        elif request == 'ctrl.get' :
-            report = self.getNetworkInfo(data['networkId'])
-        elif request == 'ctrl.nodes' :
-            report['nodes'] = []
-            for nodeId in ctrl.getNodesId():
-                report['nodes'].append(self.getNodeInfos(data['homeId'], nodeId))
-        elif request == 'node.infos' :
-            data['nodeId'] =  int(data['nodeId'])
-            if self._IsNodeId(data['nodeId']):
-                report = self.getNodeInfos(data['homeId'], data['nodeId'])
-            else : report = {'error':  'Invalide nodeId format.'}
-        elif request == 'RefreshNodeDynamic' :
-            if self._IsNodeId(data['node']):
-                report = self.refreshNodeDynamic(data['homeId'], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
-        elif request == 'RefreshNodeInfo' :
-            if self._IsNodeId(data['node']):
-                report = self.refreshNodeInfo(data['homeId'], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
-        elif request == 'RefreshNodeState' :
-            if self._IsNodeId(data['node']):
-                report = self.refreshNodeState(data['homeId'], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
-            print "Refresh node :", report
-        elif request == 'HealNode' :
-            if self._IsNodeId(data['node']):
-                self.healNetworkNode(data['networkId'],  data['node'],  data['forceroute'])
-                report = {'usermsg':'Command sended, please wait for result...'}
-            else : report = {'error':  'Invalide nodeId format.'}
+
         elif request == 'HealNetwork' :
             self.healNetwork(data['networkId'], data['forceroute'])
             report = {'usermsg':'Command sended node by node, please wait for each result...'}
-        elif request == 'ctrl.saveconf':
-            report = ctrl.saveNetworkConfig()
         elif request == 'GetMemoryUsage':
             report = self.getMemoryUsage()
         elif request == 'GetAllProducts':
             report = self.getAllProducts()
-        elif request == 'node.set':
-            if data['key'] == "name" :
-                report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], data['value'], "Undefined")
-            elif data['key'] == "location" :
-                report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], "Undefined", data['value'])
-        elif request == 'GetNodeValuesInfo':
-            if self._IsNodeId(data['node']):
-                report =self.getNodeValuesInfos(data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
         elif request == 'GetValueInfos':
             if self._IsNodeId(data['node']):
                 valId = long(data['valueid']) # Pour javascript type string
@@ -1390,18 +1355,75 @@ class OZWavemanager():
             report = self.getLoglines(data)
         elif request == 'GetLogOZW':
             report = self.getLogOZWlines(data)
-        elif request == 'StartMonitorNode':
-            if self._IsNodeId(data['node']):
-                report = self.monitorNodes.startMonitorNode(data["homeId"], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
-        elif request == 'StopMonitorNode':
-            if self._IsNodeId(data['node']):
-                report = self.monitorNodes.stopMonitorNode(data["homeId"], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         return report
 
+    def _handleControllerRequest(self, request, data):
+        """Handle all zwave controller request coming from MQ"""
+        ctrl = self.getCtrlOfNetwork(data['networkId'])
+        report = {}
+        if request == 'ctrl.get' :
+            report = self.getNetworkInfo(data['networkId'])
+        elif request == 'ctrl.nodes' :
+            report['nodes'] = []
+            for nodeId in ctrl.getNodesId():
+                report['nodes'].append(self.getNodeInfos(data['homeId'], nodeId))
+        elif request == 'ctrl.saveconf':
+            report = ctrl.saveNetworkConfig()
+        else :
+            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+        return report
+
+    def _handleNodeRequest(self, request, data):
+        """Handle all zwave node request coming from MQ"""
+        ctrl = self.getCtrlOfNetwork(data['networkId'])
+        if request == 'node.infos' :
+            if self._IsNodeId(data['nodeId']):
+                report = self.getNodeInfos(data['homeId'], data['nodeId'])
+            else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'node.set':
+            if data['key'] == "name" :
+                report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], data['value'], "Undefined")
+            elif data['key'] == "location" :
+                report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], "Undefined", data['value'])
+        elif request == 'node.get':
+            if data['key'] == 'values':
+                if self._IsNodeId(data['nodeId']):
+                    report =self.getNodeValuesInfos(data['networkId'], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'node.action' :
+            if data['action'] == 'StartMonitorNode':
+                if self._IsNodeId(data['nodeId']):
+                    report = self.monitorNodes.startMonitorNode(data["homeId"], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+            elif data['action'] == 'StopMonitorNode':
+                if self._IsNodeId(data['nodeId']):
+                    report = self.monitorNodes.stopMonitorNode(data["homeId"], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+            elif data['action'] == 'RefreshNodeDynamic' :
+                if self._IsNodeId(data['nodeId']):
+                    report = self.refreshNodeDynamic(data['homeId'], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+            elif data['action'] == 'RefreshNodeInfo' :
+                if self._IsNodeId(data['nodeId']):
+                    report = self.refreshNodeInfo(data['homeId'], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+            elif data['action'] == 'RefreshNodeState' :
+                if self._IsNodeId(data['nodeId']):
+                    report = self.refreshNodeState(data['homeId'], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+                print "Refresh node :", report
+            elif data['action'] == 'HealNode' :
+                if self._IsNodeId(data['nodeId']):
+                    self.healNetworkNode(data['networkId'],  data['nodeId'],  data['forceroute'])
+                    report = {'usermsg':'Command heal node sended, please wait for result...'}
+                else : report = {'error':  'Invalide nodeId format.'}
+        else :
+            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+        report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId']})
+        return report
+    
     def reportCtrlMsg(self, networkId, ctrlmsg):
         """Un message de changement d'état a été recu, il est reporté au besoin sur le hub xPL pour l'UI
             SIGNAL_CTRL_NORMAL = 'Normal'                   # No command in progress.  

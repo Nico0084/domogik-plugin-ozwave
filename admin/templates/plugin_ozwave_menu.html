@@ -7,6 +7,13 @@
 <!-- Sidebar CSS -->
     <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/css/bootstrap-sidebar.css">
 
+<!-- Bootbox -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/bootbox.min.js"></script>
+    
+<!-- Bootstrap switch -->
+    <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/libraries/css/bootstrap-switch.min.css">
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/bootstrap-switch.min.js"></script>
+
 <div class="container">
     <div class="list-group">
         <h4>
@@ -99,22 +106,22 @@
           <ul class="nav navbar-nav">
             <li{% if plugin_active == "controller" %} class="active" {% endif %}>
                 <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller" id="ctrl-href">{% trans %}Controller{% endtrans %}
-                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-cog"></span>
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-server"></span>
                 </a>
             </li>
             <li{% if plugin_active == "nodes" %} class="active" {% endif %}>
                 <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes"  id="nodes-href">{% trans %}Nodes{% endtrans %}
-                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tree-deciduous"></span>
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cubes"></span>
                 </a>
             </li>
             <li{% if plugin_active == "network" %} class="active" {% endif %}>
                 <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
-                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span>
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-link"></span>
                 </a>
             </li>
             <li{% if plugin_active == "tools" %} class="active" {% endif %}>
                 <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
-                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-wrench"></span>
+                    <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cogs"></span>
                 </a>
             </li>
           </ul>
@@ -193,7 +200,7 @@
         
         $("[id^='saveconf_']").click(function() {
             var NetworkID = this.id.split("_")[1];
-            ws.send('{"dst": "plugin-{{ client_detail.name }}.{{ client_detail.host }}", "action": "ozwave.ctrl.saveconf", '+
+            ws.send('{"dst": "plugin-{{ client_detail.name }}.{{ client_detail.host }}", "mq_request ": "ozwave.ctrl.saveconf", '+
                 '"data": {"name": "{{ client_detail.name }}", "host": "{{ client_detail.host }}", '+
                         '"ack":"pub", ' +
                         '"networkId":"' + NetworkID + '"' +

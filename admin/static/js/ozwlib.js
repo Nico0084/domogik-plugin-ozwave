@@ -13,6 +13,14 @@ var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0,
 
 // Handle Data nodes table
 
+function GetNodeRefId(NetworkID, NodeID) {
+    return  "_" + NetworkID + "_" + NodeID;
+};
+
+function GetValueRefId(NetworkID, NodeID, ValueID) {
+    return  "_" + NetworkID + "_" + NodeID + "_" + ValueID;
+};
+
 function RefreshDataNode(dataNode, Kbuild) {
     var idx = -1;
     for (var i = 0; i < nodesData.length; i++) {
@@ -44,9 +52,35 @@ function RefreshDataNode(dataNode, Kbuild) {
     return nodesData[idx];
 };
 
-function GetZWNode(NetworkID, nodeiId) {
-    for (var i=0; i< nodesData.length; i++) {
-        if ((nodesData[i].NodeID == nodeiId) && (nodesData[i].NetworkID == NetworkID)) {
+function RefreshValuesNodeData(NetworkID, NodeID, Values) {
+    for (var i=0; i < nodesData.length; i++) {
+        if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
+                nodesData[i].Values = Values;
+            break;
+        };
+    };
+};
+
+function GetValueZWNode(NetworkID, NodeID, ValueID) {
+    for (var i=0; i < nodesData.length; i++) {
+        if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
+            if (nodesData[i].Values.length != 0) {
+                for (var v=0; v < nodesData[i].Values.length; v++) {
+                    if (nodesData[i].Values[v].id ==ValueID) {
+                        return nodesData[i].Values[v];
+                    };
+                };
+            } else {
+                return false;
+            };
+        };
+    };
+    return false;
+};
+
+function GetZWNode(NetworkID, NodeID) {
+    for (var i=0; i < nodesData.length; i++) {
+        if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
             return nodesData[i];
         };
     };
@@ -99,7 +133,12 @@ function updateNode(newNodeData, date) {
         };
     };
 };
-                
+
+function sendRequest(request, data, callback) {
+    $.getJSON('/plugin_ozwave/' + clientID + '/request/' + request, data, 
+        callback);
+};
+
 function requestZWNodeInfos(NetworkID, nodeId) {
     if ((NetworkID != undefined) && (nodeId != undefined)) {
         var nodeData = GetZWNode(NetworkID, nodeId);
@@ -111,13 +150,16 @@ function requestZWNodeInfos(NetworkID, nodeId) {
             };
         };
         console.log("Requesting node infos, NetworkID = " + NetworkID + ", nodeId = " +nodeId);
-        $.getJSON('/plugin_ozwave/' + clientID + '/'+ NetworkID + '/' + nodeId + '/infos', {}, 
-            function(data, result) {
+        $.getJSON('/plugin_ozwave/' + clientID + '/request/ozwave.node.infos', {
+            networkID: NetworkID,
+            nodeId: nodeId
+            }, 
+            function(data, result, request) {
                 console.log("Retour de get node infos :" + JSON.stringify(data));
                 if (data.result == 'success') {
                     console.log("updating datatable...");
-                    data.data.LastReqRefresh = d.getTime();
-                    updateNode(data.data);
+                    data.content.LastReqRefresh = d.getTime();
+                    updateNode(data.content);
                 } else {
                     console.warn("Request node infos fail (NetworkID = " + NetworkID + ", nodeId = " +nodeId + ") ", data);
                 };
@@ -222,6 +264,14 @@ function EnableInputText(obj, callback) {
     });
 };
 
+function EnableButtonAction(obj, callback) {
+    $(obj).attr("isHandled", true);
+    $('#st_'+obj.id).attr('disabled', true);
+    $(obj).on('click', function (e) {
+        return callback(obj);
+    });
+};
+
 function updateBtStatus(refId, newClassSt) {
     var removedClassSt ="";
     var removedClassStic ="";
@@ -260,6 +310,17 @@ function updateBtSavedConf(NetworkID, saved) {
     } else {
         $("#saveconf_" + NetworkID).removeClass("btn-info hide").addClass("btn-warning");
         $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-saved glyphicon-hourglass").addClass("glyphicon-floppy-save");
+    };
+};
+
+function updateBtMonitored(nodeData) {
+    var nodeRef = GetNodeRefId(nodeData.NetworkID, nodeData.NodeID);
+    if (nodeData.Monitored != '') {
+        $("#monitornode" + nodeRef).attr('title', "Node monitoring file : " + nodeData.Monitored + "&#10;Click to stop monitoring.");
+        $("#monitornodeic" + nodeRef).removeClass("icon16-action-play").addClass("icon16-action-processing_ffffff");
+    } else {
+        $("#monitornode" + nodeRef).attr('title', "Start Monitor Node and log it.");
+        $("#monitornodeic" + nodeRef).removeClass("icon16-action-processing_ffffff").addClass("icon16-action-play");
     };
 };
 
@@ -365,30 +426,32 @@ function renderNodeTypeCol(data, type, full, meta) {
 function renderNodeActionColl(data, type, full, meta) {
     var api = $.fn.dataTable.Api(meta.settings);
     var cell = api.cell(meta.row, 0);
-    var nodeData = GetZWNodeByRow(cell);
+    var refId = cell.data().split(".");
+    var nodeRef = GetNodeRefId(refId[0], refId[1]);
+    var nodeData = GetZWNode(refId[0], refId[1]);
     if (nodeData) {
-        var stAct = 'glyphicon-zoom-in';
-        var tabDet = document.getElementById("detNode" + nodeData.NodeID);
+        var stAct = 'fa-search-plus';
+        var tabDet = document.getElementById("valuesNode" + nodeRef);
         if (tabDet) { // DetailNode opened 
-            stAct = 'glyphicon-zoom-out'; 
+            stAct = 'fa-search-minus'; 
         };
-        var ret = "<span id='detailnode_" + nodeData.NodeID + "' class='btn btn-xs btnspacing btn-info' title='CommandClass detail'>" +
-                        "<span id='detailnodeic_" + nodeData.NodeID + "' class='glyphicon " + stAct + "'></span></span>"
-        ret += "<span id='refreshnode_" + nodeData.NodeID + "' class='btn btn-xs btnspacing btn-info' title='Force Refresh Node'>" +
-                        "<span id='refreshnodeic_" + nodeData.NodeID + "' class='glyphicon glyphicon-refresh'></span></span>"
+        var ret = "<span id='detailnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='CommandClass detail'>" +
+                        "<span id='detailnodeic" + nodeRef + "' class='fa " + stAct + "'></span></span>"
+        ret += "<span id='refreshnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='Force Refresh Node'>" +
+                        "<span id='refreshnodeic" + nodeRef + "' class='glyphicon glyphicon-refresh'></span></span>"
         if (nodeData.Groups.length > 0) {
-            ret += "<span id='updassoc_" + nodeData.NodeID + "' class='btn btn-xs extbtn btn-info' title='Edit association'>" +
-                        "<span id='updassocic_" + nodeData.NodeID + "' class='glyphicon icon16-action-groups'></span></span>"
+            ret += "<span id='updassoc" + nodeRef + "' type='nodeaction' class='btn btn-xs extbtn btn-info' title='Edit association'>" +
+                        "<span id='updassocic" + nodeRef + "' class='glyphicon icon16-action-groups'></span></span>"
             };
         var stMonitored = "action-play";
         var tMonitored = "Start Monitor Node and log it.";
         if (nodeData.Monitored != '') {
             stMonitored = "action-processing_ffffff";
-            tMonitored = "Node monitoring file : " + nodeData.Monitored + "<BR><BR>Click to stop monitoring.";
+            tMonitored = "Node monitoring file : " + nodeData.Monitored + "/n/nClick to stop monitoring.";
             };
 
-        ret += "<span id='monitornode_" + nodeData.NodeID + "' class='btn btn-xs extbtn btn-info' title='" +tMonitored + "'>" +
-                "<span id='monitornodeic_" + nodeData.NodeID + "' class='glyphicon icon16-" + stMonitored + "'></span></span>"
+        ret += "<span id='monitornode" + nodeRef + "' type='nodeaction' class='btn btn-xs extbtn btn-info' title='" +tMonitored + "'>" +
+                "<span id='monitornodeic" + nodeRef + "' class='glyphicon icon16-" + stMonitored + "'></span></span>"
         return  ret;
     } else {
         return 'No Data';
