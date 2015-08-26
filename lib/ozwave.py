@@ -1267,8 +1267,10 @@ class OZWavemanager():
         ctrl = self.getCtrlOfNetwork(data['networkId'])
         if reqRef[0] == 'ctrl':
             report = self._handleControllerRequest(request, data)
-        if reqRef[0] == 'node':
+        elif reqRef[0] == 'node':
             report = self._handleNodeRequest(request, data)
+        elif reqRef[0] == 'value':
+            report = self._handleValueRequest(request, data)
         elif request == 'ctrlAction' :
             report = self.handle_ControllerAction(data['networkId'],  data['action'])
      #       if data['action']['cmd'] =='getState' and report['cmdstate'] != 'stop' : blockAck = True
@@ -1301,24 +1303,12 @@ class OZWavemanager():
                 report = {'error':''}
             else :
                 report = {'error':'Setting interval error : keep value %d ms.' %report['interval']}
-        elif request == 'EnablePoll':
-            valId = long(data['valueid']) # Pour javascript type string
-            report = ctrl.node.enablePoll(data['node'],  valId,  data['intensity']) 
-        elif request == 'DisablePoll':
-            valId = long(data['valueid']) # Pour javascript type string
-            report = ctrl.node.disablePoll(data['node'],  valId)
         
         # Manager request
         elif request == 'GetValueTypes':
             report = self.getValueTypes()  
         elif request == 'GetListCmdsCtrl':
             report = self.getListCmdsCtrl(data['networkId'])
-        elif request == 'setValue':
-            if self._IsNodeId(data['node']):
-                valId = long(data['valueid']) # Pour javascript type string
-                report = self.setValue(data['homeId'], data['node'], valId, data['newValue'])
-            else : report = {'error':  'Invalide nodeId format.'}
-            print 'Set command_class Value : ',  report
         elif request == 'setGroups':
             if self._IsNodeId(data['node']):
                 report = self.setMembersGrps(data['homeId'], data['node'], data['ngrps'])
@@ -1378,6 +1368,7 @@ class OZWavemanager():
     def _handleNodeRequest(self, request, data):
         """Handle all zwave node request coming from MQ"""
         ctrl = self.getCtrlOfNetwork(data['networkId'])
+        report = {}
         if request == 'node.infos' :
             if self._IsNodeId(data['nodeId']):
                 report = self.getNodeInfos(data['homeId'], data['nodeId'])
@@ -1419,11 +1410,42 @@ class OZWavemanager():
                     self.healNetworkNode(data['networkId'],  data['nodeId'],  data['forceroute'])
                     report = {'usermsg':'Command heal node sended, please wait for result...'}
                 else : report = {'error':  'Invalide nodeId format.'}
+            else :
+                report['error'] ='Request {0} unknown action, data : {1}'.format(request,  data)
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId']})
         return report
-    
+
+    def _handleValueRequest(self, request, data):
+        """Handle all zwave node request coming from MQ"""
+        ctrl = self.getCtrlOfNetwork(data['networkId'])
+        report = {}
+        if request == 'value.set' :
+            if self._IsNodeId(data['nodeId']):
+                valId = long(data['valueId']) # Pour javascript type string
+                report = self.setValue(data['homeId'], data['nodeId'], valId, data['newValue'])
+            else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'value.poll':
+            valId = long(data['valueId']) # Pour javascript type string
+            data['intensity'] = int(data['intensity'])
+            node = self._getNode(data['homeId'], data['nodeId'])
+            if node :
+                if data['action'] == 'EnablePoll' :
+                    report = ctrl.node.enablePoll(data['nodeId'],  valId,  data['intensity']) 
+                elif data['action'] == 'DisablePoll':
+                    report = ctrl.node.disablePoll(data['nodeId'],  valId)
+                    value = node.getValue(valId)
+                    value.setPollIntensity(data['intensity'])
+                else :
+                    report['error'] ='Request {0} unknown action, data : {1}'.format(request,  data)
+            else : report = {'error':  'Invalide nodeId format.'}
+            report.update({'action': data['action'], 'intensity': data['intensity']})
+        else :
+            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+        report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId'], 'ValueID': data['valueId']})
+        return report
+
     def reportCtrlMsg(self, networkId, ctrlmsg):
         """Un message de changement d'état a été recu, il est reporté au besoin sur le hub xPL pour l'UI
             SIGNAL_CTRL_NORMAL = 'Normal'                   # No command in progress.  

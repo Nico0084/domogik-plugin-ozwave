@@ -168,7 +168,7 @@ class OZwave(XplPlugin):
         print action
         if action[0] == 'ozwave' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
-            if action[1] in ["openzwave", "manager", "ctrl", "node"] :# "ozwave.networks.get":
+            if action[1] in ["openzwave", "manager", "ctrl", "node", "value"] :# "ozwave.networks.get":
                 handled = True
                 data = msg.get_data()
                 report = self.myzwave.processRequest("{0}.{1}".format(action[1], action[2]),  msg.get_data())

@@ -20,6 +20,36 @@ function initValuesTab(refId) {
            '</div>'
     };
 
+function GetValueCell(table, valueRef, col) {
+    try {
+        var row = $("#value"+ valueRef)[0].parentNode;
+        var index = table.cell(row).index();
+        var cell = table.cell(index.row, col);
+        }
+    catch (err) {
+        var cell = false;
+        };
+    return cell
+};
+
+function validateSetValueCmdClss(refId, newValue, valueData) {
+    if (valueData.genre != "User") {
+        bootbox.confirm('<p class="text-center">Set Command Class value for Node ' + valueData.nodeId + ', instance ' + valueData.instance +', <b>' + valueData.label +
+            '</b> to </p><h4 class="text-center">' + newValue + '</h4>',
+        function(result) {
+            if (result) {
+                setValueCmdClss(refId, newValue);
+            } else {
+                var table = $('#valuesNode' + GetNodeRefId(refId[1],refId[2])).DataTable();
+                var cell = GetValueCell(table, GetValueRefId(refId[1],refId[2],refId[3]), 3);
+                cell.data(valueData.value).draw();
+            };
+        });
+    } else {
+        setValueCmdClss(refId, newValue);
+    };
+};
+
 function buildValuesTab (data) {
     if (data.Values.length != 0) {
         var thOut = Object.keys(data.Values[0]);  // Hypothèse, vrais pour l'intant, toutes les lignes on les mêmes entêtes !
@@ -62,67 +92,180 @@ function buildValuesTab (data) {
                 "render": function (data, type, full, meta) {return renderCmdClssName(data, type, full, meta);}
                 }
             ],
-//                "fnDrawCallback": function(oSettings) {
-//                    handleChangeVCC();
-//                    var iId = getDataTableColIndex(oSettings, 'id');
-//                    var nodeid = getDataTableColIndex(oSettings, 'nodeId');
-//                    var start = oSettings._iDisplayStart;
-//                    var stop =  oSettings._iDisplayEnd;
-//                    var iIntensity = getDataTableColIndex(oSettings, 'pollintensity');
-//                    vTable = this;
-//                    for (i=start; i<stop; i++) {
-//                        var vData = this.fnGetData(i)
-//                        var vId = vData[iId]
-//                        var intensity = vData[iIntensity]
-//                        createToolTip('#st' + vId, 'bottom');
-//                        createToolTip('#hn' + vId, 'bottom');
-//                        createToolTip('#adr' + vId, 'bottom');
-//                        createToolTip('#hc' + vId, 'top');
-//                        createToolTip('#poll' + vId, 'top');
-//                        if ($('#poll' + vId).attr('isHandled') === undefined) {
-//                            $('#set_polling_value').dialog_form('updbutton', {
-//                                title: "{% trans 'Set polling value index ' %}" + (i +1) +"{% trans ', node ' %}" + vData[nodeid],
-//                                button: "#poll" + vId,
-//                                values: {polled: $('#poll' + vId).is(':checked'), intensity : intensity, valueid: vId},
-//                                onok: function(values) {
-//                                    // Submit form
-//                                    console.log("set checkbox value : " + values.polled + ", intensity :  " + values.intensity);
-//                                    setPollingValue(vTable, vData[nodeid], values.valueid, values.polled == 'True', values.intensity);
-//                                    $('#set_polling_value').dialog('close');
-//                                }
-//                            });
-//                            $('#poll' + vId).click(function(e){
-//                                var vId =  this.id.slice(4)
-//                                var obj = $('#hc' + vId);
-//                                var cInt = getDataTableColIndex(oSettings, 'pollintensity');
-//                                var vPos = vTable.fnGetPosition(obj[0].parentNode);
-//                                var vData = vTable.fnGetData(vPos[0]);
-//                                var intensity = vData[cInt];
-//                                if (intensity == 0) {intensity =1;};
-//                                $('#valueid').hide();
-//                                $('#tipsSetPollt').html("<br>" + getValueTabCmdClass(vTable, vData, 'commandClass') + " -> " + getValueTabCmdClass(vTable, vData, 'label'));
-//                                $('#intensity').val(intensity);
-//                                if ($('#poll' + vId).is(':checked')) {
-//                                    $('#poll' + vId).removeAttr('checked');
-//                                    $('#polled').removeAttr('checked');
-//                                } else {
-//                                    $('#poll' + vId).attr('checked', 'checked');
-//                                    $('#polled').attr('checked', 'checked');
-//                                };
-//                                console.log("click checkbox value : " + this.id + "  " + vId);
-//                                }); 
-//                            $('#poll' + vId).attr('isHandled',true)
-//                            };
-//                        };
-//                    var hideCols= ['realValue', 'nodeId', 'homeId','domogikdevice','help' ,'readOnly', 'listElems', 'id','polled','pollintensity']
-//                    for (i=0; i<thOut.length; i++) {
-//                        if (hideCols.indexOf(thOut[i]) != -1) {
-//                            $(idValuesNode).dataTable().fnSetColumnVis( i, false ); };
-//                        }
-//                },
-                "sPaginationType": "full_numbers",
-                data: RowN
+            "drawCallback": function(settings) {
+                var api = this.api();
+                var data = api.rows({page:'current'}).data()
+                // activate poll checkbox
+                $( "[id^='poll_']").not("[isHandled]" ).each(function(rowN, nData) {
+                    var refId =  this.id.split("_");
+                    var valueData = GetValueZWNode(refId[1],refId[2],refId[3]);
+                    $(this).attr("isHandled", true);
+                    $(this).click(function(e){
+                        var polled = ''
+                        if  (valueData.polled) {
+                            polled='checked';
+                            $(this).prop('checked', true);
+//                            $(this).attr('checked', 'checked');
+                        } else {
+                            $(this).prop('checked', false);
+                        };
+                        var delay = '';
+                        if (valueData.pollintensity == 0) {valueData.pollintensity = 1};
+                        if (ozwInfo.Options.IntervalBetweenPolls.value) {
+                            delay = "Approx every " + (ozwInfo.Options.PollInterval.value/valueData.pollintensity) + " msec";
+                        } else  {
+                            delay = "Every " + ((ozwInfo.Options.PollInterval.value/1000)/valueData.pollintensity) + " sec";
+                        };
+                        var bdiag = bootbox.dialog({
+                            show: false,
+                            size: 'small',
+                            className: 'text-center',
+                            title: 'Set polling value for <b>'+  valueData.label  +'</b> instance <b>'+ valueData.instance + '</b> node <b>'+ refId[1]+ '.' + refId[2] + '<b>',
+                            message: "<div class='row'>" +
+                                            "<p>" + valueData.commandClass + "</p>" +
+                                            "<p>Set if value must be polled and his instensity.</p>" +
+                                            "<h4>Global pool parameters :</h4><ul>"  +
+                                                "<li class='text-left' title='"+ ozwInfo.Options.PollInterval.doc +"'>Interval : " + ozwInfo.Options.PollInterval.value + " msec</li>" +
+                                                "<li class='text-left' title='"+ ozwInfo.Options.IntervalBetweenPolls.doc +"'>Interval Between Polls: " + ozwInfo.Options.IntervalBetweenPolls.value + "</li></ul>" +
+                                            "<h5 class='alert-info'>Save openzwave network configuration to keep change.</h5>" +
+                                          "</div>" +  
+                                          "<div class='row'>" +
+                                            "<div class='col-md-12'> " +
+                                                "<label for='intensity'>Intensity</label>" +
+                                                "<div class='input-group'>"+
+                                                    "<span class='input-group-addon'>Polled " +
+                                                        "<input id='polled' type='checkbox'"+ polled + ">" +
+                                                    "</span>" +
+                                                    "<input id='intensity' type='number' class='form-control' value=" + valueData.pollintensity + ">" +
+                                                "</div>" +
+                                            "</div>" +
+                                          "</div>" +
+                                          "<div class='row'>" +
+                                            "<p id='delay'>"+ delay +"</p>" +
+                                          "</div>",
+                            data: valueData,
+                            buttons: [{
+                                id: 'btn-cancel',   
+                                label: 'Cancel',
+                                className: 'btn-danger', 
+                                autospin: false,
+                                callback: function(dialogRef){    
+                                    console.log("Cancel set polling value : " + refId[1]+ "." + refId[2]);
+                                }
+                            },{
+                                id: 'btn-ok',   
+                                label: 'Ok',
+                                className: 'btn-primary',
+                                autospin: false,
+                                callback: function(dialogRef){
+                                    console.log("Send set polling value : " + refId[1]+ "." + refId[2]);
+                                    var action = 'DisablePoll';
+                                    if ($('#polled').is(':checked')) { action = 'EnablePoll';}
+                                    var intensity  = $('#intensity').val();
+                                    sendRequest("ozwave.value.poll", {"action": action, "networkId": refId[1], "nodeId": refId[2], "valueId": refId[3],
+                                                      "intensity": intensity}, function(data, result) {
+                                        if (result == "error" || data.result == "error") {
+                                            new PNotify({
+                                                type: 'error',
+                                                title: 'Poll action ' + data.content.action + ' fail.',
+                                                text: data.content.error,
+                                                delay: 6000
+                                            });
+                                        } else {
+                                            var table = $('#valuesNode' + GetNodeRefId(data.content.NetworkID,data.content.NodeID)).DataTable();
+                                            var valueData = GetValueZWNode(data.content.NetworkID, data.content.NodeID, data.content.ValueID);
+                                            var valueRef = GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.ValueID);
+                                            valueData.pollintensity = data.content.intensity;
+                                            if (data.content.action == "EnablePoll") {
+                                                valueData.polled = true;
+                                                $('#poll'+valueRef).attr('title',"Value is polled with intensity : " + valueData.pollintensity).prop('checked', true);
+                                            } else {
+                                                valueData.polled = false;
+                                                $('#poll'+valueRef).attr('title', "Check to poll this value").prop('checked', false) ;
+                                            };
+                                            RefreshValueNodeData(data.content.NetworkID, data.content.NodeID, valueData);
+                                            var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.ValueID), 0);
+                                            HighlightCell(cell.node());
+                                        };
+                                    });
+                                }
+                            }]
+                        });
+                        $("#intensity").on('change', function(e) {
+                            var delay = '';
+                            if (ozwInfo.Options.IntervalBetweenPolls.value) {
+                                delay = "Approx every " + (ozwInfo.Options.PollInterval.value/this.value) + " msec";
+                            } else  {
+                                delay = "Every " + ((ozwInfo.Options.PollInterval.value/1000)/this.value) + " sec";
+                            };
+                            $("#delay").text(delay);
+                        });
+                        bdiag.modal('show');
+                    });
                 });
+                
+                // activate inputs
+                $( "[name='CmdClssValue']").not("[isHandled]" ).each(function(rowN, nData) {
+                    var refId =  this.id.split("_");
+                    var valueData = GetValueZWNode(refId[1],refId[2],refId[3]);
+                    $(this).attr("isHandled", true);
+                    switch (valueData.type) {
+                        case 'Bool' :
+                            if ($(this).hasClass("switchtype")) {
+                                $(this).bootstrapSwitch()
+                                $(this).on('switchChange.bootstrapSwitch', function (event, state) {
+                                    validateSetValueCmdClss(refId, state, valueData);
+                                });
+                            };
+                            break;
+                        case 'Byte' :
+                        case 'Short' :
+                        case 'Int' :
+                        case 'Decimal' :
+                            $(this).on('keypress keyup change', function (e) {
+                                if (e.type == 'keypress') {
+                                    if (e.which == 13) {
+                                        var value = this.value;
+                                        validateSetValueCmdClss(refId, value, valueData);
+                                        return false;
+                                    };
+                                };
+                                var valueRef = GetValueRefId(refId[1],refId[2],refId[3]);
+                                if (valueData.realvalue.toString() != this.value) {
+                                    $("#stch"+ valueRef).removeClass('hidden');
+                                } else {
+                                    $("#stch"+ valueRef).addClass('hidden');
+                                };
+                                if (e.which == 13) {return false};
+                            });
+                            break;
+                        case 'List' :
+                            $(this).on('change', function(e) {
+                                var value = this.value;
+                                validateSetValueCmdClss(refId, value, valueData);
+                            });
+                            break;
+                        case 'String' :
+                            EnableInputText(this, function(obj) {
+                                var value = obj.value;
+                                validateSetValueCmdClss(refId, value, valueData);
+                            });
+                            break;
+                        case 'Button' :
+                            $(this).on('click', function () {
+                                var value =$(this).val();
+                                validateSetValueCmdClss(refId, value, valueData);
+//                                var $btn = $(this).button('loading')
+//                                // business logic...
+//                                $btn.button('reset')
+                              })
+                            break;
+                    };
+                });
+            },
+        "sPaginationType": "full_numbers",
+        data: RowN
+        });
     }  else { // le Node n'as pas de command_class
         var thOut =[];
         thOut[0]="No Command_Class";
@@ -158,14 +301,14 @@ function renderCmdClssStatus(data, type, full, meta) {
             st = 'false';
         };
         if (valueData.polled) { 
-            poll = " checked='checked'";
+            poll = " checked";
             tpoll = "Value is polled with intensity : " + valueData.pollintensity;
         }else { 
             poll ="";
             tpoll =  "Check to poll this value";
         }
 
-        return  "<span  id='adr"+valueRef +"'class='icon16-text-right icon16-status-" + st + "' title='" + textstatus +
+        return  "<span id='value"+valueRef +"'class='icon16-text-right icon16-status-" + st + "' title='" + textstatus +
                 "'></span>" + rw + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
                 "title='"+ tpoll + "' />" + extra;
     } else {
@@ -182,81 +325,72 @@ function renderCmdClssValue(data, type, full, meta) {
     if (valueData) {
         var id = "valCC" + valueRef;
         if (valueData.realvalue == undefined) {valueData.realvalue = valueData.value; };
-        var modify =  (valueData.realvalue != valueData.value);
+        var modify = "";
+        if (valueData.realvalue != valueData.value) {
+            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Requested value change, but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
+        };
         var ret = valueData.value;
         if (valueData.readOnly==true) {
             ret = "<span id='" + id +"' title=''>" +  valueData.value+ "</span>";
-        } else {            
-            if (valueData.type=='Bool') {
-                opt="";
-                valueData.realvalue = (valueData.realvalue == 'true');
-                valueData.value = (valueData.value == 'true');
-                modify =  (valueData.realvalue != valueData.value);
-                if (valueData.label.search(/switch/i) != -1) {
-                    var state = '';
-                    if (valueData.value) { state = ' checked'};
-                    ret = "<div class='make-switch'>"
-                    ret += "<input id='" + id + "' name='CmdClssValue' type='checkbox'" + state + ">";
-                    ret += "</div>"
-                } else {
-                    if (valueData.value) {
-                        opt = "<option selected value=" + valueData.value +">" + valueData.value + "</option>" +
-                                 "<option value=false>false</option>";
+        } else {
+            switch (valueData.type) {
+                case 'Bool' :
+                    if (valueData.label.search(/switch/i) != -1) {
+                        var state = '';
+                        if (valueData.value) { state = ' checked'};
+                        ret = "<div class='make-switch'>";
+                        ret += "<input id='" + id + "' name='CmdClssValue' type='checkbox' class='switchtype'" + state + ">";
+                        ret += modify + "</div>";
                     } else {
-                        opt = "<option value=true>true</option>" +
-                                 "<option selected value=" + valueData.value +">" + valueData.value + "</option>" ;
-                    }
-                    ret ="<select id='" + id + "' name='CmdClssValue' class='listes ccvalue' style='width:7em' title=''>" + opt + "</select>";
-                };
-            };
-            if (valueData.type=='Byte') {
-                ret ="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' min='0' max='255' value='"+ valueData.value +"' title=''></input>";
-                };
-            if (valueData.type=='Short') {
-                ret ="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' min='0' max='65535' value='"+ valueData.value +"' title=''></input>";
-            };
-            if (valueData.type=='Int' | valueData.type=='Decimal') {
-                ret ="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' value='"+ valueData.value +"' title=''></input>";
-            };
-            if (valueData.type=='String') {
-//                ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue' type='text' value='"+ valueData.value +"' title=''></input>";
-                ret = renderInputText( id, "valueN", "value", valueData.value, "");
-            };
-             if (valueData.type=='Schedule') {
-                ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue' type='date' value='"+ valueData.value +"' title=''></input>";
-            };
-             if (valueData.type=='List') {
-//                opt="";
-//                 for (i in valueData.listElems) {
-//                     if (valueData.listElems[i] != valueData.value) {
-//                        opt= opt + "<option value='" + valueData.listElems[i]  + "'>" + valueData.listElems[i] + "</option>";
-//                     } else {
-//                        opt= opt + "<option selected value='" + valueData.value +"'>" + valueData.value + "</option>";
-//                     }
-//                 }
-//                ret ="<select id='" + id + "' name='CmdClssValue' class='liste ccvalue' style='width:15em' title=''>" + opt + "</select>";
-                
-                ret = "<select class='form-control input-sm' id='"+id+"' name='CmdClssValue'>"
-                for (i in valueData.listElems) {
-                    ret += "<option value='"+ valueData.listElems[i] +"'"
-                    if (valueData.listElems[i] == valueData.value) {
-                        ret += " selected"
+                        var opt="";
+                        if (valueData.value) {
+                            opt = "<option selected value=" + valueData.value +">" + valueData.value + "</option>" +
+                                     "<option value=false>false</option>";
+                        } else {
+                            opt = "<option value=true>true</option>" +
+                                     "<option selected value=" + valueData.value +">" + valueData.value + "</option>" ;
+                        }
+                        ret ="<select id='" + id + "' name='CmdClssValue' class='listes ccvalue' style='width:7em' title=''>" + opt + "</select>";
                     };
-                    ret += ">" + valueData.listElems[i] + "</option>"
-                };
-                ret += "</select>"
-            };
-            if (valueData.type=='Button') {
-                ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue ccbt' type='button' value='" + valueData.label +"' title=''></input>"; //
-            };
-            if (modify) {
-                ret = ret + "<button id='send" + valueRef +"' class='button icon16-action-update buttonicon' name='Send value' title='Send value'><span class='offscreen'>Send value</span></button>";
+                    break;
+                case 'Byte' :
+                case 'Short' :
+                case 'Int' :
+                case 'Decimal' :
+                    ret = "<div class='input-group'><span class='input-group-addon label-warning hidden' id='stch"+ valueRef +
+                            "' title='Value is actually "+valueData.realvalue+". You must validate your change by enter key.'><i class='fa fa-recycle'></i></span>";
+                    ret +="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' aria-describedby='stch"+ valueRef + "' min='" + 
+                            valueData.min  +" ' max='"+ valueData.max  +"' value='"+ valueData.value +"' title='range "+valueData.min+" to "+valueData.max+"'></input>" +
+                            modify + "</div>";
+                    break;
+                case 'Raw' :
+                case 'String' :
+                    ret = renderInputText( id, "valueN", "value", valueData.value, "");
+                    break;
+                case 'Schedule' :
+                    ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue' type='date' value='"+ valueData.value +"' title=''></input>";
+                    break;
+                case 'List' :
+                    ret = "<div class='input-group'>";
+                    ret += "<select class='form-control input-sm' id='"+id+"' name='CmdClssValue'>"
+                    for (i in valueData.listElems) {
+                        ret += "<option value='"+ valueData.listElems[i] +"'"
+                        if (valueData.listElems[i] == valueData.value) {
+                            ret += " selected"
+                        };
+                        ret += ">" + valueData.listElems[i] + "</option>"
+                    };
+                    ret +="</select>" + modify + "</div>";
+                    break;
+                case 'Button' :
+                    ret ="<button id='" + id + "' name='CmdClssValue' class='btn btn-default btn-xs' type='button' value='" + valueData.label +"' title=''>"+ valueData.label +"</v>"; 
+                    break;
+                default :
+                    ret = "No data :(";
             };
         };
-        return ret
-    } else {
-        return "No data :(";
     };
+    return ret;
 };
 
 function renderCmdClssName(data, type, full, meta) {

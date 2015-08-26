@@ -3,7 +3,7 @@
 """ This file is part of B{Domogik} project (U{http://www.domogik.org}$
 
 License
-=======
+======
 
 B{Domogik} is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,28 +19,24 @@ You should have received a copy of the GNU General Public License
 along with Domogik. If not, see U{http://www.gnu.org/licenses}.
 
 Plugin purpose
-==============
+===========
 
 Support Z-wave technology
+Version for domogik >= 0.4
 
 Implements
-==========
+========
 
--Zwave
+- Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2012 Domogik project
+@copyright: (C) 2007-2015 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
 
 from ozwdefs import *
-import binascii
-import libopenzwave
-from libopenzwave import PyManager
 import time
-from time import sleep
-import os.path
 
 class OZwaveValueException(OZwaveException):
     """"Zwave ValueNode exception class"""
@@ -86,12 +82,16 @@ class ZWaveValueNode:
                     'label' : str,      # Nom de la value OZW
                     'units' : str,      # unité
                     'readOnly': manager.IsValueReadOnly(v),  # Type d'accès lecture/ecriture
+                    'min' :  uint   # the minimum that this value may contain.
+                    'max' :  uint   # the maximum that this value may contain.
                     }   
         '''
         self._node = node
         self._valueData = valueData
         self._lastUpdate = time.time()
         self._tempConv = True # Conversion forcée de F en °C, a mettre en option.
+        self._valueData['min'] = self._node._manager.getValueMin(self._valueData['id'])
+        self._valueData['max'] = self._node._manager.getValueMax(self._valueData['id'])
         
     # On accède aux attributs uniquement depuis les property
   
@@ -120,9 +120,9 @@ class ZWaveValueNode:
     
     def RefreshOZWValue(self):
         """Effectue une requette pour rafraichir la valeur réelle lut par openzwave"""
-        if self.valueData['genre'] != 'Config' :
+        if self._valueData['genre'] != 'Config' :
             if self._node._manager.refreshValue(self.valueData['id']):
-                print "++++++++++ Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'],  self._valueData['label'])
+                print "++++++++++ Node {0} Request a RefreshOZWValue : {1}".format(self.valueData['nodeId'],  self.valueData['label'])
                 return True
         else :
             print "RefreshOZWValue : call requestConfigParam waiting ValueChanged..."
@@ -153,8 +153,8 @@ class ZWaveValueNode:
         if self.valueData['genre'] != 'Config' or self.valueData['type'] == 'List' : # TODO: Pas encore de gestion d'une config en type list, force envoie par setvalue
             if self.valueData['type'] == 'Bool':
                 value = False if val in [False, 'FALSE', 'False',  'false', '',  0,  0.0, (),  [],  {},  None ] else True
-                v = bool(val)
-                print type(value), value,   "----",  type(v),  v
+                val = value
+                print type(value), value,   "----",  type(val),  val
             elif self.valueData['type'] == 'Byte' : 
                 try: value = int(val)
                 except ValueError, ex: 
@@ -237,8 +237,7 @@ class ZWaveValueNode:
             print float(valueData['value'])*(5.0/9)
             valueData['value'] = (float(valueData['value'])*(5.0/9))-(160.0/9)
             print valueData['value']
-
-        self._valueData = dict(valueData)
+        self._valueData.update(dict(valueData))
         self._lastUpdate = time.time()
         valueData['homeId'] = int(valueData['homeId']) # Pour etre compatible avec javascript
         valueData['id'] = str(valueData['id']) # Pour etre compatible avec javascript

@@ -104,22 +104,22 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li{% if plugin_active == "controller" %} class="active" {% endif %}>
+            <li{% if networkmenu_active == "controller" %} class="active" {% endif %}>
                 <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/controller" id="ctrl-href">{% trans %}Controller{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-server"></span>
                 </a>
             </li>
-            <li{% if plugin_active == "nodes" %} class="active" {% endif %}>
+            <li{% if networkmenu_active == "nodes" %} class="active" {% endif %}>
                 <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes"  id="nodes-href">{% trans %}Nodes{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cubes"></span>
                 </a>
             </li>
-            <li{% if plugin_active == "network" %} class="active" {% endif %}>
+            <li{% if networkmenu_active == "network" %} class="active" {% endif %}>
                 <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-link"></span>
                 </a>
             </li>
-            <li{% if plugin_active == "tools" %} class="active" {% endif %}>
+            <li{% if networkmenu_active == "tools" %} class="active" {% endif %}>
                 <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cogs"></span>
                 </a>
@@ -138,7 +138,7 @@
         <div class="tab-pane" id="debug-pane">
             <h3>Raw data page selection :</h3>
                 <li><b>{% trans %}network_active{% endtrans %} : </b><span id="debug-networkactive">{{ network_active }}</span></li>
-                <li><b>{% trans %}plugin_active{% endtrans %} : </b><span id="degub-pluginactive">{{ plugin_active }}</span></li>
+                <li><b>{% trans %}networkmenu_active{% endtrans %} : </b><span id="degub-networkmenuactive">{{ networkmenu_active }}</span></li>
             <h3>Raw data Openzwave :</h3>
                 <li><b>{% trans %}openzwaveInfo{% endtrans %} : </b></li>
                 <pre id="debug-ozw">{{ openzwaveInfo }}</pre>
@@ -162,6 +162,7 @@
 
         var activeNetwork = "{{ network_active }}";
         clientID = "{{ clientid }}";
+        ozwInfo = {{ openzwaveInfo|tojson }}
         
         /* Action which shows and hides div with a id */
         $("[id^='toggle-OZWconfig']").click(function() {

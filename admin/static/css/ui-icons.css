@@ -12,6 +12,14 @@
     line-height: 1;
 }
 
+.input-addon-xs {
+    height: 30px;
+    padding: 1px 1px;
+    font-size: 12px;
+    line-height:1.5;
+    border-radius: 3px;
+}
+
 /* Usage icons */
 .icon64-usage- { content:url(../images/unknown_64.png);}
 .icon32-usage- { content:url(../images/unknown_32.png);}

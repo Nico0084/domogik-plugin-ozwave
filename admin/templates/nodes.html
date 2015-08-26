@@ -69,7 +69,7 @@
         "drawCallback": function(settings) {
             var api = this.api();
             var data = api.rows({page:'current'}).data()
-            $( "input[type='text']").not("[isHandled]" ).each(function(rowN, nData) {
+            $( "input[type='text'][datatype='node']").not("[isHandled]" ).each(function(rowN, nData) {
                 try {
                     var cell = api.cell(rowN, 0);
                     EnableInputText(this, function(obj) {
@@ -218,7 +218,6 @@
                                             RefreshValuesNodeData(data.content.NetworkID, data.content.NodeID, data.content.Values);
                                             row.child(initValuesTab(nodeRefId)).show();
                                             buildValuesTab(data.content);
-                                            $('.make-switch').bootstrapSwitch() //.removeClass('make-switch');
                                             $('#valuesNode'+nodeRefId +' thead tr').addClass("headcmdclss");
                                             $('#detailnodeic'+nodeRefId).removeClass('fa-search-plus fa-spinner fa-spin').addClass('fa-search-minus');
                                         };

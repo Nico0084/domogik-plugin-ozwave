@@ -1,4 +1,5 @@
 var clientID ="";
+var ozwInfo;
 var nodesData = new Array();  // global list of all nodes whith there data.
 // Reference of displaying key node in DataTable nodes column.
 var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0, 
@@ -56,6 +57,20 @@ function RefreshValuesNodeData(NetworkID, NodeID, Values) {
     for (var i=0; i < nodesData.length; i++) {
         if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
                 nodesData[i].Values = Values;
+            break;
+        };
+    };
+};
+
+function RefreshValueNodeData(NetworkID, NodeID, value) {
+    for (var i=0; i < nodesData.length; i++) {
+        if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
+            for (var v=0; v < nodesData[i].Values.length; v++) {
+                if (nodesData[i].Values[v].id ==value.id) {
+                    nodesData[i].Values[v] = value;
+                    break;
+                };
+            }
             break;
         };
     };
@@ -224,7 +239,7 @@ function renderInputText(refId, name, dtype, value, title, label) {
    return inputRender;
 };
 
-function  saveUpdate(event) {
+function saveUpdate(event) {
     var data = event.data.callback(event.data.obj);
     if (data.result == 'error') {
         new PNotify({
@@ -261,6 +276,13 @@ function EnableInputText(obj, callback) {
             $('#st_'+this.id).on('click', {obj: this, callback: callback}, saveUpdate);
             $('#st_'+this.id).attr('disabled', false);
         };
+    });
+};
+
+function EnableInputList(obj, callback) {
+    $(obj).attr("isHandled", true);
+    $(obj).on('changed', function (e) {
+        var ret = callback(obj);
     });
 };
 
@@ -323,6 +345,34 @@ function updateBtMonitored(nodeData) {
         $("#monitornodeic" + nodeRef).removeClass("icon16-action-processing_ffffff").addClass("icon16-action-play");
     };
 };
+
+function setValueCmdClss(refId, newValue) {
+    var idValuesNode = '#valuesNode' + GetNodeRefId(refId[1], refId[2]);
+    var table = $(idValuesNode).DataTable();
+    sendRequest("ozwave.value.set", {"newValue": newValue, "networkId":  refId[1], "nodeId":  refId[2], "valueId": refId[3]}, function(data, result) {
+        if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Set a value CommandClass',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                var valueData = GetValueZWNode(data.content.NetworkID, data.content.NodeID, data.content.ValueID);
+                valueData.value = data.content.value;
+                RefreshValueNodeData(data.content.NetworkID, data.content.NodeID, valueData);
+                var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.ValueID), 3);
+                cell.data(data.content.value).draw();
+                HighlightCell(cell.node());
+                new PNotify({
+                    type: 'success',
+                    title: 'Set a value CommandClass',
+                    text: 'Node ' + valueData.nodeId + ', instance ' + valueData.instance +', ' + valueData.label +  ' is set to "' + data.content.value + '"',
+                    delay: 4000
+                });
+            };
+    });
+};   
 
 // DataTable Nodes renderers
 function renderNodeStatusCol(data, type, full, meta) {
