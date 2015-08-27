@@ -91,6 +91,7 @@ class ZWaveNode:
         self._productType = None
         self._groups = list()
         self._sleeping = False
+        self._batteryCheck = True # For device with battery get battery level when node awake
         self._thTest = None
         self._lastMsg = None
         
@@ -121,6 +122,7 @@ class ZWaveNode:
     isNamed = property(lambda self: self._named)
     isConfigured = property(lambda self: self._isConfigured)
     isFailed = property(lambda self: self._isFailed())
+    isbatteryChecked = property(lambda self: self._batteryCheck)
     level = property(lambda self: self._getLevel())
     isOn = property(lambda self: self._getIsOn())
     batteryLevel = property(lambda self: self._getBatteryLevel())
@@ -165,10 +167,14 @@ class ZWaveNode:
         if state : 
             # le node est réveillé, fait une request, pour le prochain réveille, de niveau de battery si la command class existe.
             values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
-            if values:
+            if values and self._batteryCheck :
                 for value in values : value.RefreshOZWValue()
             if self._configAsk and self.GetNodeStateNW() in [1, 3, 4, 5] : # :'Initialized - not known', 3:'In progress - Devices initializing', 4:'In progress - Linked to controller', 5:'In progress - Can receive messages'
                 self._updateConfig()
+        
+    def setBatteryCheck(self, check):
+        """Set flag for checking battery level when awake."""
+        self._batteryCheck = check
         
     def markAsFailed(self): 
         """Le node est marqué comme HS."""
@@ -679,6 +685,7 @@ class ZWaveNode:
         retval["Polled"] = self.isPolled
         retval["ComQuality"] = self.getComQuality()
         retval["BatteryLevel"] = self._getBatteryLevel()
+        retval["BatteryChecked"] = self.isbatteryChecked
         retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.homeId,  self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.homeId,  self.nodeId) else ''
         return retval
         

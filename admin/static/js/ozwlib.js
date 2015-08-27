@@ -383,9 +383,12 @@ function renderNodeStatusCol(data, type, full, meta) {
               4:'In progress - Linked to controller',
               5:'In progress - Can receive messages', 
               6:'Out of operation'} */
-        var nodeRef= data.split(".");
-        var nodeData = GetZWNode(nodeRef[0], parseInt(nodeRef[1]));
-        var status = 'status-unknown';
+    var api = $.fn.dataTable.Api(meta.settings);
+    var cell = api.cell(meta.row, 0);
+    var refId = cell.data().split(".");
+    var nodeRef = GetNodeRefId(refId[0], refId[1]);
+    var nodeData = GetZWNode(refId[0], refId[1]);    
+    var status = 'status-unknown';
     try {
         var initState = nodeData.InitState.toLowerCase();
         }
@@ -410,8 +413,16 @@ function renderNodeStatusCol(data, type, full, meta) {
             } else if (nodeData.BatteryLevel >= 15) {st = '20';
             } else if (nodeData.BatteryLevel >= 5) {st = '10';};
         bat = "<span id='battery" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-status-battery-" + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
-        }
-    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-" + status + "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat;
+        var bCheck = "";
+        var tCheck =  "Check to request battery level at each awake.";
+        if (nodeData.BatteryChecked) { 
+            bCheck = " checked";
+            tCheck = "Battery level is requested at each awake.";
+        };
+        bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
+    };
+    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-" + status + 
+               "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat;
 };
 
 function renderNodeNameCol(data, type, full, meta) {
@@ -507,7 +518,6 @@ function renderNodeActionColl(data, type, full, meta) {
         return 'No Data';
     };
 };
-
 
 function GetNodeCell(table, nodeId, col) {
     try {

@@ -233,6 +233,35 @@
                     console.log(err);
                 };
             });
+            $( "input[type='checkbox'][id^='batcheck']").not("[isHandled]" ).each(function(rowN, nData) {
+                $(this).attr("isHandled", true);
+                $(this).on('change', function (e) {
+                    var refId = this.id.split('_');
+                    var state = $(this).is(':checked');
+                    sendRequest("ozwave.node.action", {"action": "batterycheck", "networkId": refId[1], "nodeId": refId[2], "state": state}, function(data, result) {
+                        var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+                        var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                        if (result == "error" || data.result == "error") {
+                            new PNotify({
+                                type: 'error',
+                                title: 'Set battery checking at wakeup fail.',
+                                text: data.content.error,
+                                delay: 6000
+                            });
+                        } else {
+                            if ([true, "true", "True", 1].indexOf(data.content.state) != -1) {data.content.state = true;
+                            } else {data.content.state = false;};
+                            nodeData.BatteryChecked = data.content.state;
+                            RefreshDataNode(nodeData);
+                            var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                            var cell = GetNodeCell(table, data.content.NodeID, 0);
+                            HighlightCell(cell.node());
+                        };
+                        if (nodeData.BatteryChecked) {$('#batcheck'+nodeRefId).attr("title","Battery level is requested at each awake.").prop('checked', true);
+                        } else { $('#batcheck'+nodeRefId).attr("title","Check to request battery level at each awake.").prop('checked', false);};
+                    });
+                });
+            });
           }
         });
     });

@@ -1410,6 +1410,13 @@ class OZWavemanager():
                     self.healNetworkNode(data['networkId'],  data['nodeId'],  data['forceroute'])
                     report = {'usermsg':'Command heal node sended, please wait for result...'}
                 else : report = {'error':  'Invalide nodeId format.'}
+            elif data['action'] == 'batterycheck' :
+                node = self._getNode(data['homeId'], data['nodeId'])
+                if node :
+                    node.setBatteryCheck(data['state'])
+                    report = {'error':  ''}
+                else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
+                report['state'] = node.isbatteryChecked
             else :
                 report['error'] ='Request {0} unknown action, data : {1}'.format(request,  data)
         else :
@@ -1438,12 +1445,14 @@ class OZWavemanager():
                     value = node.getValue(valId)
                     value.setPollIntensity(data['intensity'])
                 else :
-                    report['error'] ='Request {0} unknown action, data : {1}'.format(request,  data)
-            else : report = {'error':  'Invalide nodeId format.'}
+                    report['error'] = 'Request {0} unknown action, data : {1}'.format(request,  data)
+            else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
             report.update({'action': data['action'], 'intensity': data['intensity']})
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId'], 'ValueID': data['valueId']})
+        if report['error'] == '' :
+            ctrl.setSaveConfig(False)
         return report
 
     def reportCtrlMsg(self, networkId, ctrlmsg):

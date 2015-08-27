@@ -201,12 +201,25 @@
         
         $("[id^='saveconf_']").click(function() {
             var NetworkID = this.id.split("_")[1];
-            ws.send('{"dst": "plugin-{{ client_detail.name }}.{{ client_detail.host }}", "mq_request ": "ozwave.ctrl.saveconf", '+
-                '"data": {"name": "{{ client_detail.name }}", "host": "{{ client_detail.host }}", '+
-                        '"ack":"pub", ' +
-                        '"networkId":"' + NetworkID + '"' +
-                        '}}');
             $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
+            sendRequest("ozwave.ctrl.saveconf", { "networkId": NetworkID }, function(data, result) {
+                if (data.content.result == "error") {
+                    new PNotify({
+                        type: 'error',
+                        title: 'Fail to save config file',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    new PNotify({
+                        type: 'success',
+                        title: 'Config file saved',
+                        text: data.content.msg,
+                        delay: 4000
+                    });
+                };
+                updateBtSavedConf(data.content.NetworkID, data.content.saved);
+            });
         });
         
     $( document ).ready(function() {
@@ -262,6 +275,14 @@
                             break;
                         case "saveconfchange":
                             updateBtSavedConf(data.content.NetworkID, data.content.saved);
+                            if ( !data.content.saved ) {
+                                new PNotify({
+                                    type: 'info',
+                                    title: 'ZWave network '+ data.content.NetworkID +' config change',
+                                    text: 'Save config file to keep your change.',
+                                    delay: 6000
+                                });
+                            };
                             break;                    };
                 };
                 if (msgId[1] == "lib") {

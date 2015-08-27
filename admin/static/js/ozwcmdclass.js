@@ -280,33 +280,29 @@ function renderCmdClssStatus(data, type, full, meta) {
     var valueData = GetValueZWNode(refId[0],refId[1],refId[2]);
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
+        var textRW = "Read and Write";
+        var st ='inactive';
         if (valueData.readOnly==true) {
             textRW = "Read only";
             st ='active';
-        } else {            
-            textRW = "Read and Write";
-            st ='inactive';
         };
         var rw=  " <span id='st"+valueRef +"' class='icon16-text-right icon16-status-" + st +"' title='" + textRW + "'></span>";
+        var extra ="";
         if (valueData.help!="") {
             extra = "  <span id='hn"+valueRef +"' class='icon16-text-right icon16-status-info' title='" + valueData.help + "'></span>";
-        } else {
-            extra ="";
         };
+        var textstatus = "Not available for domogik device";
+        var st = 'false';
         if (valueData.domogikdevice) { //Available for domogik device
             textstatus = "Named domogik device : " + valueData.domogikdevice.networkid + "." +valueData.domogikdevice.node+"."+valueData.domogikdevice.instance;
             st = 'primary';
-        } else { //not available
-            textstatus = "Not available for domogik device";
-            st = 'false';
         };
+        var poll ="";
+        var tpoll =  "Check to poll this value.";
         if (valueData.polled) { 
             poll = " checked";
             tpoll = "Value is polled with intensity : " + valueData.pollintensity;
-        }else { 
-            poll ="";
-            tpoll =  "Check to poll this value";
-        }
+        };
 
         return  "<span id='value"+valueRef +"'class='icon16-text-right icon16-status-" + st + "' title='" + textstatus +
                 "'></span>" + rw + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
