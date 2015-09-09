@@ -45,8 +45,6 @@ from ozwnode import ZWaveNode
 from ozwctrl import ZWaveController
 from ozwxmlfiles import *
 from ozwmonitornodes import ManageMonitorNodes
-#from wsuiserver import BroadcastServer
-from ozwmqworker import OZWMQRep
 from ozwdefs import *
 from datetime import timedelta
 import pwd
@@ -57,6 +55,7 @@ import tailer
 import re
 import os
 import time
+import json
 
 class OZwaveManagerException(OZwaveException):
     """"Zwave Manager exception  class"""
@@ -1290,12 +1289,6 @@ class OZWavemanager():
             report = self.getMemoryUsage()
         elif request == 'GetAllProducts':
             report = self.getAllProducts()
-        elif request == 'GetValueInfos':
-            if self._IsNodeId(data['node']):
-                valId = long(data['valueid']) # Pour javascript type string
-                report =self.getValueInfos(data['node'], valId)
-            else : report = {'error':  'Invalide nodeId format.'}
-            print 'Refresh one Value infos : ', report
         elif request == 'SetPollInterval':
             ctrl.node.setPollInterval(data['interval'],  False)
             report['interval'] = ctrl.node.getPollInterval()
@@ -1309,11 +1302,6 @@ class OZWavemanager():
             report = self.getValueTypes()  
         elif request == 'GetListCmdsCtrl':
             report = self.getListCmdsCtrl(data['networkId'])
-        elif request == 'setGroups':
-            if self._IsNodeId(data['node']):
-                report = self.setMembersGrps(data['homeId'], data['node'], data['ngrps'])
-            else : report = {'error':  'Invalide nodeId format.'}
-            print 'Set Groups association : ',  report
         elif request == 'GetGeneralStats':
             report = self.getGeneralStatistics(data['networkId'])
             print 'Refresh generale stats : ',  report
@@ -1378,6 +1366,14 @@ class OZWavemanager():
                 report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], data['value'], "Undefined")
             elif data['key'] == "location" :
                 report = self.setUINodeNameLoc(data['homeId'], data['nodeId'], "Undefined", data['value'])
+            elif data['key'] == 'groups':
+                if self._IsNodeId(data['nodeId']):
+                    data['ngrps'] = json.loads(data['ngrps'])  # MQ Array in json string format.
+                    report = self.setMembersGrps(data['homeId'], data['nodeId'], data['ngrps'])
+                else : report = {'error':  'Invalide nodeId format.'}
+                print 'Set Groups association : ',  report
+            else :
+                report['error'] ='Request {0} unknown key to set, data : {1}'.format(request,  data)
         elif request == 'node.get':
             if data['key'] == 'values':
                 if self._IsNodeId(data['nodeId']):
@@ -1428,11 +1424,16 @@ class OZWavemanager():
         """Handle all zwave node request coming from MQ"""
         ctrl = self.getCtrlOfNetwork(data['networkId'])
         report = {}
-        if request == 'value.set' :
+        if request == 'value.infos':
+            if self._IsNodeId(data['nodeId']):
+                valId = long(data['valueId']) # Pour javascript type string
+                report =self.getValueInfos(data['nodeId'], valId)
+            else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'value.set' :
             if self._IsNodeId(data['nodeId']):
                 valId = long(data['valueId']) # Pour javascript type string
                 report = self.setValue(data['homeId'], data['nodeId'], valId, data['newValue'])
-            else : report = {'error':  'Invalide nodeId format.'}
+            else : report = {'error':  'Invalide nodeId format.'}            
         elif request == 'value.poll':
             valId = long(data['valueId']) # Pour javascript type string
             data['intensity'] = int(data['intensity'])

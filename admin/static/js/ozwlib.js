@@ -11,6 +11,7 @@ var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0,
                                 "Last update": 6,
                                 };
     
+var mbrGrpSt = {0: 'unknown', 1: 'confirmed', 2: 'to confirm', 3: 'to update'};
 
 // Handle Data nodes table
 
@@ -74,6 +75,38 @@ function RefreshValueNodeData(NetworkID, NodeID, value) {
             break;
         };
     };
+};
+
+function RefreshGroupsNodeData(NetworkID, NodeID, groups) {
+    for (var i=0; i < nodesData.length; i++) {
+        if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
+            if (groups[0].index != undefined) {
+                nodesData[i].Groups = groups;
+            } else {
+                var exist = false;
+                for (var g=0; g <groups.length; g++) {
+                    exist = false;
+                    for (var grp=0; grp<nodesData[i].Groups.length; grp++) {
+                        if (nodesData[i].Groups[grp].index == groups[g].idx) {
+                            nodesData[i].Groups[grp].members = groups[g].mbs;
+                            exist = true;
+                            break;
+                        };
+                    };
+                    if (!exist) {
+                        new PNotify({
+                            type: 'error',
+                            title: 'Corrupted group association data .',
+                            text: 'For node ' + nodesData[i].NetworkID + "." + nodesData[i].NodeID + " groups index " + groups[g].idx + " not exist !",
+                            delay: 6000
+                        });
+                    };
+                };
+            };
+            return nodesData[i];
+        };
+    };
+    return false;
 };
 
 function GetValueZWNode(NetworkID, NodeID, ValueID) {

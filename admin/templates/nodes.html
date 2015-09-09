@@ -224,6 +224,72 @@
                                     });
                                 };
                                 break;
+                            case "updassoc" :
+                                var bdiag = bootbox.dialog({
+                                    show: false,
+                               //     size: 'small',
+                                    className: 'text-center',
+                                    title: 'Edit associations groups.' + "<br> " + nodeData.Model + " " + NetworkID + '.' + NodeID,
+                                    message:  "<div class='contenaire-fluid'>" +
+                                                    "<div id='contgrpass'>" +
+                                                    "</div>" +
+                                                "</div>",
+                                    data: nodeData,
+                                    buttons: [{
+                                        id: 'btn-cancel',   
+                                        label: 'Quit',
+                                        className: 'btn-danger', 
+                                        autospin: false,
+                                        callback: function(dialogRef){    
+                                            console.log("Exit edit association.");
+                                        }
+                                    },{
+                                        id: 'btn-sendchange',   
+                                        label: 'Send modification',
+                                        className: 'btn-primary',
+                                        autospin: false,
+                                        callback: function(dialogRef){
+                                            var grps =[];
+                                            var newgrps = bdiag.getnewgroups();
+                                            for (var i=0; i<newgrps.length; i++){
+                                                grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
+                                            };
+                                            console.log("Send association modification : " + JSON.stringify(grps));
+                                            document.body.style.cursor = "wait";
+                                            $('#btn-cancel').addClass('disabled');
+                                            sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
+                                                var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+                                                document.body.style.cursor = "default";
+                                                $('#btn-cancel').removeClass('disabled');
+                                                if (result == "error" || data.result == "error") {
+                                                    new PNotify({
+                                                        type: 'error',
+                                                        title: 'Set group association fail.',
+                                                        text: data.content.error,
+                                                        delay: 6000
+                                                    });
+                                                } else {
+                                                    nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.groups);
+                                                    RefreshGroups(bdiag.stageGrps, data.content.groups);
+                                                    new PNotify({
+                                                        type: 'success',
+                                                        title: 'Set group association',
+                                                        text: 'Association modification are sended.',
+                                                        delay: 4000
+                                                    });
+                                                };
+                                            });
+                                            return false;
+                                        }
+                                    }]
+                                });
+                                bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeData);
+                                bdiag.getnewgroups = function () {
+                                    var newgrps =  GetNewGroups(this.stageGrps, nodeData);
+                                    return newgrps;
+                                };
+                                bdiag.modal('show');
+                                break;
                         };
                         // send update to ws
                         return {"result":"success", "value":value, "msg": "bad format"};
@@ -249,8 +315,6 @@
                                 delay: 6000
                             });
                         } else {
-                            if ([true, "true", "True", 1].indexOf(data.content.state) != -1) {data.content.state = true;
-                            } else {data.content.state = false;};
                             nodeData.BatteryChecked = data.content.state;
                             RefreshDataNode(nodeData);
                             var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
