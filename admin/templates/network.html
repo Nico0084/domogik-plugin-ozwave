@@ -46,11 +46,11 @@
                         <h4>
                             <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-nodesCTRL" aria-hidden="true" data-target="nodesCTRL"></span> 
                             <span>&nbsp;&nbsp;{% trans %}Nodes{% endtrans %}</span>
-                            &nbsp;&nbsp;<span id="count_sleep" class="badge progress-bar-warning {% if network_state['Node sleeping'] == 0 %}hidden{% endif %}" title="Sleep">
+                            &nbsp;&nbsp;<span id="count_sleep" class="badge badge-warning {% if network_state['Node sleeping'] == 0 %}hidden{% endif %}" title="Sleep">
                             {{ network_state['Node sleeping'] }}</span>
-                            &nbsp;&nbsp;<span  id="count_fail" class="badge progress-bar-danger {% if network_state['Node fail'] == 0 %}hidden{% endif %}" title="Fail">
+                            &nbsp;&nbsp;<span  id="count_fail" class="badge badge-error {% if network_state['Node fail'] == 0 %}hidden{% endif %}" title="Fail">
                             {{ network_state['Node fail'] }}</span>
-                            <span class="pull-right badge" title="Count">{{ network_state['Node count'] }}</span>
+                            <span  id="count_node" class="pull-right badge" title="Count">{{ network_state['Node count'] }}</span>
                         </h4>
                     </a>
                 </div>
@@ -70,6 +70,112 @@
             </div>
         </div>
     </div>
- </div>
+    <div class='row'> 
+        <div class='col-md-12'> 
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <h4>{% trans %}Basic controller commands{% endtrans %}</h4>
+                </div>
+                <div class='panel-body'>
+                    <div class="col-xs-6 col-md-4">
+                        {% if network_state.state == 'alive' or  network_state.state == 'starting' %}
+                            {% set runIc = 'stop' %}
+                            {% set runColor = 'red' %}
+                            {% set runText = 'Stop controller' %}
+                        {% else %}
+                            {% set runIc = 'play' %}
+                            {% set runColor = 'green' %}
+                            {% set runText = 'Start controller' %}
+                        {% endif %}
+                        <button class="btn btn-default center-block" id="runctrl">
+                            <i class="fa fa-{{ runIc }}" id="runctrl-ic" style="color:{{ runColor }}"></i>
+                            <span id='runctrl-text'> {% trans %}{{ runText }}{% endtrans %}</span>
+                        </button>
+                    </div>
+                    <div class="col-xs-6 col-md-4">
+                        <button class="btn btn-default center-block" id="softreset">
+                            <i class="fa icon16-action-btreset"></i> {% trans %}Soft reset{% endtrans %}
+                        </button>
+                    </div>
+                    <div class="col-xs-6 col-md-4">
+                        <button class="btn btn-default center-block" id="hardreset" name="hardreset" type="button" value="Hard reset">
+                            <i class="fa icon16-action-btreset" style="color:red"></i> {% trans %}Hard reset{% endtrans %}
+                        </button>
+                    </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <div class='row'> 
+        <div class='col-md-12'> 
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <h4>{% trans %}Controller actions{% endtrans %}
+                        <div class="pull-right"><i id='actionstatus-ic' class="fa fa-2x fa-circle-o icon-success"></i>
+                            <span id='actionstatus'>  {% trans %}Ready{% endtrans %}</span>
+                        </div>
+                    </h4>
+                </div>
+                <div class='panel-body'>
+                    <h5>{% trans %}Some actions block controller activity, you must unlock it after session action fisnished.{% endtrans %}</h5>
+                    <div class='row row-spacing'> 
+                        <div class="col-xs-6 col-md-4">
+                            <div class='input-group placeholder'>
+                                <label for="ctrlactions">{% trans %}Chose action{% endtrans %} :</label>
+                                <select class='form-control actdisable' id='ctrlactions' >
+                                    <option value="" style="display: none" selected>{% trans %}Chose an action{% endtrans %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-6">
+                            <div id='actiondoc' class="alert alert-info">{% trans %}Select a action{% endtrans %}</div>
+                        </div>
+                    </div>
+                    <div class='row row-spacing'> 
+                        <div class="col-xs-6 col-md-4 ">
+                            <div class='input-group placeholder'>
+                                <label id="listnodesOptLabel" for="listnodesOpt">{% trans %}Apply on node{% endtrans %} :</label>
+                                <select class='form-control actdisable' id='listnodesOpt'>
+                                    <option value="" style="display: none" selected>{% trans %}Select a node{% endtrans %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="dosecurityOpt" class="col-xs-4 col-md-2" title="{% trans %}Whether to initialize the Network Key on the device if it supports the Security CC.{% endtrans %}">                    
+                            <label for="dosecurity">{% trans %}do security CC{% endtrans %} :</label>
+                            <input id="dosecurity" class="actdisable" type="checkbox" data-on-text="{% trans %}Unable{% endtrans %}" data-off-text="{% trans %}Disable{% endtrans %}">
+                        </div>
+                        <div id="argOpt" class="col-xs-6 col-md-6">
+                            <div id='infoOpt' class="alert alert-info">{% trans %}Some extra informations{% endtrans %}</div>
+                            <div id="argOpt" class="col-xs-4 col-md-4">
+                                <label id='numberOptLabel' for="numberOpt">{% trans %}Enter a number{% endtrans %} :</label>
+                                <input id="numberOpt" class="form-control actdisable" type="number" min=0 max=255 title="range 0 to 255"></input>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row row-spacing'> 
+                        <div class="col-xs-6 col-md-4">
+                             <h5>{% trans %}Status and user informations last action{% endtrans %} :
+                             <span id='lastaction' class='alert-success'></span></h5>
+                        </div>
+                        <div class="col-xs-6 col-md-4">
+                            <i id='actionresult-ic' class="fa fa-2x fa-check-circle icon-success"></i>
+                            <span id='actionresult'>{% trans %}No process action{% endtrans %}</span>
+                            <div id='actionmessage' class='alert alert-success' style="display: none"></div>
+                        </div>
+                        <div class="col-xs-6 col-md-4">
+                            <div class="input-group">
+                                <button id="btctrlaction" type="button" class="btn btn-default">
+                                    <i class="fa fa-play" id="btctrlaction-ic" style="color:green"></i>
+                                   <span id='btctrlaction-text'> {% trans %}Start action{% endtrans %}</span>
+                                </button><br>
+                                <br><label id="forcestopaction"><input type="checkbox"> Force stop command</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
  {% endblock %}

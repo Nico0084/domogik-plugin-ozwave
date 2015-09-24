@@ -35,13 +35,10 @@ Implements
 @organization: Domogik
 """
 
-import binascii
 import libopenzwave
-from libopenzwave import PyManager
 from ozwnode import ZWaveNode
 from ozwdefs import *
 import time 
-from time import sleep
 
 class OZwaveCtrlException(OZwaveException):
     """"Zwave Controller exception  class"""
@@ -63,13 +60,12 @@ Commands :
 - Driver::ControllerCommand_CreateNewPrimary - Create a new primary controller when old primary fails. Requires SUC.
 - Driver::ControllerCommand_ReceiveConfiguration - Receive network configuration information from primary controller. Requires secondary.
 - Driver::ControllerCommand_RemoveDevice - Remove a device or controller from the Z-Wave network.
-- Driver::ControllerCommand_RemoveFailedNode - Remove a node from the network. The node must not be responding
-and be on the controller's failed node list.
+- Driver::ControllerCommand_RemoveFailedNode - Remove a node from the network. The node must not be responding and be on the controller's failed node list.
 - Driver::ControllerCommand_HasNodeFailed - Check whether a node is in the controller's failed nodes list.
 - Driver::ControllerCommand_ReplaceFailedNode - Replace a failed device with another. If the node is not in
-the controller's failed nodes list, or the node responds, this command will fail.
+            the controller's failed nodes list, or the node responds, this command will fail.
 - Driver:: ControllerCommand_TransferPrimaryRole - Add a new controller to the network and
-make it the primary. The existing primary will become a secondary controller.
+            make it the primary. The existing primary will become a secondary controller.
 - Driver::ControllerCommand_RequestNetworkUpdate - Update the controller with network information from the SUC/SIS.
 - Driver::ControllerCommand_RequestNodeNeighborUpdate - Get a node to rebuild its neighbour list. This method also does RequestNodeNeighbors afterwards.
 - Driver::ControllerCommand_AssignReturnRoute - Assign a network return route to a device.
@@ -81,57 +77,17 @@ make it the primary. The existing primary will become a secondary controller.
 
 Callbacks :
 
-- Driver::ControllerState_Waiting, the controller is waiting for a user action. A notice should be displayed \
-to the user at this point, telling them what to do next. \
-For the add, remove, replace and transfer primary role commands, the user needs to be told to press the \
-inclusion button on the device that is going to be added or removed. For ControllerCommand_ReceiveConfiguration, \
-they must set their other controller to send its data, and for ControllerCommand_CreateNewPrimary, set the other \
-controller to learn new data.
+- Driver::ControllerState_Waiting, the controller is waiting for a user action. A notice should be displayed
+        to the user at this point, telling them what to do next.
+        For the add, remove, replace and transfer primary role commands, the user needs to be told to press the
+        inclusion button on the device that is going to be added or removed. For ControllerCommand_ReceiveConfiguration,
+        they must set their other controller to send its data, and for ControllerCommand_CreateNewPrimary, set the other
+        controller to learn new data.
 - Driver::ControllerState_InProgress - the controller is in the process of adding or removing the chosen node. It is now too late to cancel the command.
 - Driver::ControllerState_Complete - the controller has finished adding or removing the node, and the command is complete.
 - Driver::ControllerState_Failed - will be sent if the command fails for any reason.
 
     '''
-    SIGNAL_CTRL_NORMAL = 'Normal'                   # No command in progress.  
-    SIGNAL_CTRL_STARTING = 'Starting'             # The command is starting.  
-    SIGNAL_CTRL_CANCEL = 'Cancel'                   # The command was cancelled.
-    SIGNAL_CTRL_ERROR = 'Error'                       # Command invocation had error(s) and was aborted 
-    SIGNAL_CTRL_WAITING = 'Waiting'                # Controller is waiting for a user action.  
-    SIGNAL_CTRL_SLEEPING = 'Sleeping'              # Controller command is on a sleep queue wait for device.  
-    SIGNAL_CTRL_INPROGRESS = 'InProgress'       # The controller is communicating with the other device to carry out the command.  
-    SIGNAL_CTRL_COMPLETED = 'Completed'         # The command has completed successfully.  
-    SIGNAL_CTRL_FAILED = 'Failed'                     # The command has failed.  
-    SIGNAL_CTRL_NODEOK = 'NodeOK'                   # Used only with ControllerCommand_HasNodeFailed to indicate that the controller thinks the node is OK.  
-    SIGNAL_CTRL_NODEFAILED = 'NodeFailed'       # Used only with ControllerCommand_HasNodeFailed to indicate that the controller thinks the node has failed.
-
-    SIGNAL_CONTROLLER = 'Message'
-
-    CMD_NONE = 0
-    CMD_ADDDEVICE = 1
-    CMD_CREATENEWPRIMARY = 2
-    CMD_RECEIVECONFIGURATION = 3
-    CMD_REMOVEDEVICE = 4
-    CMD_REMOVEFAILEDNODE = 5
-    CMD_HASNODEFAILED = 6
-    CMD_REPLACEFAILEDNODE = 7
-    CMD_TRANSFERPRIMARYROLE = 8
-    CMD_REQUESTNETWORKUPDATE = 9
-    CMD_REQUESTNODENEIGHBORUPDATE = 10
-    CMD_ASSIGNRETURNROUTE = 11
-    CMD_DELETEALLRETURNROUTES = 12
-    CMD_SENDNODEINFORMATION = 13
-    CMD_REPLICATIONSEND = 14
-    CMD_CREATEBUTTON = 15
-    CMD_DELETEBUTTON = 16
-    
-    #Liste des commandes implémentées et disponible pour l'UI
-    AVAILABLECMDS = ['AddDevice', 'CreateNewPrimary', 'ReceiveConfiguration', 'RemoveDevice', 'RemoveFailedNode', 'HasNodeFailed', 
-                 'ReplaceFailedNode', 'TransferPrimaryRole', 'RequestNetworkUpdate', 'RequestNodeNeighborUpdate', 'AssignReturnRoute', 
-                 'DeleteAllReturnRoutes', 'SendNodeInformation', 'ReplicationSend', 'CreateButton', 'DeleteButton']
-  #  AVAILABLECMDS = ['None','AddDevice', 'CreateNewPrimary', 'ReceiveConfiguration', 'RemoveDevice', 'RemoveFailedNode', 'HasNodeFailed', 
-  #               'ReplaceFailedNode', 'TransferPrimaryRole', 'RequestNetworkUpdate', 'RequestNodeNeighborUpdate', 'AssignReturnRoute', 
-  #               'DeleteAllReturnRoutes', 'SendNodeInformation', 'ReplicationSend', 'CreateButton', 'DeleteButton']
-                  
 
     def __init__(self,  ozwmanager, homeId, nodeId,  isPrimaryCtrl=False,  networkId =""):
         '''
@@ -148,7 +104,16 @@ controller to learn new data.
         ZWaveNode.__init__(self, ozwmanager, homeId, nodeId)
         self._isPrimaryCtrl = isPrimaryCtrl
         self.networkId = networkId if self._isPrimaryCtrl else ""
-        self._lastCtrlState = {'update' : time.time(),  'state': self.SIGNAL_CTRL_NORMAL, 'error_msg' : 'None.', 'message': 'No command in progress.', 'nodeid': nodeId, 'error': 0}
+        self._lastCtrlState = {'update' : time.time(),
+                                  'state': libopenzwave.PyControllerState[0],
+                                  'stateMsg': libopenzwave.PyControllerState[0].doc, 
+                                  'stateId': 0, 
+                                  'error' : libopenzwave.PyControllerError[0], 
+                                  'errorMsg' : libopenzwave.PyControllerError[0].doc, 
+                                  'errorId' : 0, 
+                                  'nodeId': 0, 
+                                  'command': libopenzwave.PyControllerCommand[0]
+                                  }
  
 # On accède aux attributs uniquement depuis les property
     isPrimaryCtrl = property(lambda self: self._isPrimaryCtrl)
@@ -172,9 +137,10 @@ controller to learn new data.
         """
         msg = report.copy()
         msg["NetworkID"] = self.networkID
-        msg["node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
+        msg["Node count"] = self.getNetworkCtrl.getNodeCount()
+        msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
+        msg["Node fail"] = self.getNetworkCtrl.getFailedNodeCount()
         print 'Send report to MQ: '
-   #     print msg
         self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg)
         print '**************************************'
         
@@ -225,204 +191,168 @@ controller to learn new data.
         self._ozwmanager._log.debug('Node [%d] capabilities are: %s', self._nodeId, self._capabilities)
         
     def handle_Action(self,  action):
-        """Gestion des actions du controlleur et des messages de retour"""    
+        """Handle request controlleur action from MQ"""
         retval = action
         retval['error'] = ''
-        errorCom = {'cmdstate': 'not running' , 'error': 'Not started', 'error_msg': 'Check your controller.'}
-        errorNode ={'cmdstate': 'not running',  'error': 'Unknown node : ' + str(action['nodeid']), 'error_msg': 'Check input options.'}
-        if action['highpower'] =='True' : highpower = True
-        else : highpower = False
-        if action['cmd'] == 'Stop action' :
+        if action['action'] =='getState':
+            retval.update({'state': self._lastCtrlState['state'], 
+                                 'usermsg' : self._lastCtrlState['stateMsg'], 
+                                 'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'], 
+                                 'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'], 
+                                 'nodeId': self._lastCtrlState['nodeId']
+                                })
+            return retval
+        errorCom = {'error': 'Not started, check your controller.'}
+        errorNode ={'error': 'Unknown node : {0}, check input options.'.format(action['nodeid'])}
+        if action['dosecurity'] =='True' : doSecurity = True
+        else : doSecurity = False
+        if action['action'] == 'stop' :
             if self.cancel_command() :
-                retval['cmdstate'] ='not running'
                 retval['error'] = ''
                 retval['message'] = 'User have stop command.'
             else :
                 retval['error'] = 'Fail to stop controller commande.'
-                if self._lastCtrlState['state'] == self.SIGNAL_CTRL_NORMAL : 
-                    retval['cmdstate'] ='not running'
-                    retval['error_msg'] = 'User have try stop command. But no action processing.'
+                if self._lastCtrlState['state'] == libopenzwave.PyControllerState[0] : 
+                    retval['message'] = 'User have try stop command. But no action processing.'
                 else : 
-                    retval['cmdstate'] ='running'
-                    retval['error_msg'] = 'User have try stop command. ' + self._lastCtrlState['message'] 
-        elif action['cmd'] == 'Start action' :
-            retval['cmdstate'] ='TODO'
+                    retval['message'] = 'User have try stop command. ' + self._lastCtrlState['command'] 
+        elif action['action'] == 'start' :
             retval['message'] ='Command will be root soon as possible, be patient....'
-            
-            if action['action'] == 'AddDevice' :
-                if self.begin_command_add_device(highpower) :
-                    retval['cmdstate'] ='running'
+            self._lastCtrlState['command'] = action['command']
+            self._lastCtrlState['nodeId'] = action['nodeid']
+            if action['command'] == 'AddDevice' :
+                if self.add_node(doSecurity) :
                     retval['message'] ='It is up to you to perform the action on the local device(s) to add. Usually a switch to actuate 2 or 3 times.'
-                    self._lastCtrlState = {'update' : time.time(),  'state': self.SIGNAL_CTRL_STARTING, 'error_msg' : 'None.',
-                                                  'message': 'The command is starting.', 'nodeid': action['nodeid'], 'error': 0}
-
                 else : retval.update(errorCom)
                 
-            elif action['action'] == 'CreateNewPrimary' :
-                if self.begin_command_create_new_primary() :
-                    retval['cmdstate'] ='running'
+            elif action['command'] == 'CreateNewPrimary' :
+                if self.create_new_primary() :
                     retval['message'] ='Wait for refresh, be patient...'
                 else : retval.update(errorCom)   
     
             elif action['action'] == 'ReceiveConfiguration' :
-                if self.begin_command_receive_configuration() :
-                    retval['cmdstate'] ='running'
+                if self.receive_configuration() :
                     retval['message'] ='Wait for refresh, be patient...'
                 else : retval.update(errorCom)    
     
-            elif action['action'] == 'RemoveDevice' :
-                if self.begin_command_remove_device(highpower) :
-                    retval['cmdstate'] ='running'
+            elif action['command'] == 'RemoveDevice' :
+                if self.remove_node() :
                     retval['message'] ='It is up to you to perform the action on the local device(s) to renove. Usually a switch to actuate 2 or 3 times.'
                 else : retval.update(errorCom)
                 
-            elif action['action'] =='RemoveFailedNode':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='RemoveFailedNode':
+                if action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
-                    print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_remove_failed_node(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.remove_failed_node(action['nodeid']) :
                         retval['message'] ='Wait for removing node, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)            
                 
-            elif action['action'] =='HasNodeFailed':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='HasNodeFailed':
+                if action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
                     print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_has_node_failed(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.has_node_failed(action['nodeid']) :
                         retval['message'] ='Wait for research, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
                     
-            elif action['action'] =='ReplaceFailedNode':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='ReplaceFailedNode':
+                if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
                     print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_replace_failed_node(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.replace_failed_node(action['nodeid']) :
                         retval['message'] ='Wait for replace node failed, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)                    
                     
-            elif action['action'] == 'TransferPrimaryRole' :
-                if self.begin_command_transfer_primary_role(highpower) :
-                    retval['cmdstate'] = 'running'
+            elif action['command'] == 'TransferPrimaryRole' :
+                if self.transfer_primary_role() :
                     retval['message'] = 'Add a new controller to the network and make it the primary. The existing primary will become a secondary controller.'
                 else : retval.update(errorCom)
                     
-            elif action['action'] == 'RequestNetworkUpdate' :
-                if self.begin_command_request_network_update() :
-                    retval['cmdstate'] ='running'
-                    retval['message'] ='Wait for refresh, be patient...'
-                else : retval.update(errorCom)
+            elif action['command'] == 'RequestNetworkUpdate' :
+                if  action['nodeid'] is not None and action['nodeid'] != 0 :
+                    if self.request_network_update(action['nodeid']) :
+                        retval['message'] ='Wait for refresh, be patient...'
+                    else : retval.update(errorCom)
+                else : retval.update(errorNode)                    
                     
-            elif action['action'] =='RequestNodeNeighborUpdate':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='RequestNodeNeighborUpdate':
+                if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
                     print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_request_node_neigbhor_update(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.request_Node_Neighbor_Update(action['nodeid']) :
                         retval['message'] ='Wait for refresh, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
  
-            elif action['action'] =='AssignReturnRoute':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='AssignReturnRoute':
+                if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
                     print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
-                if not action['arg']  or action['arg'] not in range (1,  255) :
-                    self._ozwmanager._log.error('No action.arg for controleur command, quit')
-                    print ('ERROR : No action.arg for controleur command, quit')
-                    nodeDest = None
-                else :
-                    nodeDest = self._ozwmanager._getNode(self.homeId, action['arg'])
                 if node and nodeDest :
-                    if self.begin_command_assign_return_route(action['nodeid'],  action['arg']) :
-                        retval['cmdstate'] ='running'
+                    if self.assign_return_route(action['nodeid']) :
                         retval['message'] ='Wait for route assign, be patient...'
                     else : retval.update(errorCom)
-                else : 
-                    retval.update(errorNode)
-                    if not node : retval['error'] = 'Unknown node : ' + str(action['nodeid']) +' '
-                    if not nodeDest : retval['error'] +=  'Unknown node : '  + str(action['arg'])
+                else : retval.update(errorNode)
 
-            elif action['action'] =='DeleteAllReturnRoutes':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='DeleteAllReturnRoutes':
+                if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
                     print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_delete_all_return_routes(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.delete_all_return_routes(action['nodeid']) :
                         retval['message'] ='Wait for deleting return route, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
  
-            elif action['action'] =='SendNodeInformation':
-                if action['nodeid'] == 0 :
+            elif action['command'] =='SendNodeInformation':
+                if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
-                    print ('ERROR : No action.nodeid for controleur command, quit')
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
                 if node :
-                    if self.begin_command_send_node_information(action['nodeid']) :
-                        retval['cmdstate'] ='running'
+                    if self.send_node_information(action['nodeid']) :
                         retval['message'] ='Wait get node information, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
                 
-            elif action['action'] == 'ReplicationSend' :
-                if self.begin_command_replication_send(highpower) :
-                    retval['cmdstate'] ='running'
-                    retval['message'] ='Wait for sending information from primary to secondary, be patient...'
-                else : retval.update(errorCom)
-            if retval['error'] == '' :
-                self._lastCtrlState = {'update' : time.time(),  'state': self.SIGNAL_CTRL_STARTING, 'error_msg' : 'None.',
-                                              'message': 'The command is starting.', 'nodeid': action['nodeid'], 'error': 0}
-            else :
-                self._lastCtrlState = {'update' : time.time(),  'state': self.SIGNAL_CTRL_FAILED, 'error_msg' : 'The command has failed.',
-                                              'message': 'The command not started.', 'nodeid': action['nodeid'], 'error': 8}
-
+            elif action['command'] == 'ReplicationSend' :
+                if  action['nodeid'] is not None and action['nodeid'] != 0 :
+                    if self.replication_send(action['nodeid']) :
+                        retval['message'] ='Wait for sending information from primary to secondary, be patient...'
+                    else : retval.update(errorCom)
+                else : retval.update(errorNode)
+            if retval['error'] != '' :
+                retval['message'] ='Command not sended.'
  # TODO: CreateButton , DeleteButton 
  
-        elif action['cmd'] =='getState':
-            print '*********** UI require State of ctrl action'
-            chkAction = self.checkActionCtrl()
-            print chkAction
-            if chkAction :
-                retval['cmdstate']  = 'stop'
-                retval.update(chkAction)
-            else :
-                retval['cmdstate']  = 'waiting'
-                retval['state']  = 'Waiting'
-                retval['message'] ='Wait for controller response, be patient...'
         else :
-            retval['error'] = 'Unknown cmd : ' + action['cmd']
-            retval['cmdstate'] ='Unknown'
+            retval['error'] = 'Unknown action : ' + action['action']
             retval['message'] ='Command error'
             retval['state']  = 'Stop'
         return retval
@@ -473,273 +403,308 @@ controller to learn new data.
         """
         retval={}
         for elem in  libopenzwave.PyControllerCommand :
-            if elem in self.AVAILABLECMDS : retval[elem] = str(elem.doc)
+            if elem != 'None' : retval[elem] = str(elem.doc)
         return retval
         
-
-    def begin_command_send_node_information(self, node_id):
+    def add_node(self, doSecurity = False):
         """
-        Send a node information frame.
-
-        :param node_id:  to specify the node that is get information.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
+        Start the Inclusion Process to add a Node to the Network.
+        The Status of the Node Inclusion is communicated via Notifications. Specifically, you should
+        monitor ControllerCommand Notifications.
+                 
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+                 
+        :param _homeId: The Home ID of the Z-Wave network where the device should be added.
+        :param _doSecurity: Whether to initialize the Network Key on the device if it supports the Security CC
+        :return: True if the Command was sent succcesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_SENDNODEINFORMATION, self.zwcallback, nodeId=node_id)
+        return self._manager.addNode(self.homeId, doSecurity)
 
-    def begin_command_replication_send(self, high_power = False):
+    def remove_node(self):
         """
-        Send information from primary to secondary.
-
-        :param high_power: Usually when adding or removing devices, the controller operates at low power so that the controller must
-        be physically close to the device for security reasons.  If _highPower is true, the controller will
-        operate at normal power levels instead.  Defaults to false.
-        :type high_power: bool
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
+        Remove a Device from the Z-Wave Network
+        The Status of the Node Removal is communicated via Notifications. Specifically, you should
+        monitor ControllerCommand Notifications.
+        
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+        
+        :param _homeId: The HomeID of the Z-Wave network where you want to remove the device
+        :return: True if the Command was send succesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REPLICATIONSEND, self.zwcallback, highPower=high_power)
+        return self._manager.removeNode(self.homeId)
 
-    def begin_command_request_network_update(self):
+    def remove_failed_node(self, node_id):
+        """
+        Remove a Failed Device from the Z-Wave Network
+        This Command will remove a failed node from the network. The Node should be on the Controllers Failed
+        Node List, otherwise this command will fail. You can use the HasNodeFailed function below to test if the Controller
+        believes the Node has Failed.
+        The Status of the Node Removal is communicated via Notifications. Specifically, you should
+        monitor ControllerCommand Notifications.
+        
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+        
+        :param _homeId: The HomeID of the Z-Wave network where you want to remove the device
+        :param _nodeId: The NodeID of the Failed Node.
+        :return: True if the Command was send succesfully to the Controller
+        """
+        return self._manager.removeFailedNode(self.homeId, node_id)
+
+    def has_node_failed(self, node_id):
+        """
+        Check if the Controller Believes a Node has Failed.
+        This is different from the IsNodeFailed call in that we test the Controllers Failed Node List, whereas the IsNodeFailed is testing
+        our list of Failed Nodes, which might be different.
+        The Results will be communicated via Notifications. Specifically, you should monitor the ControllerCommand notifications
+
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network where you want to test the device
+        :param _nodeId: The NodeID of the Failed Node.
+        :return: True if the RemoveDevice Command was send succesfully to the Controller
+        """
+        return self._manager.hasNodeFailed(self.homeId, node_id)
+
+    def request_Node_Neighbor_Update(self, node_id):
+        """
+        Ask a Node to update its Neighbor Tables
+        This command will ask a Node to update its Neighbor Tables.
+
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network where you want to update the device
+        :param _nodeId: The NodeID of the Node.
+        :return: True if the Command was send succesfully to the Controller
+        """
+        return self._manager.requestNodeNeighborUpdate(self.homeId, node_id)
+
+    def assign_return_route(self, node_id):
+        """
+        Ask a Node to update its update its Return Route to the Controller
+        This command will ask a Node to update its Return Route to the Controller
+
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId:The HomeID of the Z-Wave network where you want to update the device
+        :param _nodeId: The NodeID of the Node.
+        :return: True if the Command was send succesfully to the Controller
+        """
+        return self._manager.assignReturnRoute(self.homeId, node_id)
+
+    def delete_all_return_routes(self, node_id):
+        """
+        Ask a Node to delete all Return Route.
+        This command will ask a Node to delete all its return routes, and will rediscover when needed.
+
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network where you want to update the device
+        :param _nodeId: The NodeID of the Node.
+        :return: True if the Command was send succesfully to the Controller
+        """
+        return self._manager.deleteAllReturnRoutes(self.homeId, node_id)
+
+    def send_node_information(self, node_id):
+        """
+        Send a NIF frame from the Controller to a Node.
+        This command send a NIF frame from the Controller to a Node
+
+        Results of the AddNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: The NodeID of the Node to recieve the NIF
+        :return: True if the sendNIF Command was send succesfully to the Controller
+        """
+        return self._manager.sendNodeInformation(self.homeId, node_id)
+
+    def create_new_primary(self):
+        """
+        Create a new primary controller when old primary fails. Requires SUC.
+        This command Creates a new Primary Controller when the Old Primary has Failed. Requires a SUC on the network to function
+
+        Results of the CreateNewPrimary Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :return: True if the CreateNewPrimary Command was send succesfully to the Controller
+        """
+        return self._manager.createNewPrimary(self.homeId)
+
+    def receive_configuration(self):
+        """
+        Receive network configuration information from primary controller. Requires secondary.
+        This command prepares the controller to recieve Network Configuration from a Secondary Controller.
+
+        Results of the ReceiveConfiguration Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :return: True if the ReceiveConfiguration Command was send succesfully to the Controller
+        """
+        return self._manager.receiveConfiguration(self.homeId)
+
+    def replace_failed_node(self, node_id):
+        """
+        Replace a failed device with another.
+        If the node is not in the controller's failed nodes list, or the node responds, this command will fail.
+        You can check if a Node is in the Controllers Failed node list by using the HasNodeFailed method
+
+        Results of the ReplaceFailedNode Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: the ID of the Failed Node
+        :return: True if the ReplaceFailedNode Command was send succesfully to the Controller
+        """
+        return self._manager.replaceFailedNode(self.homeId, node_id)
+
+    def transfer_primary_role(self):
+        """
+        Add a new controller to the network and make it the primary.
+        The existing primary will become a secondary controller.
+
+        Results of the TransferPrimaryRole Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        \return: True if the TransferPrimaryRole Command was send succesfully to the Controller
+        """
+        return self._manager.transferPrimaryRole(self.homeId)
+
+    def request_network_update(self, node_id):
         """
         Update the controller with network information from the SUC/SIS.
 
-        :return: True if the command was accepted and has started.
-        :rtype: bool
+        Results of the RequestNetworkUpdate Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
 
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: the ID of the Node
+        :return: True if the RequestNetworkUpdate Command was send succesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REQUESTNETWORKUPDATE, self.zwcallback)
+        return self._manager.requestNetworkUpdate(self.homeId, node_id)
 
-    def begin_command_add_device(self, high_power = False):
+    def replication_send(self, node_id):
         """
-        Add a new device (but not a controller) to the Z-Wave network.
+        Send information from primary to secondary
 
-        :param high_power: Used only with the AddDevice, AddController, RemoveDevice and RemoveController commands.
-        Usually when adding or removing devices, the controller operates at low power so that the controller must
-        be physically close to the device for security reasons.  If _highPower is true, the controller will
-        operate at normal power levels instead.  Defaults to false.
-        :type high_power: bool
-        :return: True if the command was accepted and has started.
-        :rtype: bool
+        Results of the ReplicationSend Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
 
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: the ID of the Node
+        :\return: True if the ReplicationSend Command was send succesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_ADDDEVICE, self.zwcallback, highPower=high_power)
+        return self._manager.replicationSend(self.homeId, node_id)
 
-    def begin_command_remove_device(self, high_power = False):
+    def create_button(self, node_id, arg=0):
         """
-        Remove a device (but not a controller) from the Z-Wave network.
+        Create a handheld button id.
 
-        :param high_power: Used only with the AddDevice, AddController, RemoveDevice and RemoveController commands.
-        Usually when adding or removing devices, the controller operates at low power so that the controller must
-        be physically close to the device for security reasons.  If _highPower is true, the controller will
-        operate at normal power levels instead.  Defaults to false.
-        :type high_power: bool
-        :return: True if the command was accepted and has started.
-        :rtype: bool
+        Only intended for Bridge Firmware Controllers.
 
+        Results of the CreateButton Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: the ID of the Virtual Node
+        :param _buttonId: the ID of the Button to create
+        :return: True if the CreateButton Command was send succesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REMOVEDEVICE, self.zwcallback, highPower=high_power)
+        return self._manager.createButton(self.homeId, node_id, arg)
 
-    def begin_command_remove_failed_node(self, node_id):
-        """
-        Move a node to the controller's list of failed nodes.  The node must
-        actually have failed or have been disabled since the command
-        will fail if it responds.  A node must be in the controller's
-        failed nodes list for ControllerCommand_ReplaceFailedNode to work.
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REMOVEFAILEDNODE, self.zwcallback, nodeId=node_id)
-
-    def begin_command_has_node_failed(self, node_id):
-        """
-        Check whether a node is in the controller's failed nodes list.
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_HASNODEFAILED, self.zwcallback, nodeId=node_id)
-
-    def begin_command_replace_failed_node(self, node_id):
-        """
-        Replace a failed device with another. If the node is not in
-        the controller's failed nodes list, or the node responds, this command will fail.
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REPLACEFAILEDNODE, self.zwcallback, nodeId=node_id)
-
-    def begin_command_request_node_neigbhor_update(self, node_id):
-        """
-        Get a node to rebuild its neighbors list.
-        This method also does ControllerCommand_RequestNodeNeighbors afterwards.
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_REQUESTNODENEIGHBORUPDATE, self.zwcallback, nodeId=node_id)
-
-    def begin_command_create_new_primary(self):
-        """
-        Add a new controller to the Z-Wave network. Used when old primary fails. Requires SUC.
-
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_CREATENEWPRIMARY, self.zwcallback)
-
-    def begin_command_transfer_primary_role(self, high_power = False):
-        """
-        Make a different controller the primary.
-        The existing primary will become a secondary controller.
-
-        :param high_power: Used only with the AddDevice, AddController, RemoveDevice and RemoveController commands.
-        Usually when adding or removing devices, the controller operates at low power so that the controller must
-        be physically close to the device for security reasons.  If _highPower is true, the controller will
-        operate at normal power levels instead.  Defaults to false.
-        :type high_power: bool
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_TRANSFERPRIMARYROLE, self.zwcallback, highPower=high_power)
-
-    def begin_command_receive_configuration(self):
-        """
-        -
-
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_RECEIVECONFIGURATION, self.zwcallback)
-
-    def begin_command_assign_return_route(self, from_node_id, to_node_id):
-        """
-        Assign a network return route from a node to another one.
-
-        :param from_node_id: The node that we will use the route.
-        :type from_node_id: int
-        :param to_node_id: The node that we will change the route
-        :type to_node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_ASSIGNRETURNROUTE, self.zwcallback, nodeId=from_node_id, arg=to_node_id)
-
-    def begin_command_delete_all_return_routes(self, node_id):
-        """
-        Delete all network return routes from a device.
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_DELETEALLRETURNROUTES, self.zwcallback, nodeId=node_id)
-
-    def begin_command_create_button(self, node_id, arg=0):
-        """
-        Create a handheld button id
-
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :param arg:
-        :type arg: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
-
-        """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_CREATEBUTTON, self.zwcallback, nodeId=node_id, arg=arg)
-
-    def begin_command_delete_button(self, node_id, arg=0):
+    def delete_button(self, node_id, arg=0):
         """
         Delete a handheld button id.
 
-        :param node_id: Used only with the ReplaceFailedNode command, to specify the node that is going to be replaced.
-        :type node_id: int
-        :param arg:
-        :type arg: int
-        :return: True if the command was accepted and has started.
-        :rtype: bool
+        Only intended for Bridge Firmware Controllers.
 
+        Results of the DeleteButton Command will be send as a Notification with the Notification type as
+        Notification::Type_ControllerCommand
+
+        :param _homeId: The HomeID of the Z-Wave network
+        :param _nodeId: the ID of the Virtual Node
+        :param _buttonId: the ID of the Button to delete
+        :return: True if the DeleteButton Command was send succesfully to the Controller
         """
-        return self._manager.beginControllerCommand(self.homeId, \
-            self.CMD_DELETEBUTTON, self.zwcallback, nodeId=node_id, arg=arg)
+        return self._manager.deleteButton(self.homeId, node_id, arg)
 
     def cancel_command(self):
         """
         Cancels any in-progress command running on a controller.
-
+        :param _homeId: The Home ID of the Z-Wave controller.
+        :return: True if a command was running and was cancelled.
         """
-        retval = self._manager.cancelControllerCommand(self.homeId)
-        print '************* cancel ctrl action ************** ', retval 
-        return retval
+        self._ozwmanager._log.debug('Try to cancel controller {0} command : {1}'.format(self._ozwmanager.getHomeID(self.homeId), self._lastCtrlState))
+        return self._manager.cancelControllerCommand(self.homeId)
         
     def checkActionCtrl(self):
         """
         Check if controller action is in state finished return None is not finish or all state if finished
+        None for : ['Normal', 'Cancel', 'Error', 'Completed', 'Failed' 'NodeOK', 'NodeFailed']
+        State for :[''Starting', 'Waiting', 'Sleeping', 'InProgress']
         """
-        if self._lastCtrlState['state'] in [self.SIGNAL_CTRL_NORMAL,  self.SIGNAL_CTRL_CANCEL,  self.SIGNAL_CTRL_ERROR,
-                                                      self.SIGNAL_CTRL_COMPLETED, self.SIGNAL_CTRL_FAILED, 
-                                                      self.SIGNAL_CTRL_NODEOK,  self.SIGNAL_CTRL_NODEFAILED] :
+        if self._lastCtrlState['state'] not in [libopenzwave.PyControllerState[1], libopenzwave.PyControllerState[4],
+                                                            libopenzwave.PyControllerState[5], libopenzwave.PyControllerState[6]] :
             return self._lastCtrlState
         else : return None
 
-    def zwcallback(self, args):
-        """
-        The Callback Handler used when sendig commands to the controller.
-
-        To do : add node in signal when necessary
-
-        :param args: A dict containing informations about the state of the controller
-        :type args: dict()
-
-        """
-        self._ozwmanager._log.debug('Controller state change : %s' % (args))
-        if self._lastCtrlState.has_key ('nodeid') : args['nodeid'] = self._lastCtrlState['nodeid']
-        self._lastCtrlState = args
-        self._lastCtrlState["update"]= time.time()
-        state = args['state']
-        message = args['message']
-        print 'zwcallback Action State :', state, ' -- message :', message, ' -- controller', self
-        self._ozwmanager.reportCtrlMsg(self.homeId,  self._lastCtrlState)
+    def handleNotificationCommand(self, args):
+        """Handle notification ControllerCommand from openzwave."""
+        if args['controllerState'] == libopenzwave.PyControllerState[0] : 
+            self._lastCtrlState['nodeId'] = args['nodeId']
+            self._lastCtrlState['command'] = libopenzwave.PyControllerCommand[0]
+        if args['nodeId'] != 0 : 
+            self._lastCtrlState['nodeId'] = args['nodeId']
+        self._lastCtrlState.update({ 'update' : time.time(),
+                                              'state': args['controllerState'],
+                                              'stateMsg': args['controllerStateDoc'], 
+                                              'stateId': args['controllerStateInt'],
+                                              'error' : args['controllerError'], 
+                                              'errorMsg' : args['controllerErrorDoc'], 
+                                              'errorId' : args['controllerErrorInt']
+                                              })
+        self.publishCommandState()
+                                              
+    def publishCommandState(self):
+        """Publish a controller command state over MQ"""
+        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.command', {'NetworkID': self.networkID,
+                'state': self._lastCtrlState['state'], 
+                'usermsg' : self._lastCtrlState['stateMsg'], 
+                'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'], 
+                'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'], 
+                'nodeId': self._lastCtrlState['nodeId']
+                })
         
+#@DEPRECIATE
+#TODO: delete after all begin_command_* modifed to direct command
+#    def zwcallback(self, args): 
+#        """
+#        The Callback Handler used when sendig commands to the controller.
+#
+#        To do : add node in signal when necessary
+#
+#        :param args: A dict containing informations about the state of the controller
+#        :type args: dict()
+#
+#        """
+#        self._ozwmanager._log.debug('Controller state change : %s' % (args))
+#        if self._lastCtrlState.has_key ('nodeid') : args['nodeid'] = self._lastCtrlState['nodeid']
+#        self._lastCtrlState = args
+#        self._lastCtrlState["update"]= time.time()
+#        state = args['state']
+#        message = args['message']
+#        print 'zwcallback Action State :', state, ' -- message :', message, ' -- controller', self
+#        self._ozwmanager.reportCtrlMsg(self.homeId,  self._lastCtrlState)
+#        
 # -----------------------------------------------------------------------------
 # Polling Z-Wave devices
 # -----------------------------------------------------------------------------

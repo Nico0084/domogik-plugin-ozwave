@@ -6,7 +6,7 @@
 {% include "plugin_ozwave_menu.html" %}
 
 <!-- ozwave lib -->
-<script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwlib.js"></script>
+<script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwctrlactions.js"></script>
 
 <div class="container" id="test-move">
 {% include "network.html" %}
@@ -16,6 +16,49 @@
         var container = document.getElementById("{{ network_active }}");
         $('#test-move').appendTo("#{{ network_active }}");
         var ws_onmessage_ctrl = ws.onmessage;
+        $("#dosecurity").bootstrapSwitch();
+        renderActionOption("");
+        sendRequest("ozwave.ctrl.getlistcmdsctrl", {"networkId": "{{ network_active }}"}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Zwave controlleur {{ network_active }} error',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                AvaillableCtrlActions = data.content.ctrlactions;
+                for (action in AvaillableCtrlActions) {
+                    $('#ctrlactions').append("<option value='"+ action +"'>" + action + "</option>");
+                };
+            };
+        });
+        sendRequest("ozwave.ctrl.nodes",{"networkId": "{{ network_active }}"}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Controller  {{ network_active }} , list nodes fail.'  ,
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                nodesData = data.content.nodes;
+            };
+        });
+        var action = {'action': 'getState'}
+        action['action'] =='getState';
+        sendRequest("ozwave.ctrl.action",{"networkId": "{{ network_active }}", "action": JSON.stringify(action)}, function(data, result) {
+            if (result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Controller  {{ network_active }} , get action state. fail.'  ,
+                    text: data.content.error + " " + data.content.usermsg,
+                    delay: 6000
+                });
+            } else {
+                renderStateAction(data.content.command, data.content.state, data.content.usermsg);
+            };
+        });
         ws.onmessage = function(e) {
             ws_onmessage_ctrl(e);
             data = JSON.parse(e.data);
@@ -27,7 +70,20 @@
                     if ((data.content.type == 'change') || (data.content.type == 'status')) {
                         $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
                         $("#ctrl-status").text(data.content.init);
+                        if (data.content.status == 'alive' || data.content.status =='starting') {
+                            var icon = 'stop';
+                            var text = ' Stop controller';
+                            var color = 'red';
+                        } else {
+                            var icon = 'play';
+                            var text = ' Start controller';
+                            var color = 'green';
+                        }
+                        $("#runctrl-text").text(text);
+                        $("#runctrl-ic").attr('style', "color:"+ color ).removeClass().addClass("fa fa-"+icon);
                     };
+                } else if (msgId[2] == "command" && data.content.NetworkID == "{{ network_active }}") {
+                    renderStateAction(data.content.command, data.content.state, data.content.error + data.content.usermsg);
                 } else {
                     if (data.content.type == 'node-state-changed') {
                         if (data.content.data.state == "sleep") {
@@ -38,11 +94,147 @@
                             renderBadgeCount("count_fail", data.content["Node fail"]);
                             $("#statistic_fail").text(data.content["Node fail"]);
                         };
-
+                        if (data.content["Node count"] != undefined) {$('#count_node').text(data.content["Node count"]);};
                     };
                 };
             };
         };
+        $('#ctrlactions').change(function(e) {
+            $('#actiondoc').text(AvaillableCtrlActions[this.value]);
+            renderActionOption(this.value);
+        });
+        $('#btctrlaction').click(function() {
+            var act = 'stop';
+            if ($('#btctrlaction-ic').hasClass('fa-play')) {act = 'start'};
+            $('#btctrlaction').addClass('disabled'); // Disables visually + functionally
+            var action = {'command': $('#ctrlactions').val(),
+                            'action': act,
+                            'nodeid': parseInt($('#listnodesOpt').val()),
+                            'dosecurity': $('#dosecurity').val(),
+                            'arg': $('#numberOpt').val(),
+                            };
+                            
+            sendRequest("ozwave.ctrl.action", {"networkId": "{{ network_active }}", "action": JSON.stringify(action)}, function(data, result) {
+                $('#btctrlaction').removeClass('disabled'); 
+                if (data.content.message != '' && data.content.message != undefined) {
+                    $('#actionmessage').text(data.content.message);
+                    $('#actionmessage').show();
+                } else {
+                    $('#actionmessage').text('');
+                    $('#actionmessage').hide();
+                };
+
+                if (result == "error" || data.result == "error") {
+                    new PNotify({
+                        type: 'error',
+                        title: 'Controller  {{ network_active }} , action fail'  ,
+                        text: data.content.error + "\n" + data.content.message,
+                        delay: 6000
+                    });
+                } else {
+                    new PNotify({
+                        type: 'success',
+                        title: 'Controller  {{ network_active }} action',
+                        text: 'Request ' + data.content.action + ' ' + data.content.command + ' sended. \n' + data.content.message,
+                        delay: 4000
+                    });
+                };
+            });
+        });
+        $('#forcestopaction').change(function() {
+            if ($('#forcestopaction :input').is(':checked')) {
+                $('#btctrlaction-ic').removeClass().addClass("fa fa-stop").attr("style", "color:red");
+                $('#btctrlaction-text').text(" Stop action");
+                $('.actdisable').attr('disabled', true);
+            } else {
+                var state = $.trim($('#actionstatus').text());
+                if (state == 'Ready') { state = 'Normal';};
+                renderStateAction($('#lastaction').text(), state,$('#actionresult').text());
+            };
+        });
+        $('#runctrl').click(function() {
+            var act = 'stop';
+            if ($('#runctrl-ic').hasClass('fa-play')) {act = 'start'};
+            $('#runctr').addClass('disabled'); // Disables visually + functionally
+            sendRequest("ozwave.ctrl." + act, {"networkId": "{{ network_active }}"}, function(data, result) {
+                $('#runctr').removeClass('disabled');
+                if (result == "error" || data.result == "error") {
+                    new PNotify({
+                        type: 'error',
+                        title: 'fail ' + act + ' controller  {{ network_active }} command',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    new PNotify({
+                        type: 'success',
+                        title: act + ' controller  {{ network_active }} command',
+                        text: 'Command '+ act + ' sended.',
+                        delay: 4000
+                    });
+                };
+            });
+                
+        });
+        $('#softreset').click(function() {
+            bootbox.confirm('<h3 class="text-center alert-info">Soft Reset of PC ZWave Controller</h3> ' +
+                              '<h4 class="text-center">{{ network_active }} - {{ network_state.HomeID }}</h4>' +
+                              '<p class="text-center alert-info">Resets a controller without erasing its network configuration settings.</p>' +
+                              '<h4 class="text-center">Please confirm the Soft Reset</h4>',
+                function(result) {
+                    if (result) {
+                        $('#softreset').addClass('disabled'); // Disables visually + functionally
+                        sendRequest("ozwave.ctrl.softreset", {"networkId": "{{ network_active }}"}, function(data, result) {
+                            $('#softreset').removeClass('disabled');
+                            if (result == "error" || data.result == "error") {
+                                new PNotify({
+                                    type: 'error',
+                                    title: 'fail soft reset controller  {{ network_active }} command',
+                                    text: data.content.error,
+                                    delay: 6000
+                                });
+                            } else {
+                                new PNotify({
+                                    type: 'success',
+                                    title: 'Soft reset controller  {{ network_active }} command',
+                                    text: 'Command '+ act + ' sended.',
+                                    delay: 4000
+                                });
+                            };
+                        });
+                    };
+                });
+        });
+        $('#hardreset').click(function() {
+            bootbox.confirm('<h3 class="text-center alert-info">Hard Reset of PC ZWave Controller</h3> ' +
+                              '<h4 class="text-center">{{ network_active }} - {{ network_state.HomeID }}</h4>' +
+                              '<p class="text-center alert-danger">Resets a controller and erases its network configuration settings. The controller becomes a primary controller ready to add devices to a new network.</p>' +
+                              '<h4 class="text-center">Please confirm the Hard Reset</h4>',
+                function(result) {
+                    if (result) {
+                        $('#softreset').addClass('disabled'); // Disables visually + functionally
+                        sendRequest("ozwave.ctrl.hardreset", {"networkId": "{{ network_active }}"}, function(data, result) {
+                            $('#softreset').removeClass('disabled'); 
+                           if (result == "error" || data.result == "error") {
+                                new PNotify({
+                                    type: 'error',
+                                    title: 'fail hard reset controller  {{ network_active }} command',
+                                    text: data.content.error,
+                                    delay: 6000
+                                });
+                            } else {
+                                new PNotify({
+                                    type: 'success',
+                                    title: 'Hard reset controller  {{ network_active }} command',
+                                    text: 'Command '+ act + ' sended.',
+                                    delay: 4000
+                                });
+                            };
+                        });
+                    };
+                });
+        });
+
     });
 </script>
 

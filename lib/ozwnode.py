@@ -294,21 +294,21 @@ class ZWaveNode:
     def  requestNodeDynamic(self)  :
         """Force un rafraichissement des informations du node depuis le reseaux zwave"""
         if self._manager.requestNodeDynamic(self._homeId,  self._nodeId):
-            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} dynamics data.".format(self.networdID, self.nodeId)}
+            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} dynamics data.".format(self.networkID, self.nodeId)}
         else :
             return {'erreur': "Failed request refresh node %d Dynamic." % self._nodeId}
 
     def  requestNodeInfo(self)  :
         """Force un rafraichissement des informations du node depuis le reseaux zwave"""
         if self._manager.refreshNodeInfo(self._homeId,  self._nodeId):
-            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} infos.".format(self.networdID, self.nodeId)}
+            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} infos.".format(self.networkID, self.nodeId)}
         else :
             return {'erreur': "Failed request refresh node %d information." % self._nodeId}
 
     def  requestNodeState(self) :
         """Force un rafraichissement des valeurs primaires du node depuis le reseaux zwave"""
         if self._manager.requestNodeState(self._homeId,  self._nodeId):
-            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} state.".format(self.networdID, self.nodeId)}
+            return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} state.".format(self.networkID, self.nodeId)}
         else :
             return {'erreur': "Failed request node %d state." % self._nodeId}
 

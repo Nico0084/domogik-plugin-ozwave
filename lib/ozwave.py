@@ -96,7 +96,6 @@ class OZWavemanager():
         self._configPath = configPath
         self._userPath = userPath
         self._initFully = False
-        self._ctrlActProgress = None
         self.lastTest = 0
         self._devicesCtrl = []
         self._openingDriver = None
@@ -109,12 +108,15 @@ class OZWavemanager():
         # Spécification du chemain d'accès à la lib open-zwave
         if autoPath :
             self._configPath = libopenzwave.configPath()
+            print "----",  self._configPath
             if self._configPath is None :
                 self._log.warning(u"libopenzwave can't autoconfigure path to config, try user config : {0}".format(configPath))
                 self._configPath = configPath
+        print self._configPath, " : ", os.path.exists(self._configPath) 
         if not os.path.exists(self._configPath) : 
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
             raise OZwaveManagerException (u"Directory openzwave config not exist : %s"  % self._configPath)
+            self._xplPlugin.force_leave()
         elif not os.access(self._configPath,  os.R_OK) :
             self._log.error(u"User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
             raise OZwaveManagerException ("User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
@@ -308,6 +310,7 @@ class OZWavemanager():
         if ctrl.status == 'open' :
             self._log.info(u"Remove driver from openzwave : {0}".format(ctrl.driver))
             self._manager.removeDriver(ctrl.driver)
+            print "**************" + ctrl.driver + " closed"
             ctrl.status = 'close'
             ctrl.ready = False
             self._xplPlugin.publishMsg('ozwave.ctrl.closed', {"NetworkID": ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'driver-remove', 'usermsg' : 'Driver removed.', 'data': False})
@@ -327,7 +330,7 @@ class OZWavemanager():
         for ctrl in self._devicesCtrl:
             if ctrl.status == 'open':
                 if ctrl.node is None : st = 'opening...'
-                elif ctrl.ctrlActProgress and ctrl.ctrlActProgress.has_key('state') and ctrl.ctrlActProgress['state'] == ctrl.node.SIGNAL_CTRL_WAITING : st ='locked'
+                elif ctrl.ctrlActProgress and ctrl.ctrlActProgress.has_key('state') and ctrl.ctrlActProgress['state'] == libopenzwave.PyControllerState[4] : st ='locked' #Waiting
                 elif ctrl.ready : st= 'ok'
                 else : st = 'init...'
                 data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'status'}
@@ -514,8 +517,8 @@ class OZWavemanager():
 #         AllNodesQueriedSomeDead = 24      / All nodes have been queried but some dead nodes found.
 #         AllNodesQueried = 25              / All nodes have been queried, so client application can expected complete data.
 #         Notification = 26                        / An error has occured that we need to report.
-#         DriverRemoved = 27                 / The Driver is being removed. (either due to Error or by request) Do Not Call Any Driver Relatedh -- see rev : ttps://code.google.com/p/open-zwave/source/detail?r=890
-
+#         ControllerCommand = 28	      / When Controller Commands are executed, Notifications of Success/Failure etc are communicated via this Notification
+#											    Notification::GetEvent returns Driver::ControllerCommand and Notification::GetNotification returns Driver::ControllerState
 
 #TODO: notification à implémenter
 #         ValueRefreshed = 3                / A node value has been updated from the Z-Wave network.
@@ -524,6 +527,8 @@ class OZWavemanager():
 #         DeleteButton = 15                 / Handheld controller button event deleted 
 #         ButtonOn = 16                     / Handheld controller button on pressed event
 #         ButtonOff = 17                    / Handheld controller button off pressed event 
+#         DriverRemoved = 27                 / The Driver is being removed. (either due to Error or by request) Do Not Call Any Driver Relatedh -- see rev : ttps://code.google.com/p/open-zwave/source/detail?r=890
+#		  NodeReset = 29	        			/ The Device has been reset and thus removed from the NodeList in OZW.
 
         self.monitorNodes.openzwave_report(args)
         print('\n%s\n[%s]:' % ('-'*40, args['notificationType']))
@@ -565,6 +570,8 @@ class OZWavemanager():
             self._handleNodeQueryComplete(args)
         elif notifyType == 'Notification':
             self._handleNotification(args)
+        elif notifyType == 'ControllerCommand':
+            self._handleControllerCommand(args)
         else : 
             self._log.info("zwave callback : %s is not handled yet",  notifyType)
             self._log.info(args)
@@ -896,13 +903,21 @@ class OZWavemanager():
                 return k
         return None
         
+    def _handleControllerCommand(self, args):
+        """Handle controller command (action) Notification."""
+        self._log.debug("Controller Command Notification : {0}".format(args))
+        ctrl = self.getDeviceCtrl('homeID', args['homeId'])
+        if ctrl :
+            ctrl.handleNotificationCommand(args)
+        else :
+            self._log.Warning ("Notification of ControllerCommand: OZWave controller not affectted for homeId {0)".format(self.matchHomeID(args['homeId'])))
+
     def handle_ControllerAction(self,  networkId,  action):
         """Transmet une action controleur a un controleur primaire."""
         print ('********************** handle_ControllerAction ***********')
         print 'Action : ',  action
-        if self.isReady :
-            ctrl = self.getCtrlOfNetwork(networkId)
-            crtl.ctrlActProgress = action   
+        ctrl = self.getCtrlOfNetwork(networkId)
+        if self.isReady and ctrl :
             retval = ctrl.node.handle_Action(action)
         else :
             retval = action
@@ -1258,25 +1273,22 @@ class OZWavemanager():
         """Callback come from MQ (request with reply)"""
         report = {}
         print "WS - Requete MQ : ", request, data
-        reqRef = request.split('.')
-        if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId  
-        if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
-        else : data['homeId'] = self.getCtrlOfNetwork(data['networkId']).homeId
-        if 'nodeId' in data : data['nodeId'] =  int(data['nodeId'])
-        ctrl = self.getCtrlOfNetwork(data['networkId'])
+        try :
+            reqRef = request.split('.')
+            if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId  
+            if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
+            else : data['homeId'] = self.getCtrlOfNetwork(data['networkId']).homeId
+            if 'nodeId' in data : data['nodeId'] =  int(data['nodeId'])
+            ctrl = self.getCtrlOfNetwork(data['networkId'])
+        except Exception as e:
+            self._log.warning(e.message)
+            return {'error':'Bad request ({0}) parameters : {1}'.format(data)} 
         if reqRef[0] == 'ctrl':
             report = self._handleControllerRequest(request, data)
         elif reqRef[0] == 'node':
             report = self._handleNodeRequest(request, data)
         elif reqRef[0] == 'value':
             report = self._handleValueRequest(request, data)
-        elif request == 'ctrlAction' :
-            report = self.handle_ControllerAction(data['networkId'],  data['action'])
-     #       if data['action']['cmd'] =='getState' and report['cmdstate'] != 'stop' : blockAck = True
-        elif request == 'ctrlSoftReset' :
-            report = self.handle_ControllerSoftReset(data['networkId'])
-        elif request == 'ctrlHardReset' :
-            report = self.handle_ControllerHardReset(data['networkId'])
         elif request == 'openzwave.get' :
             report = self.getOpenzwaveInfo()
         elif request == 'manager.get' :
@@ -1300,8 +1312,6 @@ class OZWavemanager():
         # Manager request
         elif request == 'GetValueTypes':
             report = self.getValueTypes()  
-        elif request == 'GetListCmdsCtrl':
-            report = self.getListCmdsCtrl(data['networkId'])
         elif request == 'GetGeneralStats':
             report = self.getGeneralStatistics(data['networkId'])
             print 'Refresh generale stats : ',  report
@@ -1310,18 +1320,7 @@ class OZWavemanager():
                 report = self.getNodeStatistics(data['homeId'], data['node']) 
             else : report = {'error':  'Invalide nodeId format.'}
             print 'Refresh node stats : ',  report
-        elif request == 'StartCtrl':
-            if ctrl.status != 'open' :
-                self.openDeviceCtrl(ctrl)
-                report = {'error':'',  'running': True}
-            else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
-            print 'Start Driver : ',  report
-        elif request == 'StopCtrl':
-            if ctrl.status =='open' :
-                self.closeDeviceCtrl(ctrl)
-                report = {'error':'',  'running': False}
-            else : report = {'error':'No Driver knows.',  'running': False}
-            print 'Stop Driver : ',  report
+
         elif request == 'TestNetwork':
             report = self.testNetwork(data["networkId"], data['count'],  10000, True)
         elif request == 'TestNetworkNode':
@@ -1347,8 +1346,28 @@ class OZWavemanager():
             report['nodes'] = []
             for nodeId in ctrl.getNodesId():
                 report['nodes'].append(self.getNodeInfos(data['homeId'], nodeId))
+        elif request == 'ctrl.action' :
+            report = self.handle_ControllerAction(data['networkId'],  json.loads(data['action']))
         elif request == 'ctrl.saveconf':
             report = ctrl.saveNetworkConfig()
+        elif request == 'ctrl.start':
+            if ctrl.status != 'open' :
+                self.openDeviceCtrl(ctrl)
+                report = {'error':'',  'running': True}
+            else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
+            print 'Start Driver : ',  report
+        elif request == 'ctrl.stop':
+            if ctrl.status =='open' :
+                self.closeDeviceCtrl(ctrl)
+                report = {'error':'',  'running': False}
+            else : report = {'error':'No Driver knows.',  'running': False}
+            print 'Stop Driver : ',  report
+        elif request == 'ctrl.softreset' :
+            report = self.handle_ControllerSoftReset(data['networkId'])
+        elif request == 'ctrl.hardreset' :
+            report = self.handle_ControllerHardReset(data['networkId'])
+        elif request == 'ctrl.getlistcmdsctrl':
+            report = ctrl.getListCmdsCtrl()
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         return report
@@ -1458,17 +1477,6 @@ class OZWavemanager():
 
     def reportCtrlMsg(self, networkId, ctrlmsg):
         """Un message de changement d'état a été recu, il est reporté au besoin sur le hub xPL pour l'UI
-            SIGNAL_CTRL_NORMAL = 'Normal'                   # No command in progress.  
-            SIGNAL_CTRL_STARTING = 'Starting'             # The command is starting.  
-            SIGNAL_CTRL_CANCEL = 'Cancel'                   # The command was cancelled.
-            SIGNAL_CTRL_ERROR = 'Error'                       # Command invocation had error(s) and was aborted 
-            SIGNAL_CTRL_WAITING = 'Waiting'                # Controller is waiting for a user action.  
-            SIGNAL_CTRL_SLEEPING = 'Sleeping'              # Controller command is on a sleep queue wait for device.  
-            SIGNAL_CTRL_INPROGRESS = 'InProgress'       # The controller is communicating with the other device to carry out the command.  
-            SIGNAL_CTRL_COMPLETED = 'Completed'         # The command has completed successfully.  
-            SIGNAL_CTRL_FAILED = 'Failed'                     # The command has failed.  
-            SIGNAL_CTRL_NODEOK = 'NodeOK'                   # Used only with ControllerCommand_HasNodeFailed to indicate that the controller thinks the node is OK.  
-            SIGNAL_CTRL_NODEFAILED = 'NodeFailed'       # Used only with ControllerCommand_HasNodeFailed to indicate that the controller thinks the node has failed.
         """
 
         report  = {}
@@ -1490,15 +1498,14 @@ class OZWavemanager():
         else : report['err_msg'] = 'no'
         report['update'] = ctrlmsg['update']
         print 'reportCtrlMsg', ctrlmsg
-        if ctrlmsg['state'] == ctrl.node.SIGNAL_CTRL_FAILED :
+        if ctrlmsg['state'] == libopenzwave.PyControllerState[8] : # Failed
             node = self._getNode(networkId, ctrlmsg['nodeid']) 
             if node : node.markAsFailed();
-        if ctrlmsg['state'] == ctrl.node.SIGNAL_CTRL_NODEOK :
+        if ctrlmsg['state'] == libopenzwave.PyControllerState[9] : # NodeOK :
             node = self._getNode(networkId, ctrlmsg['nodeid']) 
             if node : node.markAsOK()
-        if ctrlmsg['state'] in [ctrl.node.SIGNAL_CTRL_NORMAL,  ctrl.node.SIGNAL_CTRL_CANCEL,
-                                        ctrl.node.SIGNAL_CTRL_ERROR,  ctrl.node.SIGNAL_CTRL_COMPLETED,  
-                                        ctrl.node.SIGNAL_CTRL_FAILED, ctrl.node.SIGNAL_CTRL_NODEOK] :
+        if ctrlmsg['state'] not in [libopenzwave.PyControllerState[1], libopenzwave.PyControllerState[4],
+                                              libopenzwave.PyControllerState[5], libopenzwave.PyControllerState[6]] :
             report['cmdstate'] = 'stop'                                            
             ctrl.ctrlActProgress= None   
         else :
@@ -1523,7 +1530,6 @@ class PrimaryController():
         self.status = 'close'
         self.ready = False
         self.initFully = False
-        self.ctrlActProgress = None
         self._saved = False
         self.node = None
         self.nodeId = 0
@@ -1533,6 +1539,7 @@ class PrimaryController():
         self.controllercaps = None
     
     isSaved = property(lambda self: self._saved)
+    ctrlActProgress = property(lambda self: None if self.node is None else self.node.getLastState())
     
     def __str__(self):
         return u"driver = {0}, networkID = {1}, homeId = {2}, status = {3}, ready = {4}".format(self.driver, self.networkID , self.homeId, self.status, self.ready)
@@ -1569,15 +1576,15 @@ class PrimaryController():
         self._saved = saved
         self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.saveconfchange', {"NetworkID": self.networkID, "saved": saved})
         
-	def getListCmdsCtrl(self):
-		"""Retourne le liste des commandes possibles du controleur ainsi que la doc associée."""
-		retval = {}
-		if self.node is None : return {"error" : "Zwave network not ready, can't find node controller"}
-		if ctrl.ready :
-			retval = self.node.cmdsAvailables()
-			retval['error'] = ""
-			return retval
-		else : return {"error" : "Zwave network not ready, can't controller get command list."}
+    def getListCmdsCtrl(self):
+        """Retourne le liste des commandes possibles du controleur ainsi que la doc associée."""
+        retval = {"NetworkID": self.networkID}
+        if self.node is None : return {"error" : "Zwave network not ready, can't find node controller"}
+        if self.ready :
+            retval['ctrlactions'] = self.node.cmdsAvailables()
+            retval['error'] = ""
+            return retval
+        else : return {"error" : "Zwave network not ready, can't controller get command list."}
 
     def getControllerDescription(self):
         """Renvoi la description du controleur (fabriquant et produit)"""
@@ -1666,4 +1673,19 @@ class PrimaryController():
             retval = '{0} ({1} sleeping)'.format(retval, sleepCount)
         if failCount :  retval += '({0} dead)'.format(failCount)
         return retval
+        
+    def handleNotificationCommand(self, args):
+        """Handle notification ControllerCommand from openzwave."""
+        if self.node is not None :
+            self.node.handleNotificationCommand(args)
+        else :
+            self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.command', {'NetworkID': self.networkID,
+                'state': args['controllerState'],
+                'usermsg' : args['controllerStateDoc'],
+                'error' : '' if args['controllerError'] == 'None' else args['controllerErrorDoc'], 
+                'command' : 'Internal', 
+                'nodeId': args['nodeId']
+               })
+
+
         
