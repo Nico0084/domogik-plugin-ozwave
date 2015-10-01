@@ -1422,6 +1422,7 @@ class OZWavemanager():
                 print "Refresh node :", report
             elif data['action'] == 'HealNode' :
                 if self._IsNodeId(data['nodeId']):
+                    data['forceroute'] = True #Not in optionfor the momment
                     self.healNetworkNode(data['networkId'],  data['nodeId'],  data['forceroute'])
                     report = {'usermsg':'Command heal node sended, please wait for result...'}
                 else : report = {'error':  'Invalide nodeId format.'}

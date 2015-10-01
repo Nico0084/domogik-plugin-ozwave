@@ -310,7 +310,7 @@ Callbacks :
                     node = None
                 else :
                     node = self._ozwmanager._getNode(self.homeId, action['nodeid'])
-                if node and nodeDest :
+                if node : # and nodeDest :
                     if self.assign_return_route(action['nodeid']) :
                         retval['message'] ='Wait for route assign, be patient...'
                     else : retval.update(errorCom)
