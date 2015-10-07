@@ -1429,7 +1429,7 @@ class OZWavemanager():
             elif data['action'] == 'batterycheck' :
                 node = self._getNode(data['homeId'], data['nodeId'])
                 if node :
-                    node.setBatteryCheck(data['state'])
+                    node.setBatteryCheck(True if data['state'] in [True, 'True', 'true'] else False)
                     report = {'error':  ''}
                 else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
                 report['state'] = node.isbatteryChecked

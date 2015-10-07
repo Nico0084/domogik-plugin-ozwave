@@ -182,7 +182,7 @@ class OZwave(XplPlugin):
                     print "               Item {0}, {1}".format(k, item)
                 print "********* message formated ********"
                 print "*** Full msg : {0}".format(msg.get())
-                print "********* reply message ********"
+                print "********* reply to message ********"
                 self.reply(msg.get())
                 if "ack" in  data and data['ack'] == "pub":
                     print "*** Report publish : ",  report
