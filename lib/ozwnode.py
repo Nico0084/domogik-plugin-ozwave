@@ -91,7 +91,7 @@ class ZWaveNode:
         self._productType = None
         self._groups = list()
         self._sleeping = False
-        self._batteryCheck = True # For device with battery get battery level when node awake
+        self._batteryCheck = False # For device with battery get battery level when node awake
         self._thTest = None
         self._lastMsg = None
         
@@ -100,6 +100,7 @@ class ZWaveNode:
     log = property(lambda self:self._ozwmanager._log)
     networkID = property(lambda self: self._ozwmanager.getNetworkID(self._homeId))
     homeID = property(lambda self: self._ozwmanager.matchHomeID(self._homeId))
+    dmgDevice = property(lambda self: self._ozwmanager._getDmgDevice(self))
     refName = property(lambda self: self._getNodeRefName())
     name = property(lambda self: self._name)
     location = property(lambda self: self._location)
@@ -122,7 +123,7 @@ class ZWaveNode:
     isNamed = property(lambda self: self._named)
     isConfigured = property(lambda self: self._isConfigured)
     isFailed = property(lambda self: self._isFailed())
-    isbatteryChecked = property(lambda self: self._batteryCheck)
+    isbatteryChecked = property(lambda self: self.getBatteryCheck())
     level = property(lambda self: self._getLevel())
     isOn = property(lambda self: self._getIsOn())
     batteryLevel = property(lambda self: self._getBatteryLevel())
@@ -175,7 +176,28 @@ class ZWaveNode:
     def setBatteryCheck(self, check):
         """Set flag for checking battery level when awake."""
         self._batteryCheck = check
-        
+        values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
+        if values :
+            for value in values:
+                dmgDevice = value.dmgDevice
+                if dmgDevice : 
+                    oldCheck = self._ozwmanager._xplPlugin.get_parameter(dmgDevice, 'batterycheck')
+                    print "TODO: When implemented in domogik set the db for batteryCheck parameter : ", oldCheck,  check
+                else : print "No domogik device created with batterycheck parameters, using memory value : ", check
+
+    def getBatteryCheck(self):
+        """Get flag for checking battery level when awake."""
+        values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
+        if values :
+            for value in values:
+                dmgDevice = value.dmgDevice
+                if dmgDevice : 
+                    check = self._ozwmanager._xplPlugin.get_parameter(dmgDevice, 'batterycheck')
+                    if check is not None : self._batteryCheck = check
+                    else : self._ozwmanager._log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {0}".format(self.refName, self._batteryCheck))
+                else : self._ozwmanager._log.debug("Node {0}. No domogik device created with batterycheck parameters, using memory value : {0}".format(self.refName, self._batteryCheck))
+        return self._batteryCheck
+
     def markAsFailed(self): 
         """Le node est marqué comme HS."""
         self._ready = False

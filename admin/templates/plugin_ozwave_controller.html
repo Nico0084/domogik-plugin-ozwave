@@ -189,7 +189,7 @@
                             if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',
-                                    title: 'fail soft reset controller  {{ network_active }} command',
+                                    title: 'Fail soft reset controller  {{ network_active }} command',
                                     text: data.content.error,
                                     delay: 6000
                                 });
@@ -218,7 +218,7 @@
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',
-                                    title: 'fail hard reset controller  {{ network_active }} command',
+                                    title: 'Fail hard reset controller  {{ network_active }} command',
                                     text: data.content.error,
                                     delay: 6000
                                 });
@@ -234,7 +234,36 @@
                     };
                 });
         });
-
+        $('#healnetwork').click(function() {
+            bootbox.confirm('<h3 class="text-center alert-info">Heal network of PC ZWave Controller</h3> ' +
+                              '<h4 class="text-center">{{ network_active }} - {{ network_state.HomeID }}</h4>' +
+                              "<p class='text-center alert-info'>Heal network by requesting node's rediscover their neighbors to every node. Can take a while on larger networks.</p>" +
+                              '<h4 class="text-center">Please confirm the heal</h4>' +
+                              '<div class="checkbox text-center"> <label><input id="forceroute" type="checkbox" value="">force route option</label></div>',
+                function(result) {
+                    if (result) {
+                        $('#healnetwork').addClass('disabled'); // Disables visually + functionally
+                        sendRequest("ozwave.ctrl.healnetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
+                            $('#healnetwork').removeClass('disabled'); 
+                           if (result == "error" || data.result == "error") {
+                                new PNotify({
+                                    type: 'error',
+                                    title: 'Fail heal network  {{ network_active }} command',
+                                    text: data.content.error,
+                                    delay: 6000
+                                });
+                            } else {
+                                new PNotify({
+                                    type: 'success',
+                                    title: 'Heal network {{ network_active }} command',
+                                    text: 'Command sended node by node, please wait for each result...',
+                                    delay: 4000
+                                });
+                            };
+                        });
+                    };
+                });
+        });
     });
 </script>
 

@@ -97,7 +97,8 @@ class ZWaveValueNode:
   
     homeId = property(lambda self: self._node._homeId)
     nodeId = property(lambda self: self._node._nodeId)
-    instance = property(lambda self: self.valueData['instance'])    
+    instance = property(lambda self: self.valueData['instance'])
+    dmgDevice = property(lambda self: self._node._ozwmanager._getDmgDevice(self))
     lastUpdate = property(lambda self: self._lastUpdate)
     valueData = property(lambda self: self._valueData)
     labelDomogik = property(lambda self: self._getLabelDomogik())

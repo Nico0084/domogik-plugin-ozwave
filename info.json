@@ -1868,6 +1868,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "temperature" :{
@@ -1908,6 +1913,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "temp.humidity.battery" :{
@@ -1928,6 +1938,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "temp.humidity" :{
@@ -1968,6 +1983,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "temp.humidity.relative" :{
@@ -2008,6 +2028,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "dim.button" :{
@@ -2048,6 +2073,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "power.meter" :{
@@ -2088,6 +2118,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "alarm.sensor.security.battery" :{
@@ -2108,6 +2143,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             },
             "alarm.sensor.battery" :{
@@ -2128,6 +2168,11 @@
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
                 }]
             }
         },
@@ -2142,17 +2187,13 @@
             {
                 "id": "tailer (>=0.2.1)",
                 "type": "python"
-            },
-            {
-                "id": "ws4py (>=0.3.3)",
-                "type": "python"
             }
 		],
 		"description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
-		"domogik_min_version" : "0.4.0",
+		"domogik_min_version" : "0.4.1",
         "name": "ozwave",
 		"type" : "plugin",
-		"version" : "0.4.0"
+		"version" : "0.4.0b1"
 	}, 
     "json_version" : 2
 	}

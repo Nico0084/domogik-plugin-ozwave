@@ -164,6 +164,8 @@ class OZWavemanager():
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl : 
             self._log.warning(u"No device primary.controller created in domogik, can't start openzwave driver.")
+        print "*****************************************************"
+        print self._xplPlugin.devices
         self.starter = threading.Thread(None, self.startServices, "th_Start_Ozwave_Services", (), {})
 
      # On accède aux attributs uniquement depuis les property
@@ -206,7 +208,6 @@ class OZWavemanager():
             self.openDeviceCtrl(device)
         self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
 
-        
     def getDeviceCtrl(self, key, value ):
         """Retourne le device ctrl de type primary.controler.
             @params key : <'driver', 'networkID',  'homeID', 'node'>
@@ -448,6 +449,47 @@ class OZWavemanager():
     def _IsNodeId(self, nodeId):
         """Verifie le si le format de nodeId est valide"""
         return True if (type(nodeId) == type(0) and (nodeId >0 and nodeId < 255)) else False
+    
+    def _validateDmgDevice(self, refXpl, refComp):
+        """Check if Xpl ref addr is exactly the same of the dmg device (with refComp formated as refXpl)
+           return True/False"""
+        if refXpl and refComp :
+            for k in refXpl :
+                if k not in refComp or refXpl[k] != refComp[k] : return False
+            for k in refComp :
+                if k not in refXpl or refComp[k] != refXpl[k] :  return False                
+            return True
+        else :
+            return False
+            
+    def _castXplCmd(self, value, type):
+        """Proper cast of xpl_command value for ozwave plugin, doesn't profide by domogik Class Plugin."""
+        if type == 'networkid' :
+            return u"{0}".format(value)
+        else :
+            return int(value)
+        
+    def _getDmgDevice(self, device):
+        """Return the domogik device if exist else None."""
+        refXpl = self.getxPLRefFromZW(device)
+        for dmgDevice in self._xplPlugin.devices :
+            for feature in dmgDevice['xpl_stats'] :
+                refComp ={}
+                for param in dmgDevice['xpl_stats'][feature]['parameters']['static'] :
+                    if 'networkid' == param['key'] : refComp['networkid'] = self._xplPlugin.cast(param['value'], param['type'])
+                    elif 'node' == param['key'] : refComp['node'] = self._xplPlugin.cast(param['value'], param['type'])
+                    elif 'instance' == param['key'] : refComp['instance'] = self._xplPlugin.cast(param['value'], param['type'])
+                if self._validateDmgDevice(refXpl, refComp) : 
+                    return dmgDevice
+            for cmd in dmgDevice['xpl_commands'] :
+                refComp ={}
+                for param in dmgDevice['xpl_commands'][cmd]['parameters'] :
+                    if 'networkid' == param['key']  : refComp['networkid'] = self._castXplCmd(param['value'], 'networkid')
+                    elif 'node' == param['key']  : refComp['node'] = self._castXplCmd(param['value'], 'node')
+                    elif 'instance' == param['key']  : refComp['instance'] = self._castXplCmd(param['value'], 'instance')
+                if self._validateDmgDevice(refXpl, refComp) : 
+                    return dmgDevice
+        return None
     
     def _getNode(self, homeId, nodeId):
         """ Renvoi l'objet node correspondant"""
@@ -1168,9 +1210,11 @@ class OZWavemanager():
     def healNetwork(self, networkId, upNodeRoute):
         """Tente de 'réparé' des nodes pouvant avoir un problème. Passe tous les nodes un par un"""
         ctrl = self.getCtrlOfNetwork(networkId)
-        if ctrl is None : return {"error" : "Zwave network not ready, can't find controller"}
+        if ctrl is None : return {"error" : "Zwave network not ready, can't find controller."}
         if ctrl.ready :
             self._manager.healNetwork(ctrl.homeId, upNodeRoute)
+            return {"error": ""}
+        else : return {"error": "Zwave network not ready, wait ready to heal network."}
 
     def healNetworkNode(self, homeId, nodeId, upNodeRoute):
         """Tente de 'réparé' un node particulier pouvant avoir un problème."""
@@ -1294,9 +1338,6 @@ class OZWavemanager():
         elif request == 'manager.get' :
             report = self.getManagerInfo()
 
-        elif request == 'HealNetwork' :
-            self.healNetwork(data['networkId'], data['forceroute'])
-            report = {'usermsg':'Command sended node by node, please wait for each result...'}
         elif request == 'GetMemoryUsage':
             report = self.getMemoryUsage()
         elif request == 'GetAllProducts':
@@ -1362,6 +1403,8 @@ class OZWavemanager():
                 report = {'error':'',  'running': False}
             else : report = {'error':'No Driver knows.',  'running': False}
             print 'Stop Driver : ',  report
+        elif request == 'ctrl.healnetwork' :
+            report = self.healNetwork(data['networkId'], data['forceroute'])
         elif request == 'ctrl.softreset' :
             report = self.handle_ControllerSoftReset(data['networkId'])
         elif request == 'ctrl.hardreset' :
