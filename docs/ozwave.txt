@@ -336,97 +336,82 @@ In Domogik administrationsection, go to client plugin-ozwave details page.
 |                |               |                                                                                      |
 +----------------+---------------+--------------------------------------------------------------------------------------+
 
-* Now you need to configure zwave network link to domogik.
-
-You can create more than one association, but only first is avaiblable.
-This parameter allows you to make the names of devices domogik partially independent of zwave network.
-
-+----------------+---------------+--------------------------------------------------------------------------------------+
-|Key             | Default value | Description                                                                          |
-+================+===============+======================================================================================+
-| homename-1     | ZWHome        | Home ID name for association with domogik device.                                    |
-|                |               |                                                                                      |
-|                |               | Give name you want without space and "."                                             |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| device         | /dev/zwave    | Z-wave device that you have define in UDEV rule                                      |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| homeidass-1    |               | Home ID refered to ID home key.                                                      |
-|                |               |                                                                                      |
-|                |               | Report Home ID information show in "Controller and devices" page.                    |
-|                |               | Example : 0x018d0f23                                                                 |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-
 Creating devices for ozwave
 -----------------------------
 In clients page of admin UI, go to **plugin-ozwave-<your_host_domogik>**, select tab **"Devices"**, **"New"** to create your devices.
 
-Create a device for the primary zwave controller Instance-type : primary.controller named **Zwave Controler**
-*************************************************************************************************************
-
-The device on the controller can be traced back to the state it to domogik, but also to create an automatic link to the driver.
-you can create it after starting the plugin, so it is possible to find its address in the devices table of the "controller and devices".
-This is usually the first node and address as: **ZWHome.1.1**
-
-.. note ::
-   -  Create this device is necessary but widget not
+Create a device for the primary zwave controller
+************************************************
+Chose instance-type : primary.controller named **Zwave Controler**
+Or all other device type who are a controller (Z-Stick2)
 
 .. |creat_ctrldevice| image:: ozwave_create_ctrldevice.png
     :width: 200px
-	
-.. |example_device2| image:: ozwave_create_device2.png
-    :width: 350px
+    
+|creat_ctrldevice|
 
-+--------------------+-------------------+--------------------------------------------------------------------------------------------+
-| Example            | Key               | Description                                                                                |
-+====================+===================+============================================================================================+
-| |creat_ctrldevice| | Device Name       | The name you want to give to the device : ...                                              |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Address           | The device address : 'homename-1'.NodeIdOfPrimaryController.1                              |
-|                    |                   | Example : ZwHome.1.1                                                                       |
-|                    |                   |                                                                                            |
-|                    |                   | You can find the reference in the                                                          |
-|                    |                   | `table <ctldevtools.html#Manage devices Commands Class>`_ of command_class                 |
-|                    |                   | of device (node) by pointing the mouse over the star.                                      |
-|                    |                   | |example_device2|                                                                          |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Feature           | Chose : Z-wave.Controller                                                                  |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Usage             | Chose : Server                                                                             |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Description       | Whatever you want                                                                          |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Reference         | Whatever you want                                                                          |
-+--------------------+-------------------+--------------------------------------------------------------------------------------------+
+That device create a link between the driver and openzwave, also between the zwave homeId and your networkId used by domogik for devices adresse.
+You can create it after starting the plugin, so it is possible to find its address in the devices table of the "controller and devices".
+You can create as many **Zwave Controler** you have primary controllers.
 
+.. note ::
+   -  Create this device is necessary to handle your zwave network.
 
++-------------------+-------------------+------------------------------------------------------------------------------+
+| Key               | Example           | Description                                                                  |
++===================+===================+==============================================================================+
+| Device Name       | MyController      | The display name for this device.                                            |
++-------------------+--------------------------------------------------------------------------------------------------+
+| Description       | What you want     | A short descriptionn for this device.                                        |
++-------------------+-------------------+------------------------------------------------------------------------------+
+| Reference         | Z-Stick 2         | A reference for this device, eg.: manufacturer reference.                    |
++-------------------+-------------------+------------------------------------------------------------------------------+
+| Global driver     | /dev/zwave        | Z-wave device that you have define in UDEV rule                              |
++-------------------+-------------------+------------------------------------------------------------------------------+
+| Global networkid  | MyHomeNetwork     | Home ID name for association with domogik devices                            |
++-------------------+-------------------+------------------------------------------------------------------------------+
 
 Feature example
 ***************
 
 .. |example_device1| image:: ozwave_create_device1.png
     :width: 200px
+    
+|example_device1|
+	
+.. |example_device2| image:: ozwave_create_device2.png
+    :width: 350px
 
-+--------------------+-------------------+--------------------------------------------------------------------------------------------+
-| Example            | Key               | Description                                                                                |
-+====================+===================+============================================================================================+
-| |example_device1|  | Name              | The name you want to give to the device : ...                                              |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Address           | The device address : 'homename-1'.NodeId.instance                                          |
-|                    |                   | Example : ZwHome.5.1                                                                       |
-|                    |                   |                                                                                            |
-|                    |                   | You can find the reference in the                                                          |
-|                    |                   | `table <ctldevtools.html#Manage devices Commands Class>`_ of command_class                 |
-|                    |                   | of device (node) by pointing the mouse over the star.                                      |
-|                    |                   | |example_device2|                                                                          |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Feature           | Example : Z-wave.Switch                                                                    |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Usage             | An appropriate usage (...)                                                                 |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Description       | Whatever you want                                                                          |
-|                    +-------------------+--------------------------------------------------------------------------------------------+
-|                    | Reference         | Whatever you want                                                                          |
-+--------------------+-------------------+--------------------------------------------------------------------------------------------+
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| Key                   | Example         | Description                                                                  |
++=======================+=================+==============================================================================+
+| Device Name           | MyController    | The display name for this device.                                            |
++-----------------------+------------------------------------------------------------------------------------------------+
+| Description           | What you want   | A short descriptionn for this device.                                        |
++-----------------------+-----------------+----------------------------------------------------------------------------+
+| Reference             | FGWPE Wall Plug |A reference for this device, eg.: manufacturer reference.                     |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| Global parameters  (Extra parameters for some particular zwave device)                                                 |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| batterycheck          | True            | HCheck battery level at zwave device wakeup.                                 |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| xPL parameters                                                                                                         |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| networkid             | MyHomeNetwork   | Home ID name for association with domogik devices                            |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| node                  | 14              | Z-wave node id that you can find in the                                      |
+|                       |                 | `nodes table <ctldevtools.html#Manage devices Commands Class>`_              |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| xPL command parameters (if it's a zwave device with command(s))                                                        |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| <xpl_cmds> - instance | 1               | Zwave node instance id that you can find in the                              |
+|                       |                 | `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| xPL stat parameters (if it's a zwave device with sensor(s))                                                            |
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| <xpl_stat> - instance | 1               | Zwave node instance id  that you can find in the                             |
+|                       |                 | `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     |
++-----------------------+-----------------+------------------------------------------------------------------------------+
 
 Start the plugin
 ----------------
