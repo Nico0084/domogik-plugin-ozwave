@@ -356,6 +356,9 @@ You can create as many **Zwave Controler** you have primary controllers.
 .. note ::
    -  Create this device is necessary to handle your zwave network.
 
+Main parameters
+^^^^^^^^^^^^^^^
+
 +-------------------+-------------------+------------------------------------------------------------------------------+
 | Key               | Example           | Description                                                                  |
 +===================+===================+==============================================================================+
@@ -365,9 +368,16 @@ You can create as many **Zwave Controler** you have primary controllers.
 +-------------------+-------------------+------------------------------------------------------------------------------+
 | Reference         | Z-Stick 2         | A reference for this device, eg.: manufacturer reference.                    |
 +-------------------+-------------------+------------------------------------------------------------------------------+
-| Global driver     | /dev/zwave        | Z-wave device that you have define in UDEV rule                              |
+
+Global parameters
+^^^^^^^^^^^^^^^^^
+
 +-------------------+-------------------+------------------------------------------------------------------------------+
-| Global networkid  | MyHomeNetwork     | Home ID name for association with domogik devices                            |
+| Key               | Example           | Description                                                                  |
++===================+===================+==============================================================================+
+| driver            | /dev/zwave        | Z-wave device that you have define in UDEV rule                              |
++-------------------+-------------------+------------------------------------------------------------------------------+
+| networkid         | MyHomeNetwork     | Home ID name for association with domogik devices                            |
 +-------------------+-------------------+------------------------------------------------------------------------------+
 
 Feature example
@@ -381,6 +391,9 @@ Feature example
 .. |example_device2| image:: ozwave_create_device2.png
     :width: 350px
 
+Main parameters
+^^^^^^^^^^^^^^^
+
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | Key                   | Example         | Description                                                                  |
 +=======================+=================+==============================================================================+
@@ -390,24 +403,45 @@ Feature example
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | Reference             | FGWPE Wall Plug |A reference for this device, eg.: manufacturer reference.                     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
-| Global parameters  (Extra parameters for some particular zwave device)                                                 |
+
+Global parameters  (Extra parameters for some particular zwave device)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
++-----------------------+-----------------+------------------------------------------------------------------------------+
+| Key                   | Example         | Description                                                                  |
 +=======================+=================+==============================================================================+
 | batterycheck          | True            | HCheck battery level at zwave device wakeup.                                 |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
-| xPL parameters                                                                                                         |
+
+
+xPL parameters
+^^^^^^^^^^^^^^
+
 +-----------------------+-----------------+------------------------------------------------------------------------------+
+| Key                   | Example         | Description                                                                  |
++=======================+=================+==============================================================================+
 | networkid             | MyHomeNetwork   | Home ID name for association with domogik devices                            |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | node                  | 14              | Z-wave node id that you can find in the                                      |
 |                       |                 | `nodes table <ctldevtools.html#Manage devices Commands Class>`_              |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
-| xPL command parameters (if it's a zwave device with command(s))                                                        |
+
+xPL command parameters (if it's a zwave device with command(s))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 +-----------------------+-----------------+------------------------------------------------------------------------------+
+| Key                   | Example         | Description                                                                  |
++=======================+=================+==============================================================================+
 | <xpl_cmds> - instance | 1               | Zwave node instance id that you can find in the                              |
 |                       |                 | `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
-| xPL stat parameters (if it's a zwave device with sensor(s))                                                            |
+
+xPL stat parameters (if it's a zwave device with sensor(s))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 +-----------------------+-----------------+------------------------------------------------------------------------------+
+| Key                   | Example         | Description                                                                  |
++=======================+=================+==============================================================================+
 | <xpl_stat> - instance | 1               | Zwave node instance id  that you can find in the                             |
 |                       |                 | `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
