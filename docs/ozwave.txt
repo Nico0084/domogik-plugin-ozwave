@@ -15,10 +15,7 @@ New instructions to apply changes from immediatly previous version.
 
 - 0.4.0b1 : (12-10-2015) Compatibily library : OpenZwave >= 1.3.400, python_openzwave >= 0.3.0
     - Target : python-openzwave, domogik (0.4.1)
-    - An `insert_data <changelog.html#do-an-insert-data>`_ or a reinstall is necessary.
     - Update, compile and install python_openzwave.
-        - checkout openzwave branch : goto python-openzwave/openzwave,
-        - do command: svn checkout http://open-zwave.googlecode.com/svn/branches/2013-11-13_release_testing
     - Change log :
         - New version for domogik 0.4.1
 
@@ -348,7 +345,7 @@ Chose instance-type : primary.controller named **Zwave Controler**
 Or all other device type who are a controller (Z-Stick2)
 
 .. |creat_ctrldevice| image:: ozwave_create_ctrldevice.png
-    :width: 200px
+    :width: 400px
     
 |creat_ctrldevice|
 
@@ -377,7 +374,7 @@ Feature example
 ***************
 
 .. |example_device1| image:: ozwave_create_device1.png
-    :width: 200px
+    :width: 300px
     
 |example_device1|
 	
@@ -394,7 +391,7 @@ Feature example
 | Reference             | FGWPE Wall Plug |A reference for this device, eg.: manufacturer reference.                     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | Global parameters  (Extra parameters for some particular zwave device)                                                 |
-+-----------------------+-----------------+------------------------------------------------------------------------------+
++=======================+=================+==============================================================================+
 | batterycheck          | True            | HCheck battery level at zwave device wakeup.                                 |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | xPL parameters                                                                                                         |
@@ -414,6 +411,8 @@ Feature example
 | <xpl_stat> - instance | 1               | Zwave node instance id  that you can find in the                             |
 |                       |                 | `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
+
+|example_device2|
 
 Start the plugin
 ----------------
