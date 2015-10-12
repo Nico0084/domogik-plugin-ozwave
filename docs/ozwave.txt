@@ -1,3 +1,5 @@
+.. _index:
+
 ====================
 Plugin documentation
 ====================
@@ -45,7 +47,7 @@ Detailed architecture
 Dependencies
 ============
 
-- `Python-openzwave https://github.com/OpenZWave/python-openzwave>`_ (>=0.3.5)
+- `Python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ (>=0.3.5)
 - `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_ (>=0.2.1)
 
 Controller/devices Compatibility List
@@ -388,7 +390,7 @@ Feature example
 | Device Name           | MyController    | The display name for this device.                                            |
 +-----------------------+------------------------------------------------------------------------------------------------+
 | Description           | What you want   | A short descriptionn for this device.                                        |
-+-----------------------+-----------------+----------------------------------------------------------------------------+
++-----------------------+-----------------+------------------------------------------------------------------------------+
 | Reference             | FGWPE Wall Plug |A reference for this device, eg.: manufacturer reference.                     |
 +-----------------------+-----------------+------------------------------------------------------------------------------+
 | Global parameters  (Extra parameters for some particular zwave device)                                                 |
