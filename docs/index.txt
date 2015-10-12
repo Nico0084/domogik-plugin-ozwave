@@ -1,13 +1,15 @@
-.. _index:
+.. _toc:
 
 ================
 Table of content
 ================
 
-* :doc:`Plugin documentation </ozwave>`
-* :doc:`Change log</changelog>`
-* :doc:`Dependencies installation </dependencies>`
-* :doc:`Controller & devices tools</ctldevtools>`
-* :doc:`Zwave network tools</networktools>`
-* :doc:`Plugin support tools</supporttools>`
+.. toctree::
+
+    /ozwave
+    /dependencies
+    /ctldevtools
+    /networktools
+    /supporttools
+    /changelog
 
