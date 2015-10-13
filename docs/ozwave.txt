@@ -56,7 +56,7 @@ Following interfaces are supported and verify with domogik:
 
 - RaZberry (using rule with /dev/ttyAMA0 instead of /dev/ttyUSBx)
 
-Others controllers are supported by openzwave, `you can check here <http://code.google.com/p/open-zwave/wiki/Controller_Compatibility_List>`_
+Others controllers are supported by openzwave, `you can check here <https://github.com/OpenZWave/open-zwave/wiki/Controller-Compatibility-List>`_
 
 Following devices are supported :
 
