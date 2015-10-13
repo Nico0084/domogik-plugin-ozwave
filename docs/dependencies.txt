@@ -1,9 +1,9 @@
-=========================
+*************************
 Dependencies installation
-=========================
+*************************
 
 Install tailer library for Python
-=================================
+*********************************
 - `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_
 
 Installation with  "pip install tailer" or "easy_install tailer"
@@ -11,10 +11,10 @@ Installation with  "pip install tailer" or "easy_install tailer"
 That all.
 
 Install python-openzwave
-========================
+************************
 
 Purpose
--------
+=======
 
 This not a plugin, but an external library for zwave plugin, is based on `python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ software.
 
@@ -29,7 +29,7 @@ Get information form `bibi21000 home site <http://bibi21000.gallet.info/index.ph
 All information are extracted from the git repository https://github.com/OpenZWave/python-openzwave
 
 Installing python-openzwave from archive
-****************************************
+========================================
 
 This is the simplest (and the fastest) way to install python-
 openzwave. It cames with openzwave source files and is already
@@ -40,7 +40,7 @@ raspberry pi.
 
 
 Get archive of python-openzwave
-===============================
+-------------------------------
 
 You are now ready to download sources of python-openzwave here :
 
@@ -61,7 +61,7 @@ right directory.
 
 
 Install the needed tools
-========================
+------------------------
 
 You must install git and other tools to get sources of python-
 openzwave and openzwave and build them. Look at the documentation of
@@ -75,7 +75,7 @@ On a debian like distribution :
 
 
 Build process
-=============
+-------------
 
 Now, you can compile sources :
 
@@ -96,7 +96,7 @@ Please use a "normal user".
 
 
 Installation
-============
+------------
 
 You can now install the packages using the following command will.
 
@@ -113,16 +113,16 @@ remove python-openzwave using the following command :
 
 
 If it fails
-===========
+------------
 
 Simply remove the python-openzwave-x.y.z directory and extract it
 again.
 
 Installing python-openzwave from repository
-*******************************************
+===========================================
 
 Install the needed tools
-========================
+------------------------
 
 You must install git and make to retrieve sources of python-openzwave
 and openzwave.
@@ -135,7 +135,7 @@ On a debian like distribution :
 
 
 Get sources of python-openzwave
-===============================
+-------------------------------
 
 You are now ready to download sources of python-openzwave :
 
@@ -148,7 +148,7 @@ your computer in a directory called python-openzwave.
 
 
 Install dependencies
-====================
+--------------------
 
 You need some tools (a c++ compiler, headers dir python, ...) to build
 python-openzwave and openzwave library.
@@ -164,7 +164,7 @@ the Makefile.
 
 
 Update and build process
-========================
+------------------------
 
 Go to the previously created directory
 
@@ -197,7 +197,7 @@ Please use a "normal user".
 
 
 Installation
-============
+------------
 
 You can now ready to install the eggs using the following command :
 
@@ -213,7 +213,7 @@ You can also remove python-openzwave using :
 
 
 Running tests
-=============
+-------------
 
 You can launch the regression tests using :
 
@@ -226,7 +226,7 @@ and off, dimming, adding and removing scenes, ...
 
 
 Static vs dynamic (or shared)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=============================
 
 The openzwave (c++) lib needs to run as a singleton : it means that it
 MUST have only one instance of the manager running on your computer.
@@ -249,7 +249,7 @@ the shared library.
 
 
 Creating the zwave device controller
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+====================================
 
 We need to create an udev rule in order to create the device **/dev/zwave**
 - check your device
@@ -275,7 +275,7 @@ Other zwave tool
 ================
 
 Migrating from python-openzwave 0.2.X to 0.3.0
-==============================================
+----------------------------------------------
 I need to update source tree of python-openzwave and modules's names because of a bug in setuptools : https://bitbucket.org/pypa/setuptools/issue/230/develop-mode-does-not-respect-src .
 Sorry for that.
 
@@ -308,7 +308,7 @@ If you have problems, please submit an issue with :
 
 
 Ubuntu 64bits ... and the others
-================================
+--------------------------------
 
 If you're using Ubuntu 64 bits (and mayde others) and keep your distribution up to date,
 you certainly have the segfault problem.
@@ -356,13 +356,13 @@ To prevent future updates of python, you could mark its packages. For example, i
 Some users have reported that building python-openzwave using the archive (INSTALL_ARCH) can also do the trick. Let me know if it works for you.
 
 Openzwave control-panel
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
-In order to identify your network and collect the NodeID of your devices, you can use the `openzwave-control-panel <https://github.com/OpenZWave/open-zwave-control-panel`_
+In order to identify your network and collect the NodeID of your devices, you can use the `openzwave-control-panel <https://github.com/OpenZWave/open-zwave-control-panel>`_
 
 
 Developer resources
-^^^^^^^^^^^^^^^^^^^
+===================
 For developing you can access to python-openzwave dev, instructions here :
 
 http://bibi21000.gallet.info/index.php/en/component/sphinxdoc/documentation/4-python-openzwave-lib.html
