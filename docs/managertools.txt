@@ -1,0 +1,39 @@
+*************************
+Openzwave & Manager tools
+*************************
+
+
+State and version of libraries
+******************************
+
+.. |menuadvanced| image:: ozwave_menu-advanced.png
+    :width: 700px
+
+|menuadvanced|
+
+The two flag **Openzwave** and **Manager** give the state of respective library
+
+* Red : Stopped
+* Green : Alive
+* orange : Starting
+* Grey : Unknown
+* Black : Failed
+
+Openzwave: is the openzwave librarie installed.
+Manager: is the ozwave plugin manager connected to openzwave.
+
+On right python-openzwave and openzwave libraries version are display, only if the plugin is started.
+
+This row can be collaspe to display openzwave configuration options.
+
+Openzwave configuration options
+*******************************
+
+.. |ozwoptions| image:: ozwave_ozwoptions.png
+    :width: 600px
+
+|ozwoptions|
+
+Here you can check all options. All details are commented in table.
+
+Soon in a future release, it may be possible to edit them..
