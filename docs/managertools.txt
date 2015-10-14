@@ -11,18 +11,35 @@ State and version of libraries
 
 |menuadvanced|
 
+.. |managerfail| image:: ozwave_manager_fail.png
+    :width: 700px
+    
+.. |managerstarting1| image:: ozwave_manager_starting1.png
+    :width: 700px
+    
+.. |managerstarting2| image:: ozwave_manager_starting2.png
+    :width: 700px
+    
+.. |managerstopped| image:: ozwave_manager_stopped.png
+    :width: 700px
+    
 The two flag **Openzwave** and **Manager** give the state of respective library
 
 * Red : Stopped
+|managerstopped|
 * Green : Alive
 * orange : Starting
+|managerstarting1|
+|managerstarting2|
 * Grey : Unknown
 * Black : Failed
+|managerfail|
 
 Openzwave: is the openzwave librarie installed.
 Manager: is the ozwave plugin manager connected to openzwave.
 
 On right python-openzwave and openzwave libraries version are display, only if the plugin is started.
+
 
 This row can be collaspe to display openzwave configuration options.
 
@@ -37,3 +54,13 @@ Openzwave configuration options
 Here you can check all options. All details are commented in table.
 
 Soon in a future release, it may be possible to edit them..
+
+Controller and Network tab
+**************************
+
+Under state libraries row, a tab list and display all controller knowns.
+
+.. |managerdiscoverctrl| image:: ozwave_manager_discover_ctrl.png
+    :width: 700px
+
+|managerdiscoverctrl|
