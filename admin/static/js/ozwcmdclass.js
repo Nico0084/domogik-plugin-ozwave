@@ -294,7 +294,10 @@ function renderCmdClssStatus(data, type, full, meta) {
         var textstatus = "Not available for domogik device";
         var st = 'false';
         if (valueData.domogikdevice) { //Available for domogik device
-            textstatus = "Named domogik device : " + valueData.domogikdevice.networkid + "." +valueData.domogikdevice.node+"."+valueData.domogikdevice.instance;
+            textstatus = "Domogik device parameters: \n" + 
+                         "  networkid: " + valueData.domogikdevice.networkid + "\n" +
+                         "  node: " + valueData.domogikdevice.node + "\n" +
+                         "  instance: " + valueData.domogikdevice.instance;
             st = 'primary';
         };
         var poll ="";

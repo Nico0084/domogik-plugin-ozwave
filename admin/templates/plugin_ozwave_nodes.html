@@ -27,8 +27,8 @@
         var ws_onmessage_nodes = ws.onmessage;
         ws.onmessage = function(e) {
             ws_onmessage_nodes(e);
-            data = JSON.parse(e.data);
-            msgId = data.msgid.split(".");
+            var data = JSON.parse(e.data);
+            var msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
                 if (msgId[2] == "opening") {
                     if ("{{ network_active }}" == data.content.NetworkID) {
@@ -96,21 +96,21 @@
                         };
                         break;
                     case 'init-process' :
-                            console.log("Zwave controller receive :)", data.msgid);
-                            console.log(data.content);
-                            var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
-                            var cell = GetNodeCell(table, data.content.NodeID, 0);
-                            if (cell) {
-                                var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                                nodeData.InitState = data.content.data;
-                                RefreshDataNode(nodeData);
-                                cell.data(data.content.NetworkID+"."+data.content.NodeID).draw();  // set data required to force draw
-                                var d = new Date();
-                                var date = d.toLocaleString();
-                                HighlightCell(cell.node(), date);
-                            };
-                            requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
-                            break;
+                        console.log("Zwave controller receive :)", data.msgid);
+                        console.log(data.content);
+                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                        var cell = GetNodeCell(table, data.content.NodeID, 0);
+                        if (cell) {
+                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                            nodeData.InitState = data.content.data;
+                            RefreshDataNode(nodeData);
+                            cell.data(data.content.NetworkID+"."+data.content.NodeID).draw();  // set data required to force draw
+                            var d = new Date();
+                            var date = d.toLocaleString();
+                            HighlightCell(cell.node(), date);
+                        };
+                        requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                        break;
                 };
             };
         };

@@ -272,43 +272,28 @@ function renderInputText(refId, name, dtype, value, title, label) {
    return inputRender;
 };
 
-function saveUpdate(event) {
-    var data = event.data.callback(event.data.obj);
-    if (data.result == 'error') {
-        new PNotify({
-                type: 'error',
-                title: 'Invalid input',
-                text: data.msg,
-                delay: 6000
-        });
-        if ($('#st_'+event.data.obj.id).length){  
-            updateBtStatus(event.dat.obj.id, 'btn-danger');
-        };
-    } else {
-        $(event.data.obj).val(data.value);
-        if ($('#st_'+event.data.obj.id).length){  
-            updateBtStatus(event.data.obj.id, 'btn-success');
-        };
-    };
-    return false;
-};
-
 function EnableInputText(obj, callback) {
     $(obj).attr("isHandled", true);
     $('#st_'+obj.id).attr('disabled', true);
     $(obj).on('keypress keyup', function (e) {
+        var ret = true
         if (e.type == 'keypress') {
             if (e.which == 13) {
-                return saveUpdate({data: {obj: obj, callback:callback}});
+                callback(e)
+                ret = false
             };
         } else {
             if (e.which == 13) {return false};
         };
         if ($('#st_'+this.id).length){
             updateBtStatus(this.id, 'btn-warning');
-            $('#st_'+this.id).on('click', {obj: this, callback: callback}, saveUpdate);
+            if ($('#st_'+this.id).attr("isHandled") != "true") {
+                $('#st_'+this.id).attr("isHandled", true);
+                $('#st_'+this.id).on('click', callback);
+            };
             $('#st_'+this.id).attr('disabled', false);
         };
+        return ret;
     });
 };
 

@@ -72,19 +72,32 @@
             $( "input[type='text'][datatype='node']").not("[isHandled]" ).each(function(rowN, nData) {
                 try {
                     var cell = api.cell(rowN, 0);
-                    EnableInputText(this, function(obj) {
+                    var obj = this
+                    EnableInputText(this, function(e) {
                         var value = obj.value;
                         var refId =  obj.id.split("_");
                         var NetworkID = refId[1];
                         var NodeID = refId[2];
                         var name = obj.name;
-                        ws.send('{"dst": "plugin-{{ client_detail.name }}.{{ client_detail.host }}", "action": "ozwave.node.set", '+
-                                   '"data": {"name": "{{ client_detail.name }}", "host": "{{ client_detail.host }}", '+
-                                            '"networkId":"' + NetworkID + '", "nodeId":'+ NodeID+ ', ' +
-                                            '"key": "'+ name +'", "value": "'+ value + '"' +
-                                            '}}');
+                        sendRequest("ozwave.node.set", {"networkId": NetworkID, "nodeId": NodeID, "key": name, "value": value}, function(data, result) {
+                             if (result == "error" || data.result == "error") {
+                                    new PNotify({
+                                        type: 'error',
+                                        title: 'Set ' + name + ' fail.',
+                                        text: data.content.error,
+                                        delay: 6000
+                                    });
+                                } else {
+                                    new PNotify({
+                                            type: 'success',
+                                            title: 'Set ' + name + ' ok.',
+                                            text: 'node ' + data.content.NodeID + ' named : ' + data.content.Name + ', location : ' + data.content.Location,
+                                            delay: 4000
+                                    });
+                                };
+                            });
                         // send update to ws
-                        return {"result":"succes", "value":value, "msg": "bad format"};
+                        //return {"result":"succes", "value":value, "msg": "bad format"};
                     });
                 }
                 catch (err) {
