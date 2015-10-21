@@ -3,7 +3,7 @@
         {
             "name" : "Z-Stick S2",
             "id" : "ctrl_aeon_stick2",
-            "documentation" : "http://http://aeotec.com/z-wave-usb-stick",
+            "documentation" : "http://aeotec.com/z-wave-usb-stick",
             "type": "primary.controller"
         }, {
             "name" : "FGS211 Relay 3kW",
