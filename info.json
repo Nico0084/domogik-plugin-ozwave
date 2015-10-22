@@ -60,6 +60,11 @@
             "id" : "SF812",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/SF812.aspx",
             "type": "alarm.sensor.security.battery"
+        }, {
+            "name" : "Danfoss living connect",
+            "id" : "014G0013",
+            "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
+            "type": "thermostat.setpoint.battery"
         }
     ],
     "configuration" : [{
@@ -2156,6 +2161,31 @@
                 "name" : "Sensor security alarm (battery)",
                 "commands": [],
                 "sensors": ["sensor_alarm", "low_battery", "battery_level"],
+                "parameters" : [{
+                    "key" : "networkid",
+					"xpl": true,
+                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
+                    "type" : "string"
+                },{
+                    "key" : "node",
+					"xpl": true,
+                    "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
+                }]
+            },
+            "thermostat.setpoint.battery" :{
+                "description" : "Thermostat with only setpoint (battery)",
+                "id": "thermostat.setpoint.battery",
+                "name" : "Thermostat (battery)",
+                "commands": ["thermostat_setpoint"],
+                "sensors": ["thermostat_setpoint", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
 					"xpl": true,
