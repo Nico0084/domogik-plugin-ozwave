@@ -42,7 +42,7 @@ function validateSetValueCmdClss(refId, newValue, valueData) {
             } else {
                 var table = $('#valuesNode' + GetNodeRefId(refId[1],refId[2])).DataTable();
                 var cell = GetValueCell(table, GetValueRefId(refId[1],refId[2],refId[3]), 3);
-                cell.data(valueData.value).draw();
+                cell.data(valueData.value).draw('page');
             };
         });
     } else {
@@ -286,10 +286,10 @@ function renderCmdClssStatus(data, type, full, meta) {
             textRW = "Read only";
             st ='active';
         };
-        var rw=  " <span id='st"+valueRef +"' class='icon16-text-right icon16-status-" + st +"' title='" + textRW + "'></span>";
+        var rw=  " <span id='st"+valueRef +"' class='glyphicon btnspacing icon16-status-" + st +"' title='" + textRW + "'></span>";
         var extra ="";
         if (valueData.help!="") {
-            extra = "  <span id='hn"+valueRef +"' class='icon16-text-right icon16-status-info' title='" + valueData.help + "'></span>";
+            extra = "  <span id='hn"+valueRef +"' class='glyphicon btnspacing icon16-status-info' title='" + valueData.help + "'></span>";
         };
         var textstatus = "Not available for domogik device";
         var st = 'false';
@@ -307,7 +307,7 @@ function renderCmdClssStatus(data, type, full, meta) {
             tpoll = "Value is polled with intensity : " + valueData.pollintensity;
         };
 
-        return  "<span id='value"+valueRef +"'class='icon16-text-right icon16-status-" + st + "' title='" + textstatus +
+        return  "<span id='value"+valueRef +"'class='glyphicon btnspacing icon16-status-" + st + "' title='" + textstatus +
                 "'></span>" + rw + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
                 "title='"+ tpoll + "' />" + extra;
     } else {
@@ -372,12 +372,12 @@ function renderCmdClssValue(data, type, full, meta) {
                 case 'List' :
                     ret = "<div class='input-group'>";
                     ret += "<select class='form-control input-sm' id='"+id+"' name='CmdClssValue'>"
-                    for (i in valueData.listElems) {
-                        ret += "<option value='"+ valueData.listElems[i] +"'"
-                        if (valueData.listElems[i] == valueData.value) {
+                    for (i in valueData.listelems) {
+                        ret += "<option value='"+ valueData.listelems[i] +"'"
+                        if (valueData.listelems[i] == valueData.value) {
                             ret += " selected"
                         };
-                        ret += ">" + valueData.listElems[i] + "</option>"
+                        ret += ">" + valueData.listelems[i] + "</option>"
                     };
                     ret +="</select>" + modify + "</div>";
                     break;

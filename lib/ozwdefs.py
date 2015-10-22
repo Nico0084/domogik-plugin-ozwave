@@ -148,9 +148,10 @@ Capabilities = ['Primary Controller', 'Secondary Controller', 'Static Update Con
 
 # Listes de commandes Class reconnues comme device domogik , il semble que la COMMAND_CLASS_BASIC ne soit pas util pour la device domogik.
 CmdsClassAvailable = ['COMMAND_CLASS_SWITCH_BINARY', 'COMMAND_CLASS_SENSOR_BINARY', 
-                               'COMMAND_CLASS_SENSOR_MULTILEVEL', 'COMMAND_CLASS_BATTERY',  'COMMAND_CLASS_METER', 
-                               'COMMAND_CLASS_SWITCH_MULTILEVEL', 'COMMAND_CLASS_THERMOSTAT_SETPOINT',  'COMMAND_CLASS_ALARM', 
-                               'COMMAND_CLASS_SENSOR_ALARM']
+                               'COMMAND_CLASS_SENSOR_MULTILEVEL', 'COMMAND_CLASS_BATTERY', 'COMMAND_CLASS_METER', 
+                               'COMMAND_CLASS_SWITCH_MULTILEVEL', 'COMMAND_CLASS_THERMOSTAT_SETPOINT', 'COMMAND_CLASS_ALARM', 
+                               'COMMAND_CLASS_SENSOR_ALARM', 'COMMAND_CLASS_THERMOSTAT_FAN_MODE', 'COMMAND_CLASS_THERMOSTAT_FAN_STATE', 
+                               'COMMAND_CLASS_THERMOSTAT_MODE', 'COMMAND_CLASS_THERMOSTAT_HEATING', 'COMMAND_CLASS_THERMOSTAT_OPERATING_STATE']
                                
 # Listes des types reconnues comme device domogik (label openzwave)
 DomogikLabelAvailable = ['temperature', 'relative-humidity', 'humidity', 'battery-level', 'sensor', 'status', # sensor / actuator

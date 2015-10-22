@@ -35,8 +35,7 @@ Implements
 @organization: Domogik
 """
 
-from domogik.common.configloader import Loader
-
+from domogik.common.database import DbHelper
 import threading
 import libopenzwave
 from libopenzwave import PyManager 
@@ -86,6 +85,7 @@ class OZWavemanager():
         self.monitorNodes = None
         self.options = None
         self._manager = None
+        self._db = DbHelper()
         self._log = log
         self._cb_send_xPL = cb_send_xPL
         self._cb_sendxPL_trig = cb_sendxPL_trig
@@ -159,13 +159,12 @@ class OZWavemanager():
         self._xplPlugin.add_stop_cb(self.stop)
         # "List les devices de type primary.controler.""
         # get the devices list
-        self._xplPlugin.devices = self._xplPlugin.get_device_list(quit_if_no_device = False)
+        self.refreshDevices()
         for a_device in self._xplPlugin.devices:
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl : 
             self._log.warning(u"No device primary.controller created in domogik, can't start openzwave driver.")
         print "*****************************************************"
-        print self._xplPlugin.devices
         self.starter = threading.Thread(None, self.startServices, "th_Start_Ozwave_Services", (), {})
 
      # On accède aux attributs uniquement depuis les property
@@ -177,6 +176,27 @@ class OZWavemanager():
     isReady = property(lambda self: self._getIfOperationsReady())
     pyOZWLibVersion = property(lambda self: self._getPyOZWLibVersion())
 
+    def udpate_device_param(self, paramId, key=None, value=None):
+        """Call DBHelper to update static device parameter"""
+        with self._db.session_scope():
+            config = self._db.udpate_device_param(paramId, key, value)
+            self._log.debug(u"Setting global device parameter {0}, key {1} on value {2}".format(paramId, key, value))
+            if config is not None:
+                self.threadingRefreshDevices()
+
+    def threadingRefreshDevices(self, max_attempt = 2):
+        """Call get_device_list from MQ
+            could take long time, run in thread to get free process"""
+        threading.Thread(None, self.refreshDevices, "th_refreshDevices", (), {"max_attempt": max_attempt}).start()
+
+    def refreshDevices(self, max_attempt = 2):
+        devices = self._xplPlugin.get_device_list(quit_if_no_device = False, max_attempt = 2)
+        if devices :
+            self._xplPlugin.devices = devices
+        else :
+            if not self._xplPlugin.devices :
+                self._log.error(u"Can't retrieve the device list, Check your domogik device, try to restart plugin.")
+            
     def _getIfOperationsReady(self):
         """"Retourne True si toutes les conditions sont réunies pour faire des actions dans openzwave.
             Règle : au moins un controleur est ready avec sont node enregistré mais le _initFully pas obligatoirement"""
@@ -791,13 +811,13 @@ class OZWavemanager():
     def _handleNotification(self,  args):
         """Une erreur ou notification particulière est arrivée
         NotificationCode
-			Code_MsgComplete = 0,					/**< Completed messages */
-			Code_Timeout,						/**< Messages that timeout will send a Notification with this code. */
-			Code_NoOperation,					/**< Report on NoOperation message sent completion  */
-			Code_Awake,						/**< Report when a sleeping node wakes up */
-			Code_Sleep,						/**< Report when a node goes to sleep */
-			Code_Dead,						/**< Report when a node is presumed dead */
-			Code_Alive						/**< Report when a node is revived */
+            Code_MsgComplete = 0,					/**< Completed messages */
+            Code_Timeout,						/**< Messages that timeout will send a Notification with this code. */
+            Code_NoOperation,					/**< Report on NoOperation message sent completion  */
+            Code_Awake,						/**< Report when a sleeping node wakes up */
+            Code_Sleep,						/**< Report when a node goes to sleep */
+            Code_Dead,						/**< Report when a node is presumed dead */
+            Code_Alive						/**< Report when a node is revived */
         """
         node = self._getNode(args['homeId'], args['nodeId'])
         nCode = libopenzwave.PyNotificationCodes[args['notificationCode']]
@@ -886,7 +906,8 @@ class OZWavemanager():
         node = self._fetchNode(args['homeId'], args['nodeId'])
         node._lastUpdate = time.time()
         valueNode = node.getValue(valueId['id'])
-        valueNode.updateData(valueId)
+        if valueNode.updateData(valueId) and (valueNode.valueData['genre'] in ['System', 'Config']) :
+            self.getCtrlOfNode(node).setSaveConfig(False)
         # formatage infos générales
         # ici l'idée est de passer tout les valeurs stats et trig en identifiants leur type par le label forcé en minuscule.
         # les labels sont listés le fichier json du plugin.
@@ -1106,15 +1127,16 @@ class OZWavemanager():
         else: retval = None
         return retval
         
-    def sendNetworkZW(self, device, command,  value):
-        """Principalement en provenance du réseaux xPL
-              Envoie la commande sur le réseaux zwave
+    def sendNetworkZW(self, device, command, params):
+        """Message come from xPL hub. Send command to wave network
             @param : device = dict{'homeId', 'nodeId', 'instance'}
+            @param : command = the command value define in json
+            @param : params = extra key with value, mostly the value of DT_Type
         """ 
         print ("envoi zwave command %s" % command)
         if device != None :
-            node = self._getNode(device['homeId'],  device['nodeId'])
-            if node : node.sendCmdBasic(device['instance'], command, value)
+            node = self._getNode(device['homeId'], device['nodeId'])
+            if node : node.sendCmdBasic(device['instance'], command, params)
 
     def getNodeInfos(self, homeId, nodeId):
         """ Retourne les informations d'un device, format dict{} """
@@ -1290,7 +1312,6 @@ class OZWavemanager():
                 value = node.getValue(valueId)
                 if value :
                     retval = value.setValue(newValue)
-              #      print ('SetValue, relecture de la valeur : ',  value.getOZWValue())
                     return retval
                 else : return {"value": newValue, "error" : "Unknown value : %d" %valId}
             else : return {"error" : "Unknown Node : %d" % nodeId}
@@ -1417,7 +1438,7 @@ class OZWavemanager():
 
     def _handleNodeRequest(self, request, data):
         """Handle all zwave node request coming from MQ"""
-        ctrl = self.getCtrlOfNetwork(data['networkId'])
+#        ctrl = self.getCtrlOfNetwork(data['networkId'])
         report = {}
         if request == 'node.infos' :
             if self._IsNodeId(data['nodeId']):
@@ -1472,14 +1493,14 @@ class OZWavemanager():
             elif data['action'] == 'batterycheck' :
                 node = self._getNode(data['homeId'], data['nodeId'])
                 if node :
-                    node.setBatteryCheck(True if data['state'] in [True, 'True', 'true'] else False)
-                    report = {'error':  ''}
+                    report['state'] = node.setBatteryCheck(True if data['state'] in [True, 'True', 'true'] else False)
+                    report['error'] = ''
                 else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
-                report['state'] = node.isbatteryChecked
             else :
-                report['error'] ='Request {0} unknown action, data : {1}'.format(request,  data)
+                report['error'] ='Request {0} unknown action, data : {1}'.format(request, data)
+            report['action'] = data['action']
         else :
-            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+            report['error'] ='Unknown request <{0}>, data : {1}'.format(request, data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId']})
         return report
 
@@ -1515,8 +1536,6 @@ class OZWavemanager():
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId'], 'ValueID': data['valueId']})
-        if report['error'] == '' :
-            ctrl.setSaveConfig(False)
         return report
 
     def reportCtrlMsg(self, networkId, ctrlmsg):

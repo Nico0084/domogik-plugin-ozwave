@@ -380,7 +380,7 @@ function setValueCmdClss(refId, newValue) {
                 valueData.value = data.content.value;
                 RefreshValueNodeData(data.content.NetworkID, data.content.NodeID, valueData);
                 var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.ValueID), 3);
-                cell.data(data.content.value).draw();
+                cell.data(data.content.value).draw('page');
                 HighlightCell(cell.node());
                 new PNotify({
                     type: 'success',
@@ -590,26 +590,26 @@ function updateNodeTableCell(cell, colName, nodeData, date) {
         case "Node":
         case "InitState":
         case "BatteryLevel":
-            cell.data(nodeData.NetworkID +"."+ nodeData.NodeID).draw();
+            cell.data(nodeData.NetworkID +"."+ nodeData.NodeID).draw('page');
             break;
         case "Name":
-            cell.data(nodeData.Name).draw();
+            cell.data(nodeData.Name).draw('page');
             break;
         case  "Location":
-            cell.data(nodeData.Location).draw();
+            cell.data(nodeData.Location).draw('page');
             break;
         case "Model":
-            cell.data(nodeData.Model).draw();
+            cell.data(nodeData.Model).draw('page');
             break;
         case "State Sleeping":
-            cell.data(nodeData['State Sleeping']).draw();
+            cell.data(nodeData['State Sleeping']).draw('page');
             break;
         case "Type":
         case "Capabilities":
-            cell.data(nodeData['Type']).draw();
+            cell.data(nodeData['Type']).draw('page');
             break;
         case "Last update":
-            cell.data(nodeData['Last update']).draw();
+            cell.data(nodeData['Last update']).draw('page');
             break;
         default:
             return false;

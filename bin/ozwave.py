@@ -121,19 +121,18 @@ class OZwave(XplPlugin):
         }
         """
         print ("commande xpl recue")
-        print message
         self.log.debug(message)
         if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
-        if 'command' in message.data: # TODO:  A supprimer faire avec MQ.
-            if 'group'in message.data:
-                # en provenance de l'UI spéciale
-                self.ui_cmd_cb(message)
+        if 'command' in message.data: 
+            device = self.myzwave.getZWRefFromxPL(message.data)
+            if device :
+                params = {}
+                for k, v in message.data.iteritems():
+                    if k not in ['command', 'networkid', 'node','instance']: # detect value and extra keys
+                        params[k] = v
+                self.myzwave.sendNetworkZW(device, message.data['command'], params)
             else :
-                device = self.myzwave.getZWRefFromxPL(message.data)
-                if device :
-                    self.myzwave.sendNetworkZW(device, message.data['command'], message.data['value'])
-                else :
-                    self.log.warning("Zwave command not sended : {0}".format(message))
+                self.log.warning("Zwave command not sended : {0}".format(message))
                     
     def getdict2UIdata(self, UIdata):
         """ retourne un format dict en provenance de l'UI (passage outre le format xPL)"""

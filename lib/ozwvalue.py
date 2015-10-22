@@ -89,6 +89,7 @@ class ZWaveValueNode:
         self._node = node
         self._valueData = valueData
         self._lastUpdate = time.time()
+        self._realValue = None
         self._tempConv = True # Conversion forcée de F en °C, a mettre en option.
         self._valueData['min'] = self._node._manager.getValueMin(self._valueData['id'])
         self._valueData['max'] = self._node._manager.getValueMax(self._valueData['id'])
@@ -231,18 +232,21 @@ class ZWaveValueNode:
         return retval
             
     def updateData(self, valueData):
-        """Mise à jour de valueData depuis les arguments du callback."""
+        """valueData update from callback argument. return true/false if value is different from old."""
         if self._tempConv and valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
             valueData['units'] = '°C'
             print '************** Conversion : ',  float(valueData['value'])
             print float(valueData['value'])*(5.0/9)
             valueData['value'] = (float(valueData['value'])*(5.0/9))-(160.0/9)
             print valueData['value']
+        new = True if self._valueData['value'] != valueData['value'] else False
         self._valueData.update(dict(valueData))
+        self._realValue = self._valueData['value']
         self._lastUpdate = time.time()
         valueData['homeId'] = int(valueData['homeId']) # Pour etre compatible avec javascript
         valueData['id'] = str(valueData['id']) # Pour etre compatible avec javascript
-        self._node.reportToUI({'notifytype': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueData})
+        self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueData})
+        return new
         
     def convertInType(self,  val):
         """Convertion de val dans le type de la value."""
@@ -289,7 +293,8 @@ class ZWaveValueNode:
         retval['help'] = self.getHelp()
         retval['polled'] = self.isPolled
         retval['pollintensity'] = self.getPollIntensity()
-        retval['listElems'] = list(self.getListItems()) if (self.valueData['type'] == 'List')  else None
+        retval['listelems'] = list(self.getListItems()) if (self.valueData['type'] == 'List') else None
+        retval['realvalue'] = self._realValue
         return retval
     
     def getValueItemStr(self):
@@ -396,15 +401,15 @@ class ZWaveValueNode:
             msgtrig = {'typexpl':'xpl-trig', 'schema': 'sensor.basic', 'device': device}
             if self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
                 if self.valueData['type'] == 'Bool' :
-                    if self.valueData['value']  in ['False', False] : current ="off"
-                    elif  self.valueData['value'] in ['True',  True] : current ="on"
+                    if self.valueData['value']  in ['False', False] : current = 0 # "Off"
+                    elif  self.valueData['value'] in ['True',  True] : current = 1 # "On"
                     else : raise OZwaveValueException("Error format in valueToxPLTrig : %s" %str(msgtrig))
                     msgtrig['data'] =  {'type': self.labelDomogik, 'current': current}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_MULTILEVEL' :
                 if self.valueData['type']  == 'Byte' and self.valueData['label']  == 'Level' :  # cas d'un module type dimmer, gestion de l'état on/off
                     if self.valueData['value'] == 0: 
-                        msgtrig['msgdump'] = {'type': 'switch','current': 'off'}        
-                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 'on'}
+                        msgtrig['msgdump'] = {'type': 'switch','current': 0} #'Off'}        
+                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 1} #'On'}
                     msgtrig['data'] = {'type': self.labelDomogik, 'current': self.valueData['value']}
                 elif self.valueData['type']  == 'Button' :                                                        # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
                     msgtrig['data']  = {'type': self.labelDomogik, 'current':  self.valueData['value']}

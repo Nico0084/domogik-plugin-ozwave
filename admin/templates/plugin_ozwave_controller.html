@@ -110,7 +110,7 @@
             var action = {'command': $('#ctrlactions').val(),
                             'action': act,
                             'nodeid': parseInt($('#listnodesOpt').val()),
-                            'dosecurity': $('#dosecurity').val(),
+                            'dosecurity': $('#dosecurity').bootstrapSwitch('state'),
                             'arg': $('#numberOpt').val(),
                             };
                             

@@ -489,7 +489,7 @@
             "name" : "Switch state",
             "incremental": false,
             "data_type" : "DT_Switch",
-            "conversion" : "",
+            "conversion" : "from_switch_to_DT_Switch",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -1314,7 +1314,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "sensor_alarm"
                     }
@@ -1338,7 +1338,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "sensor_alarm"
                     }
@@ -1362,7 +1362,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "sensor_alarm"
                     }
@@ -1386,7 +1386,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "switch_state"
                     }
@@ -1410,7 +1410,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "fan_mode"
                     }
@@ -1434,7 +1434,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "fan_state"
                     }
@@ -1458,7 +1458,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "thermostat_mode"
                     }
@@ -1482,7 +1482,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "thermostat_operating_state"
                     }
@@ -1506,7 +1506,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "temperature",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "thermostat_setpoint"
                     }
@@ -1530,7 +1530,7 @@
                         }
                 ],
                 "dynamic" : [{
-                        "key" : "state",
+                        "key" : "current",
                         "ignore_values" : "",
                         "sensor" : "thermostat_mode"
                     }
@@ -1545,7 +1545,7 @@
             "parameters" : [{
                     "key" : "switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : ""
+                    "conversion" : "from_DT_Switch_to_switch"
                 }
             ],
             "xpl_command" : "set_switch"
@@ -1556,7 +1556,7 @@
             "parameters" : [{
                     "key" : "toggle-switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : ""
+                    "conversion" : "from_DT_Switch_to_switch"
                 }
             ],
             "xpl_command" : "set_switch"

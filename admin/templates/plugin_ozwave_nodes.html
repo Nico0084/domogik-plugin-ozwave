@@ -30,86 +30,109 @@
             var data = JSON.parse(e.data);
             var msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-                if (msgId[2] == "opening") {
-                    if ("{{ network_active }}" == data.content.NetworkID) {
-                        var table = $("#tabnodes_{{ network_active }}").DataTable();
-                        console.log("Clear nodes table");
-                        table.clear().draw();
-                        nodesData = [];
-                    };
-                };
-            };
-            if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-                switch (data.content.type) {
-                    case 'node-state-changed' :
-                        switch (data.content.data.state) {
-                            case "sleep" : 
-                                var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
-                                var cell = GetNodeCell(table, data.content.NodeID, 4);
-                                if (cell) {
-                                    var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                                    nodeData['State sleeping'] = data.content.data.value;
-                                    nodeData.lastStatus = data.content.data.lastStatus;
-                                    RefreshDataNode(nodeData);
-                                    cell.data(data.content.data.value).draw();
-                                    HighlightCell(cell.node());
-                                } else {
-                                    if (table) {  // Adding node in dataTable.
-                                        requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
-                                    };
-                                };
-                                break;
-                            case "Named" :
-                                var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
-                                var cell = GetNodeCell(table, data.content.NodeID, 1);
-                                if (cell) {
-                                    var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                                    var nameUpD = true;
-                                    var locationUpD = true;
-                                    var modelUpD = true;
-                                    if (nodeData.Name == data.content.data.name || data.content.data.name == "") { nameUpD = false; } else { nodeData.Name = data.content.data.name;};
-                                    if (nodeData.Location == data.content.data.location || data.content.data.location == "") { locationUpD = false; } else { nodeData.Location = data.content.data.location;};
-                                    if (nodeData.Model == data.content.data.model || data.content.data.model == " -- ") { modelUpD = false; } else { nodeData.Model = data.content.data.model;};
-                                    RefreshDataNode(nodeData);
-                                    var d = new Date();
-                                    var date = d.toLocaleString();
-                                    if (nameUpD) { 
-                                        cell.data(data.content.data.name).draw();
-                                        HighlightCell(cell.node(), date);
-                                    };
-                                    if (locationUpD) {
-                                        cell2 = GetNodeCell(table, data.content.NodeID, 2);
-                                        cell2.data(data.content.data.location).draw();
-                                        HighlightCell(cell2.node(), date)
-                                    };
-                                    if (modelUpD) {
-                                        cell3 = GetNodeCell(table, data.content.NodeID, 3);
-                                        cell3.data(data.content.data.model).draw();
-                                        HighlightCell(cell3.node(), date);
-                                    };
-                                } else {
-                                    if (table) {  // Adding node in dataTable.
-                                        requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
-                                    };
-                                };
-                                break;
+                console.log("Zwave controller receive :)", data.msgid);
+                console.log(data.content);
+                switch (msgId[2]) {
+                    case "opening" :
+                        if ("{{ network_active }}" == data.content.NetworkID) {
+                            var table = $("#tabnodes_{{ network_active }}").DataTable();
+                            console.log("Clear nodes table");
+                            table.clear().draw();
+                            nodesData = [];
                         };
                         break;
-                    case 'init-process' :
-                        console.log("Zwave controller receive :)", data.msgid);
-                        console.log(data.content);
-                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
-                        var cell = GetNodeCell(table, data.content.NodeID, 0);
-                        if (cell) {
-                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                            nodeData.InitState = data.content.data;
-                            RefreshDataNode(nodeData);
-                            cell.data(data.content.NetworkID+"."+data.content.NodeID).draw();  // set data required to force draw
-                            var d = new Date();
-                            var date = d.toLocaleString();
-                            HighlightCell(cell.node(), date);
+                    case "report" :
+                        switch (data.content.type) {
+                            case 'node-state-changed' :
+                                switch (data.content.data.state) {
+                                    case "sleep" : 
+                                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                        var cell = GetNodeCell(table, data.content.NodeID, 4);
+                                        if (cell) {
+                                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                            nodeData['State sleeping'] = data.content.data.value;
+                                            nodeData.lastStatus = data.content.data.lastStatus;
+                                            RefreshDataNode(nodeData);
+                                            cell.data(data.content.data.value).draw('page');
+                                            HighlightCell(cell.node());
+                                        } else {
+                                            if (table) {  // Adding node in dataTable.
+                                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                            };
+                                        };
+                                        break;
+                                    case "Named" :
+                                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                        var cell = GetNodeCell(table, data.content.NodeID, 1);
+                                        if (cell) {
+                                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                            var nameUpD = true;
+                                            var locationUpD = true;
+                                            var modelUpD = true;
+                                            if (nodeData.Name == data.content.data.name || data.content.data.name == "") { nameUpD = false; } else { nodeData.Name = data.content.data.name;};
+                                            if (nodeData.Location == data.content.data.location || data.content.data.location == "") { locationUpD = false; } else { nodeData.Location = data.content.data.location;};
+                                            if (nodeData.Model == data.content.data.model || data.content.data.model == " -- ") { modelUpD = false; } else { nodeData.Model = data.content.data.model;};
+                                            RefreshDataNode(nodeData);
+                                            var d = new Date();
+                                            var date = d.toLocaleString();
+                                            if (nameUpD) { 
+                                                cell.data(data.content.data.name).draw('page');
+                                                HighlightCell(cell.node(), date);
+                                            };
+                                            if (locationUpD) {
+                                                cell2 = GetNodeCell(table, data.content.NodeID, 2);
+                                                cell2.data(data.content.data.location).draw('page');
+                                                HighlightCell(cell2.node(), date)
+                                            };
+                                            if (modelUpD) {
+                                                cell3 = GetNodeCell(table, data.content.NodeID, 3);
+                                                cell3.data(data.content.data.model).draw('page');
+                                                HighlightCell(cell3.node(), date);
+                                            };
+                                        } else {
+                                            if (table) {  // Adding node in dataTable.
+                                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                            };
+                                        };
+                                        break;
+                                };
+                                break;
+                            case 'init-process' :
+                                var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                var cell = GetNodeCell(table, data.content.NodeID, 0);
+                                if (cell) {
+                                    var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                    nodeData.InitState = data.content.data;
+                                    RefreshDataNode(nodeData);
+                                    cell.data(data.content.NetworkID+"."+data.content.NodeID).draw('page');  // set data required to force draw
+                                    var d = new Date();
+                                    var date = d.toLocaleString();
+                                    HighlightCell(cell.node(), date);
+                                };
+                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                break;
+                            case 'value-changed' :
+                                var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                if (nodeData.Values != undefined) {
+                                    for (var v in nodeData.Values) {
+                                        if (nodeData.Values[v].id == data.content.data.id) {
+                                            nodeData.Values[v].value = data.content.data.value;
+                                            nodeData.Values[v].realvalue = data.content.data.realvalue;
+                                            RefreshValuesNodeData(nodeData.Values);
+                                            var table = $('#valuesNode' + GetNodeRefId(data.content.NetworkID, data.content.NodeID)).DataTable();
+                                            var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.data.id), 3);
+                                            if (cell) {
+                                                cell.data(data.content.data.value).draw('page');  // set data required to force draw
+                                                var d = new Date();
+                                                var date = d.toLocaleString();
+                                                HighlightCell(cell.node(), date);
+                                            };
+                                            break;
+                                        };
+                                    };
+                                };
+                                break;
                         };
-                        requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
                         break;
                 };
             };
