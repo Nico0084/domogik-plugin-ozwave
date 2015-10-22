@@ -1,7 +1,7 @@
 # This file is used for automated tests with Travis CI : travis-ci.org
 # based on the template version 1
 # the templates are availables in the documentation on http://docs.domogik.org/domogik/dev/en/package_development/plugins/tests/travis_templates.html
-sudo: false
+# sudo: false
 language: python
 python:
   - "2.7"
