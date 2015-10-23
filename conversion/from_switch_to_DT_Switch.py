@@ -1,5 +1,5 @@
 def from_switch_to_DT_Switch(x):
-    if x == 'Off':
+    if x == 'Off' :
         return 0
-    else :
+    if x == 'On' :
         return 1
