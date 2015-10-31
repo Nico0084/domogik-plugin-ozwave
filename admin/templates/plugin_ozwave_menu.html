@@ -115,12 +115,12 @@
                 </a>
             </li>
             <li{% if networkmenu_active == "network" %} class="active" {% endif %}>
-                <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Network{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/network">{% trans %}Network{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-link"></span>
                 </a>
             </li>
             <li{% if networkmenu_active == "tools" %} class="active" {% endif %}>
-                <a href="/virtualnodes/{{ node_ref }}/cmd_classes">{% trans %}Tools{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/tools">{% trans %}Tools{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cogs"></span>
                 </a>
             </li>

@@ -42,7 +42,7 @@ try:
     from domogik.xpl.common.xplmessage import XplMessage
     from domogik.xpl.common.xplconnector import XplTimer
     
-    from domogik.mq.message import MQMessage
+    from domogikmq.message import MQMessage
     
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
 #    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
