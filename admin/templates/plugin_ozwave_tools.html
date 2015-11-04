@@ -174,7 +174,56 @@
                 });
             };
         });
-    });
+        $("#refreshMem").click(function(e) {
+            $("#refreshMem-ic").addClass('fa-spin');
+            sendRequest("ozwave.openzwave.getmemoryusage", {}, function(data, result) {
+                $("#refreshMem-ic").removeClass('fa-spin');
+                if (result == "error" || data.result == "error") {
+                    new PNotify({
+                        type: 'error',
+                        title: 'Refresh memory usage fail.',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    var text = '';
+                    for (var i in data.content) {
+                        text += '<li><b>' + i + ':</b> ' + data.content[i] + '</li>';
+                    };
+                    $('#memoryDetail').html(text);
+                };
+            });
+        });
+        $("#logBegin, #logEnd").click(function(e) {
+            var id = this.id;
+            $("#"+id+"-ic").addClass('fa-spin');
+            if (id == 'logBegin') {
+                var from = 'top';
+            } else {
+                var from = 'end';
+            };
+            var typeLog = $("#logtype").val();
+            var lines = parseInt($("#nbLines").val());
+            sendRequest("ozwave.openzwave."+typeLog, {"lines": lines, "from": from}, function(data, result) {
+                $("#"+id+"-ic").removeClass('fa-spin');
+                if (result == "error" || data.result == "error") {
+                    $('#logDisplay').html('{% trans %}Get log error{% endtrans %} : ' + data.content.error);
+                    new PNotify({
+                        type: 'error',
+                        title: 'Get log fail.',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    var log = "";
+                    for (var i = 0; i <data.content.data.length; i++) {
+                        log = log + data.content.data[i] + '<br>'
+                        };
+                    $('#logDisplay').html(log);
+                };
+            });
+        });
+    });logBegin
 </script>
 
 {% endblock %}

@@ -89,7 +89,7 @@
             <li id="debug-tab" {% if network_active == "" %}class="active"{% endif %}>
                 <a data-toggle="tab" href="#debug-pane" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a>
             </li>
-            <li id="tools-tab" {% if network_active == "" %}class="active"{% endif %}>
+            <li id="tools-tab" {% if network_active == "tools" %}class="active"{% endif %}>
                 <a data-toggle="tab" href="#tools-pane" onclick="sidebarVisible('network-menu', false);window.location.href='/plugin_ozwave/{{ clientid }}/tools';return true;">ozw tools</a>
             </li>
         </ul>

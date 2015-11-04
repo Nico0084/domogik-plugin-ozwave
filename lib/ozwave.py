@@ -1386,6 +1386,10 @@ class OZWavemanager():
             report = self.getProduct(data['productName'])
         elif request == 'openzwave.getmemoryusage':
             report = self.getMemoryUsage()
+        elif request == 'openzwave.getlog':
+            report = self.getLoglines(data)
+        elif request == 'openzwave.getlogozw':
+            report = self.getLogOZWlines(data)
 
         elif request == 'SetPollInterval':
             ctrl.node.setPollInterval(data['interval'],  False)
@@ -1414,10 +1418,6 @@ class OZWavemanager():
                 report = self.testNetworkNode(data["homeId"], data['node'],  data['count'],  10000, True)
             else : report = {'error':  'Invalide nodeId format.'}
             ackMsg['node'] = data['node']
-        elif request == 'GetLog':
-            report = self.getLoglines(data)
-        elif request == 'GetLogOZW':
-            report = self.getLogOZWlines(data)
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         return report

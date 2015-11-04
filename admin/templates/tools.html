@@ -2,13 +2,77 @@
 
 <div class='container-fluid'>
     <h3>{% trans %}Zwave tools administration{% endtrans %}
-        <div class="pull-right">
-            <h4>
-                <span id="ctrl-status" class="label status-{{ network_active }}">
-               log tools
-            </h4>
-        </div>
     </h3>
+    <div class="row">
+        <div class='col-md-12'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <h4>{% trans %}Memory usage{% endtrans %}
+                        <div class="input-group pull-right">
+                            <button id="refreshMem" type="button" class="btn btn-default">
+                                <i class="fa fa-refresh" id="refreshMem-ic" style="color:blue"></i>
+                               <span> {% trans %}Refresh{% endtrans %}</span>
+                            </button>
+                        </div>
+                        </h4>
+                </div>
+                <div class='panel-body'>
+                    <div id='memoryDetail'>{% trans %}Presse refresh button to get memory size{% endtrans %}.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class='col-md-12'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <a class="bg-info" href="#" onclick="toggleVisible('logCTRL', 'toggle-log');return false;">
+                        <h4>
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-log" aria-hidden="true" data-target="logCTRL"></span>
+                            <span>&nbsp;&nbsp;{% trans %}Zwave internal logs{% endtrans %}</span>
+                        </h4>
+                    </a>
+                </div>
+                <div class='panel-body' id="logCTRL" hidden>
+                    <div class='row'>
+                        <div class="col-xs-6 col-md-3">
+                            <label for="nbLines">Number of lines to show</label>
+                            <input id="nbLines" type="number" class="form-control" value="50">
+                        </div>
+                        <div class="col-xs-6 col-md-3">
+                            <div class="input-group">
+                                <button id="logBegin" type="button" class="btn btn-default">
+                                    <i class="fa fa-refresh" id="logBegin-ic" style="color:blue"></i>
+                                   <span> {% trans %}View from beginning{% endtrans %}</span>
+                                </button>
+                             </div>
+                        </div>
+                        <div class="col-xs-6 col-md-3">
+                            <div class="input-group">
+                                <button id="logEnd" type="button" class="btn btn-default">
+                                    <i class="fa fa-refresh" id="logEnd-ic" style="color:blue"></i>
+                                   <span> {% trans %}View until end{% endtrans %}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-3">
+                            <select class='form-control' id='logtype' >
+                                <option value="getlog">{% trans %}Plugin log{% endtrans %}</option>
+                                <option value="getlogozw">{% trans %}Openzwave log{% endtrans %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div id='logDisplay' style="height:300px;overflow:auto;">{% trans %}Click refresh button{% endtrans %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class='row'>
         <div class='col-md-12'>
             <div class='panel panel-default'>
