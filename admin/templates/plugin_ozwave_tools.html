@@ -1,0 +1,180 @@
+{% extends theme("base/base.html") %}
+{% import theme("base/wtf.html") as wtf %}
+
+{% block content %}
+{% include theme("client_menu.html") %}
+{% include "plugin_ozwave_menu.html" %}
+
+<!-- jstree CSS -->
+    <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/libraries/themes/default/style.min.css">
+
+<!-- jstree -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/jstree.min.js"></script>
+
+<div class="container" id="test-move">
+{% include "tools.html" %}
+</div>
+<script type="text/javascript">
+    function renderProductDetail(productData) {
+        var tab =[],
+             cmdClasses = [],
+             values = [],
+             data = [],
+             items = []
+        for (var k in productData) {
+            if (k == 'commandClasses') {
+                for (var cmdClass in productData[k]) {
+                    if (productData[k][cmdClass].values != undefined) {
+                        values = [];
+                        for (var value in productData[k][cmdClass].values) {
+                            data = []
+                            for (var d in productData[k][cmdClass].values[value]) {
+                                if (d == 'items') {
+                                    items = []
+                                    for (var i in productData[k][cmdClass].values[value][d]) {
+                                        items.push({text: i + ": " + productData[k][cmdClass].values[value][d][i],
+                                            icon: "icon-success fa fa-tag",
+                                            state: {opened: false}});
+                                    };
+                                    data.push({text: d,
+                                    icon: "icon-info fa fa-info-circle",
+                                    state: {opened: true},
+                                    children: items});
+                                } else if (d != 'label') {
+                                    data.push({text: d + ": " + productData[k][cmdClass].values[value][d],
+                                        icon: "icon-success fa fa-tag",
+                                        state: {opened: false}});
+                                };
+                            };
+                            values.push({text: productData[k][cmdClass].values[value].label,
+                                icon: "icon-info fa fa-info-circle",
+                                state: {opened: false},
+                                children: data});
+                        }
+                        tab.push({text: productData[k][cmdClass].cmdClassName + " ("+productData[k][cmdClass].id+")",
+                            icon: "icon-info fa fa-tags",
+                            state: {opened: true},
+                            children: values});
+                    } else if (productData[k][cmdClass].associations != undefined) {
+                        values = [];
+                        for (var grp in productData[k][cmdClass].associations) {
+                            data = [];
+                            for (var d in productData[k][cmdClass].associations[grp]) {
+                                if (d != 'label') {
+                                    data.push({text: d + ": " + productData[k][cmdClass].associations[grp][d],
+                                        icon: "icon-success fa fa-tag",
+                                        state: {opened: false}});
+                                };
+                            };
+                            values.push({text: productData[k][cmdClass].associations[grp].label,
+                                icon: "icon-info fa fa-info-circle",
+                                state: {opened: false},
+                                children: data});
+                        };
+                        tab.push({text: productData[k][cmdClass].cmdClassName + " ("+productData[k][cmdClass].id+")",
+                            icon: "icon-info fa fa-tags",
+                            state: {opened: true},
+                            children: values});
+                    };
+                };
+            } else {
+                values = [];
+                for (var d in productData[k]) {
+                    if (typeof(productData[k][d]) == 'object') {
+                        data = [];
+                        for (var i in productData[k][d]) {
+                            data.push({text: i + ": " + productData[k][d][i],
+                                icon: "icon-success fa fa-tag",
+                                state: {opened: false}});
+                        };
+                        values.push({text: d,
+                                icon: "icon-info fa fa-info-circle",
+                                state: {opened: true},
+                                children: data});
+                    } else {
+                        values.push({text: d + ": " + productData[k][d],
+                            icon: "icon-success fa fa-tag",
+                            state: {opened: false}});
+                    };
+                };
+                if (values) {
+                    tab.push({text: k,
+                            icon: "icon-info fa fa-tags",
+                            state: {opened: true},
+                            children: values});
+                };
+            };
+        };
+        $('#productDetail').empty().jstree('destroy');
+        $('#productDetail').jstree({
+            "core" : {
+                "multiple" : false,
+                "data" : tab
+            },
+            "themes" : {
+                "theme" : "default",
+                "dots" : false,
+                "icons" : true
+            },
+            "plugins" : ["themes", "json_data"]
+        });
+    };
+
+    $( document ).ready(function() {
+        $('#test-move').appendTo("#tools-pane");
+        var ws_onmessage_tools = ws.onmessage;
+        $("#productsTree").jstree({
+            "core" : {
+                "multiple" : false
+            },
+            "themes" : {
+                "theme" : "default",
+                "dots" : false,
+                "icons" : true
+            }
+        });
+        ws.onmessage = function(e) {
+            ws_onmessage_tools(e);
+            var data = JSON.parse(e.data);
+            var msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave" && msgId[1] == "manager") {
+                console.log("Zwave tools receive :)", data.msgid);
+                console.log(data.content);
+                switch (msgId[2]) {
+                    case "tbd" :
+                        if ("{{ network_active }}" == data.content.NetworkID) {
+                            var table = $("#tabnodes_{{ network_active }}").DataTable();
+                            console.log("Clear nodes table");
+                            table.clear().draw();
+                            nodesData = [];
+                        };
+                        break;
+                };
+            };
+        };
+        $("#productsTree").on('changed.jstree', function (e, data) {
+            var id_type = data.instance.get_node(data.selected[0]).li_attr.idtype;
+            var name = data.instance.get_node(data.selected[0]).text;
+            var pRef = data.instance.get_node(data.selected[0]).li_attr.title;
+            if (id_type == "product") {
+                sendRequest("ozwave.openzwave.getproduct", {"productName": name}, function(data, result) {
+                    if (result == "error" || data.result == "error") {
+                        new PNotify({
+                            type: 'error',
+                            title: 'get product ' + name + ' fail.',
+                            text: data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        renderProductDetail(data.content.product);
+                        var t = pRef.split('\n');
+                        t = "<h5>"+ t.join('<br>')+"</h5>";
+                        $('#productRefDetail').html(name + t);
+                    };
+                });
+            };
+        });
+    });
+</script>
+
+{% endblock %}

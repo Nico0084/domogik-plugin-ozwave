@@ -9,7 +9,7 @@
 
 <!-- Bootbox -->
     <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/bootbox.min.js"></script>
-    
+
 <!-- Bootstrap switch -->
     <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/libraries/css/bootstrap-switch.min.css">
     <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/bootstrap-switch.min.js"></script>
@@ -18,12 +18,12 @@
     <div class="list-group">
         <h4>
            <a class="list-group-item bg-info" href="#" onclick="toggleVisible('detailOZWconfig', 'toggle-OZWconfig');return false;">
-               <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span>&nbsp;&nbsp; 
+               <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-OZWconfig" aria-hidden="true" data-target="detailOZWconfig"></span>&nbsp;&nbsp;
                <span id="ozw-status" class="label status-{{ openzwaveInfo.status }}">Openzwave</span>
-               <span id="manager-status" class="label status-{{ managerState.status }}">{% trans %}Manager{% endtrans %}</span>&nbsp;&nbsp; 
+               <span id="manager-status" class="label status-{{ managerState.status }}">{% trans %}Manager{% endtrans %}</span>&nbsp;&nbsp;
                <small id="manager-init">{{ managerState.init }}</small>
                <div class="pull-right"><small id="ozw-version">{{ openzwaveInfo.PYOZWLibVers }}</small></div>
-            </a>        
+            </a>
         </h4>
         <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
             <li><b>{% trans %}Openzwave path{% endtrans %} : </b><span id="ozw-config">{{ openzwaveInfo.ConfigPath }}</span></li>
@@ -82,11 +82,16 @@
                     <span id="saveconf_{{ network.NetworkID }}" class="btn btn-xs btn-info pull-right{% if network.HomeID == 'None' %} hide{% endif %}" title="Save openzwave network config">
                         <span id="icsaveconf_{{ network.NetworkID }}" class="glyphicon glyphicon-floppy-saved"></span>
                     </span>
-               </h4> 
+               </h4>
                 </a>
             </li>
         {% endfor %}
-            <li id="debug-tab" {% if network_active == "" %}class="active"{% endif %}><a data-toggle="tab" href="#debug-pane" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a></li>
+            <li id="debug-tab" {% if network_active == "" %}class="active"{% endif %}>
+                <a data-toggle="tab" href="#debug-pane" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a>
+            </li>
+            <li id="tools-tab" {% if network_active == "" %}class="active"{% endif %}>
+                <a data-toggle="tab" href="#tools-pane" onclick="sidebarVisible('network-menu', false);window.location.href='/plugin_ozwave/{{ clientid }}/tools';return true;">ozw tools</a>
+            </li>
         </ul>
     </div>
     </nav>
@@ -100,7 +105,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-          </button>      
+          </button>
         </div>
         <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
           <ul class="nav navbar-nav">
@@ -155,6 +160,9 @@
                 <li><b>{% trans %}client_detail{% endtrans %} : </b></li>
                 <pre id="debug-client">{{ client_detail }}</pre>
         </div>
+        <div class="tab-pane{% if network_active == 'tools' %} active{% endif %}" id="tools-pane">
+        <!-- Page is insered after -->
+        </div>
     </div>
 </div>
 
@@ -163,14 +171,14 @@
         var activeNetwork = "{{ network_active }}";
         clientID = "{{ clientid }}";
         ozwInfo = {{ openzwaveInfo|tojson }}
-        
+
         /* Action which shows and hides div with a id */
         $("[id^='toggle-OZWconfig']").click(function() {
           var target_selector = $(this).attr('data-target');
           toggleVisible(target_selector, this.id);
           return false;
         });
-        
+
         function toggleVisible(target_selector, icon_selector) {
           var $target = $("[id^='"+target_selector+"']" );
           if ($target.is(':hidden')) {
@@ -181,7 +189,7 @@
             $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
           };
         };
-        
+
         function sidebarVisible(target_selector, state) {
           var $target = $("[id^='"+target_selector+"']" );
           if (state) {
@@ -190,7 +198,7 @@
             $target.hide( "fast" );
           };
         };
-        
+
         function selectActiveNetwork(NetworkID) {
             sidebarVisible('network-menu', true);
             activeNetwork = NetworkID;
@@ -198,7 +206,7 @@
             $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
             $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
         };
-        
+
         $("[id^='saveconf_']").click(function() {
             var NetworkID = this.id.split("_")[1];
             $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
@@ -221,10 +229,10 @@
                 updateBtSavedConf(data.content.NetworkID, data.content.saved);
             });
         });
-        
+
     $( document ).ready(function() {
         var ws_onmessage_menu = ws.onmessage;
-        if (activeNetwork == "") {sidebarVisible('network-menu', false);};
+        if (activeNetwork == "" || activeNetwork == "tools") {sidebarVisible('network-menu', false);};
         ws.onmessage = function(e) {
             ws_onmessage_menu(e);
             var data = JSON.parse(e.data);
@@ -237,7 +245,7 @@
                             $("#manager-init").text("Stopped");
                         };
                     };
-                }; 
+                };
             };
             var msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave") {

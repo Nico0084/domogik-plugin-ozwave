@@ -1,0 +1,49 @@
+{% block content %}
+
+<div class='container-fluid'>
+    <h3>{% trans %}Zwave tools administration{% endtrans %}
+        <div class="pull-right">
+            <h4>
+                <span id="ctrl-status" class="label status-{{ network_active }}">
+               log tools
+            </h4>
+        </div>
+    </h3>
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <h4>{% trans %}Recognized manufacturers and products{% endtrans %}</h4>
+                    <li><b>{% trans %}Openzwave path configuration{% endtrans %}:</b> {{ openzwaveInfo.ConfigPath }}</li>
+                </div>
+                <div class='panel-body'>
+                    <div class='col-md-6'>
+                        <div id='productsTree' style="height:500px;overflow:auto;">
+                        {% for manufacturer in ozw_products.manufacturers %}
+                            <ul>
+                                <li idtype="manufacturer">{{ manufacturer.manufacturer }} ({{ "{0:#3x}".format(manufacturer.id) }})
+                                    {% for product in manufacturer.products %}
+                                    <ul>
+                                        <li idtype="product" data-jstree='{"icon":"{% if product.config != '' %}icon-success fa fa-file-text{% else %}icon-unknown fa fa-file{% endif %}"}'
+                                                title="{% trans %}File{% endtrans %}: {% if product.config != '' %}{{ product.config }}{% else %}{% trans %}No config file{% endtrans %}{% endif %}
+Type: {{ '{0:#3x}'.format(product.type) }}
+Id(s): {% for id in product.ids %}{{ '{0:#3x}'.format(id) }}{% if id != product.ids[-1] %}, {% endif %}{% endfor %}">{{ product.name }}</li>
+                                    </ul>
+                                    {% endfor %}
+                                </li>
+                            </ul>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    <div class='col-md-6'>
+                        <h4 id='productRefDetail' class="alert alert-info" >{% trans %}Select a product with xml file{% endtrans %}</h4>
+                        <div id='productDetail' style="height:500px;overflow:auto;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+ {% endblock %}

@@ -63,6 +63,18 @@ def get_controller_nodes(NetworkID, abort = False):
         else : data['error'] =  u'Plugin timeout response.'
     return data
 
+def get_openzwave_all_products(abort = False):
+    data = {u'data': [], u'error': u''}
+    if not abort : 
+        cli = MQSyncReq(app.zmq_context)
+        msg = MQMessage()
+        msg.set_action('ozwave.openzwave.getallproducts')
+        res = cli.request('plugin-ozwave.{0}'.format(get_sanitized_hostname()), msg.get(), timeout=10)
+        if res is not None:
+            data = res.get_data()
+        else : data['error'] =  u'Plugin timeout response.'
+    return data
+    
 def get_request(client_id, action, data, abort = False):
     resData = {u'error': u'', u'data': {}}
     if not abort : 

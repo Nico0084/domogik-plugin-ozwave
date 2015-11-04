@@ -8,7 +8,9 @@ from domogik.admin.views.clients import get_client_detail
 from jinja2 import TemplateNotFound
 
 ### package specific imports
-from domogik_packages.plugin_ozwave.admin.views.network_tools import get_manager_state, get_openzwave_info, get_controller_state, get_controller_nodes, get_request
+from domogik_packages.plugin_ozwave.admin.views.network_tools import get_manager_state, get_openzwave_info, \
+                                                                                                     get_controller_state, get_controller_nodes, get_request, \
+                                                                                                     get_openzwave_all_products
 
 ### common tasks
 package = "plugin_ozwave"
@@ -63,8 +65,8 @@ def network_ctrl(client_id, network_id):
             client_detail = detail,
             mactive="clients",
             active = 'advanced',
-            networkmenu_active = 'controller',
             network_active = network_id,
+            networkmenu_active = 'controller',
             openzwaveInfo = openzwaveInfo,
             managerState = managerState, 
             network_state = networkState)
@@ -85,13 +87,13 @@ def network_nodes(client_id, network_id):
     if networkState['error'] == 'Plugin timeout response.': abort = True
     nodesState = get_controller_nodes(network_id,  abort)
     try:
-        return render_template('plugin_ozwave_nodes.html',
+        return render_template('plugin_ozwave_tools.html',
             clientid = client_id,
             client_detail = detail,
             mactive="clients",
             active = 'advanced',
-            networkmenu_active = 'nodes',
             network_active = network_id,
+            networkmenu_active = 'nodes',
             openzwaveInfo = openzwaveInfo,
             managerState = managerState, 
             network_state = networkState, 
@@ -100,6 +102,32 @@ def network_nodes(client_id, network_id):
     except TemplateNotFound:
         abort(404)
 
+@plugin_ozwave_adm.route('/<client_id>/tools')
+def plugin_tools(client_id):
+    detail = get_client_detail(client_id)
+    abort = False
+    if detail["status"] not in ["alive",  "starting"] : abort = True
+    openzwaveInfo = get_openzwave_info(abort)
+    if openzwaveInfo['error'] == 'Plugin timeout response.': abort = True
+    managerState = get_manager_state(abort)
+    if managerState['error'] == 'Plugin timeout response.': abort = True
+    allProducts = get_openzwave_all_products(abort)
+    if allProducts['error'] == 'Plugin timeout response.': abort = True
+    try:
+        return render_template('plugin_ozwave_tools.html',
+            clientid = client_id,
+            client_detail = detail,
+            mactive="clients",
+            active = 'advanced',
+            network_active = 'tools',
+            networkmenu_active = '',
+            openzwaveInfo = openzwaveInfo,
+            managerState = managerState, 
+            ozw_products = allProducts)
+            
+    except TemplateNotFound:
+        abort(404)
+        
 @plugin_ozwave_adm.route('/<client_id>/<network_id>/<node_id>/infos')
 def node_infos(client_id, network_id, node_id):
     nodeInfos = get_request(client_id, "ozwave.node.infos", {"networkId": network_id, "nodeId":node_id})
