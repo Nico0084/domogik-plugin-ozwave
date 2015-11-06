@@ -1,4 +1,4 @@
-{ 
+{
     "products" : [
         {
             "name" : "Z-Stick S2",
@@ -139,7 +139,7 @@
                     "expire": 0,
                     "round_value": 0
             }
-        }, 
+        },
         "battery_level" : {
             "name" : "Battery level",
             "incremental": false,
@@ -1738,7 +1738,7 @@
         "set_temperature" : {
             "name" : "Thermostat setpoint",
             "schema" : "ozwave.basic",
-            "xplstat_name" : "temperature_c",
+            "xplstat_name" : "thermostat_setpoint",
             "parameters" : {
                 "static" : [{
                         "key" : "command",
@@ -2224,6 +2224,6 @@
         "name": "ozwave",
 		"type" : "plugin",
 		"version" : "0.4.0b1"
-	}, 
+	},
     "json_version" : 2
 	}
