@@ -115,17 +115,17 @@
                 </a>
             </li>
             <li{% if networkmenu_active == "nodes" %} class="active" {% endif %}>
-                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes"  id="nodes-href">{% trans %}Nodes{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/nodes" id="nodes-href">{% trans %}Nodes{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cubes"></span>
                 </a>
             </li>
             <li{% if networkmenu_active == "network" %} class="active" {% endif %}>
-                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/network">{% trans %}Network{% endtrans %}
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/network" id="network-href">{% trans %}Network{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-link"></span>
                 </a>
             </li>
-            <li{% if networkmenu_active == "tools" %} class="active" {% endif %}>
-                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/tools">{% trans %}Tools{% endtrans %}
+            <li{% if networkmenu_active == "ctrltools" %} class="active" {% endif %}>
+                <a href="/plugin_ozwave/{{ clientid }}/{{ network_active }}/ctrltools" id="ctrltools-href">{% trans %}Tools{% endtrans %}
                     <span style="font-size:16px;" class="pull-right hidden-xs showopacity fa fa-cogs"></span>
                 </a>
             </li>
@@ -143,7 +143,7 @@
         <div class="tab-pane" id="debug-pane">
             <h3>Raw data page selection :</h3>
                 <li><b>{% trans %}network_active{% endtrans %} : </b><span id="debug-networkactive">{{ network_active }}</span></li>
-                <li><b>{% trans %}networkmenu_active{% endtrans %} : </b><span id="degub-networkmenuactive">{{ networkmenu_active }}</span></li>
+                <li><b>{% trans %}networkmenu_active{% endtrans %} : </b><span id="debug-networkmenuactive">{{ networkmenu_active }}</span></li>
             <h3>Raw data Openzwave :</h3>
                 <li><b>{% trans %}openzwaveInfo{% endtrans %} : </b></li>
                 <pre id="debug-ozw">{{ openzwaveInfo }}</pre>
@@ -205,6 +205,8 @@
             $("#debug-networkactive").text(NetworkID);
             $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
             $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
+            $("#network-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/network");
+            $("#ctrltools-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/ctrltools");
         };
 
         $("[id^='saveconf_']").click(function() {

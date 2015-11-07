@@ -225,6 +225,7 @@ class OZWavemanager():
         if self._devicesCtrl :
             thOpen = threading.Thread(None, self.startOpenDevicesCtrl, "th_Start_open_drivers", (), {})
             thOpen.start()
+            self._xplPlugin.register_thread(thOpen)
 
     def startOpenDevicesCtrl(self):
         """Demarre les différents driver en attendant que le traitement driver précedent soit  terminé.
@@ -1030,7 +1031,7 @@ class OZWavemanager():
         return retval
 
     def getOpenzwaveInfo(self):
-        """ Retourne les infos de config d' openzwave (dict) """
+        """ Retourne les infos de config d'openzwave (dict) """
         retval = {"status": "dead", "Options": {}}
         if self.options is not None:
             if self.options.areLocked :
@@ -1044,8 +1045,6 @@ class OZWavemanager():
         retval["ConfigPath"] = self._configPath
         retval["UserPath"] = self._userPath
         retval["PYOZWLibVers"] = self.pyOZWLibVersion
-        # TODO: Gére plusieurs networdID dans les fonction qui appellent.
-
         return retval
 
     def getManagerInfo(self):
@@ -1215,11 +1214,36 @@ class OZWavemanager():
         else : return {"error" : "Zwave network not ready, can't find value %d" % valueId}
 
     def getValueTypes(self):
-        """Retourne la liste des type de value possible et la doc"""
+        """return list of value type de and doc associate (dict)"""
         retval = {}
         for elem in  libopenzwave.PyValueTypes :
             retval[elem] = elem.doc
         return retval
+
+    def getListStatDriver(self):
+        """ Return list of data driver statistic and doc associate (dict)"""
+        return libopenzwave.PyStatDriver
+
+    def getListStatNode(self):
+        """ Return list of data Node statistic and doc associate (dict)"""
+        return { "sentCnt" : "Number of messages sent from this node.",
+                 "sentFailed" :  "Number of sent messages failed",
+                 "retries" :  "Number of message retries",
+                 "receivedCnt" :  "Number of messages received from this node.",
+                 "receivedDups" :  "Number of duplicated messages received.",
+                 "receivedUnsolicited" :  "Number of messages received unsolicited.",
+                 "sentTS" :  "Last message sent time.",
+                 "receivedTS" :  "Last message received time",
+                 "lastRequestRTT " :  "Last message request RTT",
+                 "averageRequestRTT" :  "Average Request Round Trip Time (ms).",
+                 "lastResponseRTT" :  "Last message response RTT",
+                 "averageResponseRTT" :  "Average Reponse round trip time.",
+                 "quality" :  "Node quality measure",
+                 "lastReceivedMessage" :  "Last received raw data message",
+                 "commandClassId" :  "Individual Stats for: ",
+                 "sentCntCC" :  "Number of messages sent from this CommandClass.",
+                 "receivedCntCC" :  "Number of messages received from this CommandClass."
+                }
 
     def testNetwork(self, networkId, count = 1, timeOut = 10000,  allReport = False):
         """Envois une serie de messages à tous les nodes pour tester la réactivité du réseaux."""
@@ -1227,24 +1251,27 @@ class OZWavemanager():
         if ctrl is None : return {"error" : "Zwave network not ready, can't find controller"}
         if ctrl.node is None : return {"error" : "Zwave network not ready, can't find node controller"}
         if ctrl.ready :
+            retval = {'error' :'', 'nodes': []}
             for node in self._nodes.itervalues() :
                 if (node.homeId == ctrl.homeId) and (not node.isSleeping) and (self.isNodeDeviceCtrl(node)) is None :
                     error = node.trigTest(count, timeOut,  allReport,  False)
-                    if error['error'] != '' :  retval['error'] = retval['error'] +'/n' + error['error']
+                    if error['error'] != '' :
+                        retval['error'] = retval['error'] +'/n' + error['error']
+                    else : retval['nodes'].append(node.refName)
             self.lastTest = time.time()
             self._manager.testNetwork(ctrl.homeId, count)
-            if retval['error']  != '': retval['error'] = 'Some node(s) have error :/n' + retval['error']
+            if retval['error'] != '': retval['error'] = 'Some node(s) have error :/n' + retval['error']
             return retval
-        else : return {"error" : "Zwave network not ready, can't find controller."}
+        else : return {"error" : "Zwave network not ready, can't find controller.", 'nodes': []}
 
-    def testNetworkNode(self, homeId, nodeId, count = 1, timeOut = 10000,  allReport = False):
+    def testNetworkNode(self, homeId, nodeId, count = 1, timeOut = 10000, allReport = False):
         """Envois une serie de messages à un node pour tester sa réactivité sur le réseaux."""
         ctrl = self.getCtrlOfNetwork(homeId)
         if ctrl is None : return {"error" : "Zwave network not ready, can't find controller"}
         if ctrl.ready :
             node = self._getNode(homeId,  nodeId)
             if self.isNodeDeviceCtrl(node) is None :
-                if node : retval = node.testNetworkNode(count, timeOut,  allReport)
+                if node : retval = node.testNetworkNode(count, timeOut, allReport)
                 else : retval['error'] = "Zwave node {0} unknown.".format(node.refName)
             else : retval['error'] = "Can't test primary controller, node {0}.".format(node.refName)
             return retval
@@ -1275,11 +1302,8 @@ class OZWavemanager():
         if ctrl.node is None : return {"error" : "Zwave network not ready, can't find node controller"}
         if ctrl.ready :
             retval = ctrl.node.stats()
-            if retval :
-                for  item in retval : retval[item] = str (retval[item]) # Pour etre compatible avec javascript
-                retval['error'] = ""
-            else : retval = {'error' : "Zwave controller not response."}
-            retval['msqueue'] = str(self.getCountMsgQueue(ctrl.homeId))
+            retval['error'] = "" if retval else "No response of Zwave controller."
+            retval['msqueue'] = ctrl.getCountMsgQueue()
             retval['elapsedtime'] = str(timedelta(0,time.time() - ctrl.timeStarted))
             return retval
         else : return {"error" : "Zwave network not ready, controller not ready"}
@@ -1399,25 +1423,14 @@ class OZWavemanager():
             else :
                 report = {'error':'Setting interval error : keep value %d ms.' %report['interval']}
 
-        # Manager request
-        elif request == 'GetValueTypes':
+        # Openzwave constants
+        elif request == 'openzwave.getvaluetypes':
             report = self.getValueTypes()
-        elif request == 'GetGeneralStats':
-            report = self.getGeneralStatistics(data['networkId'])
-            print 'Refresh generale stats : ',  report
-        elif request == 'GetNodeStats':
-            if self._IsNodeId(data['node']):
-                report = self.getNodeStatistics(data['homeId'], data['node'])
-            else : report = {'error':  'Invalide nodeId format.'}
-            print 'Refresh node stats : ',  report
+        elif request == 'openzwave.getstatdriverinfos':
+            report = self.getListStatDriver()
+        elif request == 'openzwave.getstatnodeinfos':
+            report = self.getListStatNode()
 
-        elif request == 'TestNetwork':
-            report = self.testNetwork(data["networkId"], data['count'],  10000, True)
-        elif request == 'TestNetworkNode':
-            if self._IsNodeId(data['node']):
-                report = self.testNetworkNode(data["homeId"], data['node'],  data['count'],  10000, True)
-            else : report = {'error':  'Invalide nodeId format.'}
-            ackMsg['node'] = data['node']
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         return report
@@ -1456,6 +1469,10 @@ class OZWavemanager():
             report = self.handle_ControllerHardReset(data['networkId'])
         elif request == 'ctrl.getlistcmdsctrl':
             report = ctrl.getListCmdsCtrl()
+        elif request == 'ctrl.getnetworkstats':
+            report = self.getGeneralStatistics(data['networkId'])
+        elif request == 'ctrl.testnetwork':
+            report = self.testNetwork(data["networkId"], int(data['count']),  10000, True)
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         return report
@@ -1523,6 +1540,14 @@ class OZWavemanager():
             else :
                 report['error'] ='Request {0} unknown action, data : {1}'.format(request, data)
             report['action'] = data['action']
+        elif request == 'node.getnodestats':
+            if self._IsNodeId(data['nodeId']):
+                report = self.getNodeStatistics(data['homeId'], data['nodeId'])
+            else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'node.testnetworknode':
+            if self._IsNodeId(data['nodeId']):
+                report = self.testNetworkNode(data["homeId"], data['nodeId'], int(data['count']), 10000, True)
+            else : report = {'error':  'Invalide nodeId format.'}
         else :
             report['error'] ='Unknown request <{0}>, data : {1}'.format(request, data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId']})
@@ -1631,15 +1656,6 @@ class PrimaryController():
     def __str__(self):
         return u"driver = {0}, networkID = {1}, homeId = {2}, status = {3}, ready = {4}".format(self.driver, self.networkID , self.homeId, self.status, self.ready)
 
-	def getCountMsgQueue(self):
-		"""Retourne le nombre de message
-		:return: The count of messages in the outgoing send queue.
-		:rtype: int
-		"""
-		if self.node is not None :
-			return self.node._manager.getSendQueueCount(self.homeId)
-		return 0
-
     def saveNetworkConfig(self):
         """Enregistre le configuration au format xml"""
         retval = {"NetworkID": self.networkID}
@@ -1662,6 +1678,12 @@ class PrimaryController():
     def setSaveConfig(self,  saved = False):
         self._saved = saved
         self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.saveconfchange', {"NetworkID": self.networkID, "saved": saved})
+
+    def getCountMsgQueue(self):
+        """Return number of message in openzwave outgoing send queue."""
+        if self.node is not None :
+            return self.node._manager.getSendQueueCount(self.homeId)
+        else : return 0
 
     def getListCmdsCtrl(self):
         """Retourne le liste des commandes possibles du controleur ainsi que la doc associée."""

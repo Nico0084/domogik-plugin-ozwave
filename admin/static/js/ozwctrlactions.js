@@ -1,4 +1,4 @@
-/* Library fir zwave controller action */ 
+/* Library fir zwave controller action */
 var RunningCtrlAction ={};
 var ListeningStateCtrl = false;
 var DialogInit = false;
@@ -7,19 +7,10 @@ var Action = {action: 'undefine', cmd: 'undefine', cmdsource: 'undefine', cptmsg
 var lastActionSelect =''
 
 var AvaillableCtrlActions = [];
- 
-//    ['None','AddDevice', 'AddController' , 'CreateNewPrimary', 'ReceiveConfiguration', 'RemoveDevice', 'RemoveController ', 'RemoveFailedNode', 'HasNodeFailed', 
-//            'ReplaceFailedNode', 'TransferPrimaryRole', 'RequestNetworkUpdate', 'RequestNodeNeighborUpdate', 'AssignReturnRoute', 
-//            'DeleteAllReturnRoutes', 'SendNodeInformation', 'ReplicationSend', 'CreateButton', 'DeleteButton'];
-         
 
-function renderNodeName(nodeData) {
-    if (nodesData[n].Name == "Undefined") {
-        return nodesData[n].NodeID + ' : ' + nodesData[n].Model;
-    } else {
-        return nodesData[n].NodeID + ' : ' + nodesData[n].Name + ' - ' + nodesData[n].Model;
-    };
-};
+//    ['None','AddDevice', 'AddController' , 'CreateNewPrimary', 'ReceiveConfiguration', 'RemoveDevice', 'RemoveController ', 'RemoveFailedNode', 'HasNodeFailed',
+//            'ReplaceFailedNode', 'TransferPrimaryRole', 'RequestNetworkUpdate', 'RequestNodeNeighborUpdate', 'AssignReturnRoute',
+//            'DeleteAllReturnRoutes', 'SendNodeInformation', 'ReplicationSend', 'CreateButton', 'DeleteButton'];
 
 function renderActionOption(action) {
     $('#dosecurityOpt').hide();
@@ -71,13 +62,13 @@ function renderActionOption(action) {
             $('#listnodesOpt').show();
             break;
         case 'ReplicationSend' :
-            // TODO: check in openzwave what is real action perhaps an issue ? 
+            // TODO: check in openzwave what is real action perhaps an issue ?
             $("#listnodesOpt option[value!='']").remove();
             for (n in nodesData) {
-                if (nodesData[n].InitState != 'Out of operation') { 
+                if (nodesData[n].InitState != 'Out of operation') {
                     $('#listnodesOpt').append("<option value='"+ nodesData[n].NodeID +"'>" + renderNodeName(nodesData[n]) + "</option>");
                 };
-            };        
+            };
             $('#listnodesOptLabel').show();
             $('#listnodesOpt').show();
             $('#infoOpt').text('Developer information: WARNING, unsure of the real action of the openzwave library.').show();
@@ -86,7 +77,7 @@ function renderActionOption(action) {
         case 'RemoveFailedNode' :
             $("#listnodesOpt option[value!='']").remove();
             for (n in nodesData) {
-                if (nodesData[n].InitState == 'Out of operation') { 
+                if (nodesData[n].InitState == 'Out of operation') {
                     $('#listnodesOpt').append("<option value='"+ nodesData[n].NodeID +"'>" + renderNodeName(nodesData[n]) + "</option>");
                 };
             };
@@ -106,16 +97,16 @@ function renderActionOption(action) {
             // TODO: Probably we must check if button allready exist for node.
             $("#listnodesOpt option[value!='']").remove();
             for (n in nodesData) {
-                if (nodesData[0].InitState != 'Out of operation') { 
+                if (nodesData[0].InitState != 'Out of operation') {
                     $('#listnodesOpt').append("<option value='"+ nodesData[n].NodeID +"'>" + renderNodeName(nodesData[n]) + "</option>");
                 };
-            };        
+            };
             $('#listnodesOptLabel').show();
             $('#listnodesOpt').show();
             $('#numberOptLabel').text('Button ID').show();
             $('#numberOpt').attr('title', 'Chose a button ID number (1 to 255)').show();
             break;
-            
+
         default :
     };
 };

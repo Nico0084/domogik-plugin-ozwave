@@ -2,7 +2,7 @@ var clientID ="";
 var ozwInfo;
 var nodesData = new Array();  // global list of all nodes whith there data.
 // Reference of displaying key node in DataTable nodes column.
-var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0, 
+var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0,
                                 "Name": 1,
                                 "Location": 2,
                                 "Model": 3,
@@ -10,7 +10,7 @@ var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0,
                                 "Type": 5, "Capabilities": 5,
                                 "Last update": 6,
                                 };
-    
+
 var mbrGrpSt = {0: 'unknown', 1: 'confirmed', 2: 'to confirm', 3: 'to update'};
 
 // Handle Data nodes table
@@ -45,7 +45,7 @@ function RefreshDataNode(dataNode, Kbuild) {
 //    if (Kbuild) {
 //        if  (initialized) {setTimeout(function () {
 //             neighborsGraph.buildKineticNeighbors();
-//            },1000);   
+//            },1000);
 //        } else {setTimeout(function () {
 //            neighborsGraph = new KtcNeighborsGraph('containerneighbors','graphneighbors');
 //            },1000); };
@@ -183,7 +183,7 @@ function updateNode(newNodeData, date) {
 };
 
 function sendRequest(request, data, callback) {
-    $.getJSON('/plugin_ozwave/' + clientID + '/request/' + request, data, 
+    $.getJSON('/plugin_ozwave/' + clientID + '/request/' + request, data,
         callback);
 };
 
@@ -201,7 +201,7 @@ function requestZWNodeInfos(NetworkID, nodeId) {
         $.getJSON('/plugin_ozwave/' + clientID + '/request/ozwave.node.infos', {
             networkID: NetworkID,
             nodeId: nodeId
-            }, 
+            },
             function(data, result, request) {
                 console.log("Retour de get node infos :" + JSON.stringify(data));
                 if (data.result == 'success') {
@@ -241,6 +241,14 @@ function HighlightCell(oCell, timeUpDate) {
             };
         $(elem).removeClass('alert-success');
         },4000 );
+};
+
+function renderNodeName(nodeData) {
+    if (nodesData[n].Name == "Undefined") {
+        return nodesData[n].NodeID + ' : ' + nodesData[n].Model;
+    } else {
+        return nodesData[n].NodeID + ' : ' + nodesData[n].Name + ' - ' + nodesData[n].Model;
+    };
 };
 
 function renderBadgeCount(id, count) {
@@ -390,22 +398,22 @@ function setValueCmdClss(refId, newValue) {
                 });
             };
     });
-};   
+};
 
 // DataTable Nodes renderers
 function renderNodeStatusCol(data, type, full, meta) {
      /* {0:,
-              1:'Initialized - not known', 
+              1:'Initialized - not known',
               2:'Completed',
               3:'In progress - Devices initializing',
               4:'In progress - Linked to controller',
-              5:'In progress - Can receive messages', 
+              5:'In progress - Can receive messages',
               6:'Out of operation'} */
     var api = $.fn.dataTable.Api(meta.settings);
     var cell = api.cell(meta.row, 0);
     var refId = cell.data().split(".");
     var nodeRef = GetNodeRefId(refId[0], refId[1]);
-    var nodeData = GetZWNode(refId[0], refId[1]);    
+    var nodeData = GetZWNode(refId[0], refId[1]);
     var status = 'status-unknown';
     try {
         var initState = nodeData.InitState.toLowerCase();
@@ -433,13 +441,13 @@ function renderNodeStatusCol(data, type, full, meta) {
         bat = "<span id='battery" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-status-battery-" + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
         var bCheck = "";
         var tCheck =  "Check to request battery level at each awake.";
-        if (nodeData.BatteryChecked) { 
+        if (nodeData.BatteryChecked) {
             bCheck = " checked";
             tCheck = "Battery level is requested at each awake.";
         };
         bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
     };
-    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-" + status + 
+    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-" + status +
                "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat;
 };
 
@@ -501,7 +509,7 @@ function renderNodeTypeCol(data, type, full, meta) {
         return 'No Data';
     };
 };
-    
+
 function renderNodeActionColl(data, type, full, meta) {
     var api = $.fn.dataTable.Api(meta.settings);
     var cell = api.cell(meta.row, 0);
@@ -511,8 +519,8 @@ function renderNodeActionColl(data, type, full, meta) {
     if (nodeData) {
         var stAct = 'fa-search-plus';
         var tabDet = document.getElementById("valuesNode" + nodeRef);
-        if (tabDet) { // DetailNode opened 
-            stAct = 'fa-search-minus'; 
+        if (tabDet) { // DetailNode opened
+            stAct = 'fa-search-minus';
         };
         var ret = "<span id='detailnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='CommandClass detail'>" +
                         "<span id='detailnodeic" + nodeRef + "' class='fa " + stAct + "'></span></span>"

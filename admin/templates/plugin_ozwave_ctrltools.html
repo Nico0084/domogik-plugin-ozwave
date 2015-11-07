@@ -1,0 +1,313 @@
+{% extends theme("base/base.html") %}
+{% import theme("base/wtf.html") as wtf %}
+
+{% block content %}
+{% include theme("client_menu.html") %}
+{% include "plugin_ozwave_menu.html" %}
+
+<div class="container" id="test-move">
+{% include "ctrltools.html" %}
+</div>
+<script type="text/javascript">
+    var ctrlStatInfo = {},
+        nodeStatInfo = {};
+    var nodeInTest = [];
+    $( document ).ready(function() {
+        var container = document.getElementById("{{ network_active }}");
+        $('#test-move').appendTo("#{{ network_active }}");
+        var ws_onmessage_ctrltools = ws.onmessage;
+        sendRequest("ozwave.openzwave.getstatdriverinfos", {}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Controler Statistic info error',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                ctrlStatInfo = data.content;
+            };
+        });
+        sendRequest("ozwave.openzwave.getstatnodeinfos", {}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Node Statistic info error',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                nodeStatInfo = data.content;
+            };
+        });
+        sendRequest("ozwave.ctrl.nodes",{"networkId": "{{ network_active }}"}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Controller  {{ network_active }} , list nodes fail.'  ,
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                nodesData = data.content.nodes;
+                for (n in nodesData) {
+                    $('#listnodesOpt').append("<option value='"+ nodesData[n].NodeID +"'>" + renderNodeName(nodesData[n]) + "</option>");
+                };
+            };
+        });
+        ws.onmessage = function(e) {
+            ws_onmessage_ctrltools(e);
+            data = JSON.parse(e.data);
+            msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
+                console.log("Zwave controller receive :)", data.msgid);
+                console.log(data.content);
+                if (msgId[2] == "report" && data.content.NetworkID == "{{ network_active }}") {
+                    if (data.content.type == 'node-test-msg') {
+                        var testId = 'testNode'
+                        var cellId = 'testNodeDetail'
+                        if ($("#testNetwork-ic").hasClass('fa-spin')) {
+                            testId = 'testNetwork';
+                            for (var nodeId in nodeInTest) {
+                                if (data.content.usermsg.search(nodeInTest[nodeId]) != -1) {
+                                    break;
+                                };
+                            };
+                            var text = $('[id="'+nodeInTest[nodeId]+'"]').html();
+                            if (text != '') { text += '<br>'; };
+                            $('[id="'+nodeInTest[nodeId]+'"]').html(text + data.content.usermsg);
+                            if (data.content.state == 'processing') {
+                                    $("#"+testId+"-ic").addClass('fa-spin');
+                            } else { // 'finish', 'stopped', 'timeout'
+                                nodeInTest.splice(nodeId, 1);
+                                if (nodeInTest.length == 0) {
+                                    $("#"+testId+"-ic").removeClass('fa-spin');
+                                };
+                            };
+                        } else {
+                            if (data.content.state == 'processing') {
+                                    $("#"+testId+"-ic").addClass('fa-spin');
+                            } else { // 'finish', 'stopped', 'timeout'
+                                    $("#"+testId+"-ic").removeClass('fa-spin');
+                                };
+                            var text = $("#"+testId+"Detail").html() + '<tr><td>' + data.content.usermsg + '</td></tr>';
+                            $("#"+testId+"Detail").html(text);
+                        };
+                    };
+                };
+            };
+        };
+        $("#refreshStat").click(function(e) {
+            $("#refreshStat-ic").addClass('fa-spin');
+            sendRequest("ozwave.ctrl.getnetworkstats", {}, function(data, result) {
+                $("#refreshStat-ic").removeClass('fa-spin');
+                if (result == "error" || data.result == "error") {
+                    new PNotify({
+                        type: 'error',
+                        title: 'Refresh network statistic fail.',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    var table = '<div class="table-responsive">' +
+                                    '<table class="table table-striped table-condensed">' +
+                                        '<thead>' +
+                                            '<tr class="info">' +
+                                                '<th>Statistic description</th>' +
+                                                '<th>Value</th>' +
+                                          '</tr>' +
+                                        '</thead>' +
+                                        '<tbody>' +
+                                            '<tr>';
+                    for (var i in data.content) {
+                        if (ctrlStatInfo[i] != undefined){
+                            table += '<tr><td>' + ctrlStatInfo[i] + ' (' + i +')</td><td>' + data.content[i] + '</td></tr>';
+                            };
+                    };
+                    table += '</tbody>' +
+                          '</table>' +
+                      '</div>';
+                    $('#statDetail').html(table);
+                    $('#elapstime').text(data.content['elapsedtime'] +  ' sec.');
+                    $('#msgqueue').text(data.content['msqueue']);
+
+                };
+            });
+        });
+        $("#testNetwork").click(function(e) {
+            var count = parseInt($('#nbNodeMsg').val());
+            if ( count != 0) {
+                $("#testNetwork-ic").addClass('fa-spin');
+                sendRequest("ozwave.ctrl.testnetwork", {"networkId": "{{ network_active }}", "count": count}, function(data, result) {
+                    if (result == "error" || data.result == "error") {
+                        $("#testNetwork-ic").removeClass('fa-spin');
+                        new PNotify({
+                            type: 'error',
+                            title: 'Test network fail.',
+                            text: data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        nodeInTest = data.content.nodes;
+                        var table = '<div class="table-responsive">' +
+                                        '<table class="table table-striped table-condensed">' +
+                                            '<thead>' +
+                                                '<tr class="info">' +
+                                                    '<th>Node</th>' +
+                                                    '<th>Result</th>' +
+                                              '</tr>' +
+                                            '</thead>' +
+                                            '<tbody>';
+                        for (var i in nodeInTest) {
+                            table += '<tr><td>' + nodeInTest[i] + '</td><td id='+nodeInTest[i]+'></td></tr>';
+                        };
+                        table += '</tbody>' +
+                              '</table>' +
+                          '</div>';
+                        $('#testNetworkDetail').html(table);
+                        new PNotify({
+                            type: 'success',
+                            title: 'Test network.',
+                            text: '{% trans %}Test message send for node, in progress...{% endtrans %}',
+                            delay: 6000
+                        });
+                    };
+                });
+            };
+        });
+        $('#healNetwork').click(function() {
+            bootbox.confirm('<h3 class="text-center alert-info">Heal network of PC ZWave Controller</h3> ' +
+                              '<h4 class="text-center">{{ network_active }} - {{ network_state.HomeID }}</h4>' +
+                              "<p class='text-center alert-info'>Heal network by requesting node's rediscover their neighbors to every node. Can take a while on larger networks.</p>" +
+                              '<h4 class="text-center">Please confirm the heal</h4>' +
+                              '<div class="checkbox text-center"> <label><input id="forceroute" type="checkbox" value="">force route option</label></div>',
+                function(result) {
+                    if (result) {
+                        $('#healNetwork').addClass('disabled'); // Disables visually + functionally
+                        sendRequest("ozwave.ctrl.healNetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
+                            $('#healNetwork').removeClass('disabled');
+                           if (result == "error" || data.result == "error") {
+                                new PNotify({
+                                    type: 'error',
+                                    title: 'Fail heal network  {{ network_active }} command',
+                                    text: data.content.error,
+                                    delay: 6000
+                                });
+                            } else {
+                                new PNotify({
+                                    type: 'success',
+                                    title: 'Heal network {{ network_active }} command',
+                                    text: 'Command sended node by node, please wait for each result...',
+                                    delay: 4000
+                                });
+                            };
+                        });
+                    };
+                });
+        });
+        $("#refreshStatNode").click(function(e) {
+            $("#refreshStatNode-ic").addClass('fa-spin');
+            var nodeId = parseInt($('#listnodesOpt').val());
+            if (nodeId != 0) {
+                sendRequest("ozwave.node.getnodestats", {"networkId": "{{ network_active }}", "nodeId": nodeId}, function(data, result) {
+                    $("#refreshStatNode-ic").removeClass('fa-spin');
+                    if (result == "error" || data.result == "error") {
+                        new PNotify({
+                            type: 'error',
+                            title: 'Refresh node statistic fail.',
+                            text: data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        var table = '<div class="table-responsive">' +
+                                        '<table class="table table-striped table-condensed">' +
+                                            '<thead>' +
+                                                '<tr class="info">' +
+                                                    '<th>Statistic description</th>' +
+                                                    '<th>Value</th>' +
+                                              '</tr>' +
+                                            '</thead>' +
+                                            '<tbody>';
+                        for (var i in data.content) {
+                            if (nodeStatInfo[i] != undefined){
+                                if (i == 'lastReceivedMessage') {
+                                    var d = 0;
+                                    while ( d == 0 && data.content[i].length > 0) {
+                                        d = data.content[i].pop();
+                                        if ( d != 0) { data.content[i].push(d); };
+                                    };
+                                    if (d !=0 ) {
+                                        var t = '', n;
+                                        for (nb in data.content[i]) {
+                                            if (((nb % 26) ==0) &&  (t !='')) {t =t + '<br>';};
+                                            n = data.content[i][nb].toString(16);
+                                            if (n.length == 1) {n = "0" + n;} ;
+                                            t = t + n + ' ';
+                                            };
+                                        table += '<tr><td>' + nodeStatInfo[i] + ' (' + i +')</td><td>' +  t + '</td></tr>';
+                                    };
+                                } else {
+                                    table += '<tr><td>' + nodeStatInfo[i] + ' (' + i +')</td><td>' + data.content[i] + '</td></tr>';
+                                };
+                            };
+                        };
+                        for (item in data.content.ccData) {
+                            description = "Individual Stats for: " + data.content.ccData[item]['commandClassId'] + '<br>' +
+                                                  ' &nbsp;&nbsp;&nbsp;&nbsp; --- ' + nodeStatInfo['sentCntCC'] + '<br>' +
+                                                  ' &nbsp;&nbsp;&nbsp;&nbsp; --- ' + nodeStatInfo['receivedCntCC'] ;
+
+                            table += '<tr><td>' + description + '</td><td>' + '<br>' + data.content.ccData[item]['sentCnt'] + '<br>' + data.content.ccData[item]['receivedCnt']+ '</td></tr>';
+                        };
+                        table += '</tbody>' +
+                              '</table>' +
+                          '</div>';
+                        $('#statNodeDetail').html(table);
+                    };
+                });
+            } else {
+                new PNotify({
+                    type: 'error',
+                    title: 'Test node fail.',
+                    text: "Select a node.",
+                    delay: 6000
+                });
+            };
+        });
+
+        $("#testNode").click(function(e) {
+            var nodeId = parseInt($('#listnodesOpt').val());
+            var count = parseInt($('#nbNodeMsg').val());
+            if (nodeId != 0 && count != 0) {
+                $("#testNode-ic").addClass('fa-spin');
+                sendRequest("ozwave.node.testnetworknode", {"networkId": "{{ network_active }}", "nodeId": nodeId, "count": count}, function(data, result) {
+                    if (result == "error" || data.result == "error") {
+                        $("#testNode-ic").removeClass('fa-spin');
+                        new PNotify({
+                            type: 'error',
+                            title: 'Test node fail.',
+                            text: data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        $('#testNodeDetail').html('');
+                        new PNotify({
+                            type: 'success',
+                            title: 'Test node.',
+                            text: '{% trans %}Test message send for node, in progress...{% endtrans %}',
+                            delay: 6000
+                        });
+                    };
+                });
+            } else {
+                new PNotify({
+                    type: 'error',
+                    title: 'Test node fail.',
+                    text: "Select a node and set number of messages.",
+                    delay: 6000
+                });
+            };
+        })
+    });
+</script>
+
+{% endblock %}

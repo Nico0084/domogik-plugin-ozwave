@@ -200,8 +200,8 @@ class ZWaveNode:
                 if dmgDevice :
                     check = self._ozwmanager._xplPlugin.get_parameter(dmgDevice, 'batterycheck')
                     if check is not None : self._batteryCheck = True if check == 'y' else False
-                    else : self.log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {0}".format(self.refName, self._batteryCheck))
-                else : self.log.debug("Node {0}. No domogik device created with batterycheck parameters, using memory value : {0}".format(self.refName, self._batteryCheck))
+                    else : self.log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {1}".format(self.refName, self._batteryCheck))
+                else : self.log.debug("Node {0}. No domogik device created with batterycheck parameters, using memory value : {1}".format(self.refName, self._batteryCheck))
         return self._batteryCheck
 
     def markAsFailed(self):
@@ -507,7 +507,7 @@ class ZWaveNode:
         else:
             self._neighbors = neighbors
         if self.isSleeping and self._neighbors is not None and len(self._neighbors) > 10:
-            self.log.warning('Probable OZW bug: Node [%d] is sleeping and reports %d neighbors; marking neighbors as none.', self.refName, len(self._neighbors))
+            self.log.warning('Probable OZW bug: Node [{0}] is sleeping and reports {1} neighbors; marking neighbors as none.'.format(self.refName, len(self._neighbors)))
             self._neighbors = None
         self.log.debug('Node [%d] neighbors are: %s', self._nodeId, self._neighbors)
 
@@ -793,7 +793,7 @@ class ZWaveNode:
             if retval['error'] =='' :
                 self._manager.testNetworkNode(self.homeId, self.nodeId, count)
                 self.updateLastMsg('testNetworkNode',  {'count': count})
-        else :  retval['error'] = "Zwave node %d is sleeping, can't send test." % self.refName
+        else :  retval['error'] = "Zwave node {0} is sleeping, can't send test.".format(self.refName)
         return  retval
 
     def trigTest(self, count = 1, timeOut = 10000,  allReport = False,  single = True) :
@@ -806,7 +806,7 @@ class ZWaveNode:
             self._thTest.start()
             return {'error': ''}
         else :
-            return {'error': "Node %d, test allReady launch, can't send an other test." % self.refName}
+            return {'error': "Node {0}, test allReady launch, can't send an other test.".format(self.refName)}
 
     def receivesNoOperation(self,  args,  lastTest):
         """Gère les notifications NoOperation du manager."""
@@ -816,25 +816,22 @@ class ZWaveNode:
     def validateTest(self,  cptMsg, countMsg, dTime) :
         '''Un message de test a été recu, il est reporté à l'UI.'''
         # TODO: Crée un journal de report (Possible aussi dan le thread ?)
-        msg = 'Node %d success test %d/%d in %d ms.' % (self.refName,  cptMsg, countMsg, dTime)
-        self.reportToUI({'type': 'node-state-changed', 'usermsg' : msg,
-                               'data': {'typestate': 'receviedtestmsg',  'state': 'processing'}})
+        msg = u'Node {0} success test {1}/{2} in {3} ms.'.format(self.refName,  cptMsg, countMsg, dTime)
+        self.reportToUI({'type': 'node-test-msg', 'usermsg' : msg, 'state': 'processing'})
 
     def endTest(self, state, cptMsg, countMsg, tTime,  dTime):
         if state == 'finish':
-            msg = 'Node %d success last test %d in %d ms, all tests in %d ms.' % (self.refName, cptMsg, tTime, dTime)
+            msg = u'Node {0} success last test {1} in {2} ms, all tests in {3} ms.'.format(self.refName, cptMsg, tTime, dTime)
         elif state == 'timeout' :
-            msg = 'Test Node %d as recevied time out (%d ms), %d/%d received.' % (self.refName, dTime,  cptMsg, countMsg)
+            msg = u'Test Node {0} as recevied time out ({1} ms), {2}/{3} received.'.format(self.refName, dTime,  cptMsg, countMsg)
         self._thTest = None
-        self.reportToUI({'type': 'node-state-changed', 'usermsg' : msg,
-                               'data': {'typestate': 'receviedtestmsg',  'state': state}})
+        self.reportToUI({'type': 'node-test-msg', 'usermsg' : msg, 'state': state})
 
     def stopTest(self):
         '''Arrête un test si en cours'''
         if self._thTest :
             self._thTest.stopTest()
-            self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Test Node %d is stopped.' % self.refName,
-                               'data': {'typestate': 'receviedtestmsg',  'state': 'Stopped'}})
+            self.reportToUI({'type': 'node-test-msg', 'usermsg' : 'Test Node {0} is stopped.'.format(self.refName),'state': 'stopped'})
 
     def setName(self, name):
         """Change le nom du node"""
@@ -1115,10 +1112,9 @@ class TestNetworkNode(threading.Thread):
 
     def run(self):
         """Demarre le test en mode forever, methode appelee depuis le start du thread, Sortie sur fin de test ou timeout"""
-        print "**************** Starting Test Node %d**************" % self._node.refName
         self._startTime = time.time()
         self._lastTime = self._startTime
-        if self._log: self._log.info('Starting Test Node %d' % self._node.refName)
+        if self._log: self._log.info('Starting Test Node {0}'.format(self._node.refName))
         self._running = True
         state = 'Stopped'
         while not self._stop.isSet() and self._running:
@@ -1128,8 +1124,7 @@ class TestNetworkNode(threading.Thread):
                 state = 'timeout'
                 self._running = False
         if state == 'timeout' : self._node.endTest(state, self._cptMsg, self._countMsg, tRef,  self._timeOut)
-        if self._log: self._log.info('Stop Test Node %d, status : %s' % (self._node.refName,  state))
-        print "**************** Stopped Test Node %d satus : %s**************" % (self._node.refName,  state)
+        if self._log: self._log.info('Stop Test Node {0}, status : {1}'.format(self._node.refName,  state))
 
     def decMsg(self, lastTest = 0):
         '''Décrémente le compteur de test'''
