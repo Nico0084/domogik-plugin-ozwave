@@ -601,13 +601,12 @@ class ZWaveNode:
            envoi un trig xpl si le last message est un setvalue mais n'efface pas le last message."""
         if self._lastMsg :
             if self.nodeId == sleepMsg['nodeId'] :
-                lastMsg = self._lastMsg.copy()
                 if self._lastMsg['type'] == 'setValue' :
                     valueNode = self.getValue(self._lastMsg['zwMsg']['id'])
                     if valueNode :
                         msgtrig = valueNode.valueToxPLTrig()
                         if msgtrig :
-                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
+                            self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId, self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
                             self._ozwmanager._cb_sendxPL_trig(msgtrig)
                     return True
                 else: return False
@@ -800,7 +799,6 @@ class ZWaveNode:
         """Prépare le node à une serie de messages de test.
             retourne un message d'erreur si test en cours."""
         if not self._thTest :
-            retval = ''
             tparams = {'countMsg': count,  'timeOut': timeOut, 'allReport' : allReport, 'single' : single}
             self._thTest = TestNetworkNode(self, tparams,  self._ozwmanager._stop,  self.log)
             self._thTest.start()
@@ -816,22 +814,20 @@ class ZWaveNode:
     def validateTest(self,  cptMsg, countMsg, dTime) :
         '''Un message de test a été recu, il est reporté à l'UI.'''
         # TODO: Crée un journal de report (Possible aussi dan le thread ?)
-        msg = u'Node {0} success test {1}/{2} in {3} ms.'.format(self.refName,  cptMsg, countMsg, dTime)
-        self.reportToUI({'type': 'node-test-msg', 'usermsg' : msg, 'state': 'processing'})
+        self.reportToUI({'type': 'node-test-msg', 'state': 'processing',
+                         'data': {'cptMsg': cptMsg, 'countMsg': countMsg, 'dTime': dTime}})
 
     def endTest(self, state, cptMsg, countMsg, tTime,  dTime):
-        if state == 'finish':
-            msg = u'Node {0} success last test {1} in {2} ms, all tests in {3} ms.'.format(self.refName, cptMsg, tTime, dTime)
-        elif state == 'timeout' :
-            msg = u'Test Node {0} as recevied time out ({1} ms), {2}/{3} received.'.format(self.refName, dTime,  cptMsg, countMsg)
         self._thTest = None
-        self.reportToUI({'type': 'node-test-msg', 'usermsg' : msg, 'state': state})
+        self.reportToUI({'type': 'node-test-msg', 'state': state,
+                         'data': {'cptMsg': cptMsg, 'countMsg': countMsg, 'dTime': dTime, 'tTime': tTime}})
 
     def stopTest(self):
         '''Arrête un test si en cours'''
         if self._thTest :
             self._thTest.stopTest()
-            self.reportToUI({'type': 'node-test-msg', 'usermsg' : 'Test Node {0} is stopped.'.format(self.refName),'state': 'stopped'})
+            self.reportToUI({'type': 'node-test-msg', 'state': 'stopped',
+                             'data': {'cptMsg': cptMsg, 'countMsg': countMsg, 'dTime': dTime}})
 
     def setName(self, name):
         """Change le nom du node"""
@@ -1117,6 +1113,8 @@ class TestNetworkNode(threading.Thread):
         if self._log: self._log.info('Starting Test Node {0}'.format(self._node.refName))
         self._running = True
         state = 'Stopped'
+        self._node.reportToUI({'type': 'node-test-msg', 'state': 'starting',
+                         'data': {'countMsg': self._countMsg}})
         while not self._stop.isSet() and self._running:
             self._stop.wait(0.1)
             tRef =int((time.time() - self._lastTime) * 1000)
@@ -1124,7 +1122,7 @@ class TestNetworkNode(threading.Thread):
                 state = 'timeout'
                 self._running = False
         if state == 'timeout' : self._node.endTest(state, self._cptMsg, self._countMsg, tRef,  self._timeOut)
-        if self._log: self._log.info('Stop Test Node {0}, status : {1}'.format(self._node.refName,  state))
+        if self._log: self._log.info('Stop Test Node {0}, status : {1}'.format(self._node.refName, state))
 
     def decMsg(self, lastTest = 0):
         '''Décrémente le compteur de test'''
@@ -1133,7 +1131,7 @@ class TestNetworkNode(threading.Thread):
             self._lastTime = lastTest
         if self._cptMsg == self._countMsg :
             self._running = False
-            self._node.endTest('finish', self._cptMsg, self._countMsg, int((time.time() - self._lastTime) * 1000),  int((time.time() - self._startTime) * 1000))
+            self._node.endTest('finish', self._cptMsg, self._countMsg, int((time.time() - self._startTime) * 1000), int((time.time() - self._lastTime) * 1000))
         elif self._allReport : self._node.validateTest(self._cptMsg, self._countMsg, int((time.time() - self._lastTime) * 1000))
         self._lastTime = time.time()
         self._node._ozwmanager.lastTest = self._lastTime

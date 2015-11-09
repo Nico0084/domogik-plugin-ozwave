@@ -57,8 +57,8 @@
         });
         ws.onmessage = function(e) {
             ws_onmessage_ctrltools(e);
-            data = JSON.parse(e.data);
-            msgId = data.msgid.split(".");
+            var data = JSON.parse(e.data);
+            var msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
                 console.log("Zwave controller receive :)", data.msgid);
                 console.log(data.content);
@@ -66,31 +66,42 @@
                     if (data.content.type == 'node-test-msg') {
                         var testId = 'testNode'
                         var cellId = 'testNodeDetail'
+                        var msg = renderTextTestMsg(data.content.state, data.content.data);
                         if ($("#testNetwork-ic").hasClass('fa-spin')) {
                             testId = 'testNetwork';
-                            for (var nodeId in nodeInTest) {
-                                if (data.content.usermsg.search(nodeInTest[nodeId]) != -1) {
-                                    break;
-                                };
-                            };
-                            var text = $('[id="'+nodeInTest[nodeId]+'"]').html();
-                            if (text != '') { text += '<br>'; };
-                            $('[id="'+nodeInTest[nodeId]+'"]').html(text + data.content.usermsg);
-                            if (data.content.state == 'processing') {
-                                    $("#"+testId+"-ic").addClass('fa-spin');
-                            } else { // 'finish', 'stopped', 'timeout'
-                                nodeInTest.splice(nodeId, 1);
-                                if (nodeInTest.length == 0) {
-                                    $("#"+testId+"-ic").removeClass('fa-spin');
+                            var nodeIndex = nodeInTest.indexOf(data.content.NetworkID+"."+data.content.NodeID);
+                            if ( nodeIndex == -1) {
+                                new PNotify({
+                                    type: 'warning',
+                                    title: 'Test node received',
+                                    text: 'Node '+ data.content.NetworkID+"."+data.content.NodeID+ ' recceived test result, but is not registered for test.',
+                                    delay: 6000
+                                });
+                            } else {
+                                var text = $('[id="'+nodeInTest[nodeIndex]+'"]').html();
+                                if (text != '') { text += '<br>'; };
+                                $('[id="'+nodeInTest[nodeIndex]+'"]').html(text + msg);
+                                if (data.content.state == 'processing' || data.content.state == 'starting') {
+                                        $("#"+testId+"-ic").addClass('fa-spin');
+                                } else { // 'finish', 'stopped', 'timeout'
+                                    if (data.content.state == 'timeout') {
+                                        $('[id="'+nodeInTest[nodeIndex]+'-ic"]').removeClass('fa-spinner fa-spin').addClass('fa-exclamation-triangle icon-warning');
+                                    } else {
+                                        $('[id="'+nodeInTest[nodeIndex]+'-ic"]').removeClass('fa-spinner fa-spin').addClass('fa-star icon-success');
+                                    };
+                                    nodeInTest.splice(nodeIndex, 1);
+                                    if (nodeInTest.length == 0) {
+                                        $("#"+testId+"-ic").removeClass('fa-spin');
+                                    };
                                 };
                             };
                         } else {
-                            if (data.content.state == 'processing') {
+                            if (data.content.state == 'processing' || data.content.state == 'starting') {
                                     $("#"+testId+"-ic").addClass('fa-spin');
                             } else { // 'finish', 'stopped', 'timeout'
                                     $("#"+testId+"-ic").removeClass('fa-spin');
                                 };
-                            var text = $("#"+testId+"Detail").html() + '<tr><td>' + data.content.usermsg + '</td></tr>';
+                            var text = $("#"+testId+"Detail").html() + '<tr><td>' + msg + '</td></tr>';
                             $("#"+testId+"Detail").html(text);
                         };
                     };
@@ -159,7 +170,8 @@
                                             '</thead>' +
                                             '<tbody>';
                         for (var i in nodeInTest) {
-                            table += '<tr><td>' + nodeInTest[i] + '</td><td id='+nodeInTest[i]+'></td></tr>';
+                            var refId = nodeInTest[i].split(".");
+                            table += '<tr><td><i id="'+nodeInTest[i]+'-ic" class="fa fa-spinner fa-spin"></i><span> ' + refId[1] + '</span></td><td id="'+nodeInTest[i]+'"></td></tr>';
                         };
                         table += '</tbody>' +
                               '</table>' +
@@ -184,7 +196,7 @@
                 function(result) {
                     if (result) {
                         $('#healNetwork').addClass('disabled'); // Disables visually + functionally
-                        sendRequest("ozwave.ctrl.healNetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
+                        sendRequest("ozwave.ctrl.healnetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
                             $('#healNetwork').removeClass('disabled');
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
@@ -197,7 +209,7 @@
                                 new PNotify({
                                     type: 'success',
                                     title: 'Heal network {{ network_active }} command',
-                                    text: 'Command sended node by node, please wait for each result...',
+                                    text: 'Command sended node by node. \n See nodes list to check result\n Commands could take time.',
                                     delay: 4000
                                 });
                             };
@@ -307,6 +319,27 @@
                 });
             };
         })
+    function renderTextTestMsg(state, data) {
+        var text ='';
+        switch (state) {
+            case 'starting':
+                text = 'Start test for ' + data.countMsg + ' messages.';
+                break;
+            case 'finish':
+                text = 'Success last test ' + data.cptMsg + ' in ' + data.dTime + ' ms, all tests in '+ data.tTime + ' ms.';
+                break;
+            case 'processing':
+                text = 'Success test ' + data.cptMsg + '/' + data.countMsg + ' in ' + data.dTime + ' ms.';
+                break;
+            case 'timeout':
+                text = 'Recevied time out ('  + data.dTime + ' ms), '+ data.cptMsg + '/' + data.countMsg +  ' messages received.';
+                break;
+            case 'stopped':
+                text = 'Test stopped after '  + data.tTime + ' ms';
+                break;
+            };
+        return text;
+        };
     });
 </script>
 
