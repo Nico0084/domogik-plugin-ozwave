@@ -5,14 +5,14 @@ A domogik (www.domogik.org) plugin to handle zwave controler
 
 Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control. This plugin allows to control zwave devices.
 
-It uses open source `library openZwave c++ project <http://code.google.com/p/open-zwave/>`_ and python-openzwave as interfacing cython,
+It uses open source `library openZwave c++ project <https://github.com/OpenZWave/open-zwave>`_ and `python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ as interfacing cython,
 The Zwave network manager is directly integrated into the plugin
 
 Simple action/sensor of devices have access via domogik devices (widgets).
-Viewing and setting Zwave devices is accessed via a special plugin page from the admin panel.
+Viewing and setting Zwave devices is accessed in advanced plugin page from the admin panel.
 
-Actualy only supported by domogik 0.4 branch.
+Supported by domogik >=0.4.1
 Development is in progress, features will get gradually
 
-WORKING ON MIGRATION NOT USUABLE
+Beta version, work only for test
 ================================
