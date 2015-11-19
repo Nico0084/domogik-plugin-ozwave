@@ -448,20 +448,6 @@
                     "round_value": 0
             }
         },
-        "thermostat_operating_state" : {
-            "name" : "Thermostat operating state",
-            "incremental": false,
-            "data_type" : "DT_String",
-            "conversion" : "",
-            "timeout": 0,
-            "history": {
-                    "store": true,
-                    "duplicate": false,
-                    "max": 0,
-                    "expire": 0,
-                    "round_value": 0
-            }
-        },
         "tamper_event" : {
             "name" : "Tamper event",
             "incremental": false,
@@ -561,7 +547,7 @@
             }
         },
        "thermostat_setpoint" : {
-            "name" : "Thermostat operating state",
+            "name" : "Thermostat setpoint",
             "incremental": false,
             "data_type" : "DT_Temp",
             "conversion" : "",

@@ -6,10 +6,132 @@
 
 {% include "plugin_ozwave_menu.html" %}
 <div class="container">
-<h2>{% trans %}ZWave Controller(s){% endtrans %}</H2>
-<p>{% trans %}managerState{% endtrans %}: {{ managerState }}</p>
-<p>{% trans %}State {% endtrans %} : {{ managerState['Init state'] }}</p>
-<pre>{{ managerState.Controllers }}</pre>
+<h2>{% trans %}Welcome on ZWave advanced{% endtrans %}</H2>
+{% if openzwaveInfo.status in ['dead','stopped'] %}
+    {% if client_detail.status in ['starting','alive'] %}
+        <h2 id='ozw-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM, Plugin should have error.<br>
+            Check xplplugin_ozwave.log in domogik log directory {% endtrans %}<br>
+            {% trans %}Error{% endtrans %} : {{ openzwaveInfo.error }}
+        </h2>
+    {% else %}
+        <h2 id='ozw-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}OUPS, Plugin not started.{% endtrans %}</h2>
+    {% endif %}
+    <h2 id='manager-info'></h2>
+    <h2 id='ctrl-info'></h2>
+{% elif openzwaveInfo.status == 'starting' %}
+    <h2 id='ozw-info'><i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}</h2>
+    <h2 id='manager-info'></h2>
+    <h2 id='ctrl-info'></h2>
+{% elif openzwaveInfo.status == 'alive' %}
+    <h2 id='ozw-info'><i class='fa fa-smile-o icon-success'></i> {% trans %}Openzwave Library ready{% endtrans %}</h2>
+    {% if managerState.status == 'dead' %}
+        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}HUMMM Plugin manager seem have unknown error, check xplplugin_ozwave.log in domogik log directory.{% endtrans %}</h2>
+        <h2 id='ctrl-info'></h2>
+    {% elif openzwaveInfo.status == 'starting' %}
+        <h2 id='manager-info'><i class='fa fa-smile-o icon-info'></i> {% trans %}Plugin manager starting, Zwave controller should discover soon.{% endtrans %}</h2>
+        <h2 id='ctrl-info'></h2>
+    {% elif openzwaveInfo.status == 'alive' %}
+        <h2 id='manager-info'><i class='fa fa-smile-o icon-success'></i> {% trans %}Plugin manager OK{% endtrans %}. {{ managerState.init }}</h2>
+        {% if managerState.Controllers|length > 0 %}
+            <h2 id='ctrl-info'><i class='fa fa-smile-o icon-success'></i> {% trans %}Controller dicovered, choice menu on left{% endtrans %}.</h2>
+        {% else %}
+            <h2 id='ctrl-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}There is no controller detected on domogik devices{% endtrans %}.</h2>
+        {% endif %}
+    {% else %}
+        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM Plugin manager is in unknown state {% endtrans %}({{ managerState.status }}), {% trans %}check xplplugin_ozwave.log in domogik log directory{% endtrans %}.<br>{% trans %}Error{% endtrans %} : {{ managerState.error }}</h2>
+        <h2 id='ctrl-info'></h2>
+    {% endif %}
+{% else %}
+    <h2 id='ozw-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Unknown OpenZwave library status : {% endtrans %}{{ openzwaveInfo.status }}.<br>{% trans %}Error{% endtrans %} : {{ openzwaveInfo.error }}</h2>
+    <h2 id='manager-info'></h2>
+    <h2 id='ctrl-info'></h2>
+{% endif %}
 </div>
+
+<script type="text/javascript">
+    $( document ).ready(function() {
+        var ws_onmessage_ozwave = ws.onmessage;
+        ws.onmessage = function(e) {
+            ws_onmessage_ozwave(e);
+            var data = JSON.parse(e.data);
+            if (data.msgid == "plugin.status") {
+                if ( data.content['host'] == 'vmdomogik0' && 'plugin-ozwave' == data.content['type'] + '-'+ data.content['name'] ) {
+                    if (data.content['event'] == "dead" || data.content['event'] == "stopped" || data.content['event'] == "fail") {
+                        $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}Plugin not running.{% endtrans %}");
+                        $("#manager-info").html("");
+                        $("#ctrl-info").html("");
+                    } else if (data.content['event'] == "starting") {
+                        $("#ozw-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}");
+                        $("#manager-info").html("");
+                        $("#ctrl-info").html("");
+                    };
+                };
+            };
+            var msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave") {
+                if (msgId[1] == "lib") {
+                    if (msgId[2] == "state") {
+                        switch (data.content.status) {
+                            case 'dead' :
+                                $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Plugin fail ! check domogik logs{% endtrans %}." +
+                                    "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
+                                $("#manager-info").html("");
+                                $("#ctrl-info").html("");
+                                break;
+                            case 'stopped' :
+                                $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-info'></i> {% trans %}Plugin stopped{% endtrans %}.");
+                                $("#manager-info").html("");
+                                $("#ctrl-info").html("");
+                                break;
+                            case 'starting' :
+                                $("#ozw-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}");
+                                $("#manager-info").html("");
+                                $("#ctrl-info").html("");
+                                break;
+                            case 'alive' :
+                                $("#ozw-info").html("<i class='fa fa-smile-o icon-success'></i> {% trans %}Openzwave Library ready{% endtrans %}.");
+                                break;
+                            default :
+                                $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}OUPS, Unknown OpenZwave library status : {% endtrans %}" + data.content.status +
+                                    "<br>{% trans %}Error{% endtrans %} : " + data.content.error);
+                                $("#manager-info").html("");
+                                $("#ctrl-info").html("");
+                        };
+                    };
+                };
+                if (msgId[1] == "manager") {
+                    if (msgId[2] == "state") {
+                        switch (data.content.status) {
+                            case 'dead' :
+                                $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
+                                    "{% trans %}OUPS Plugin manager fail, check xplplugin_ozwave.log in domogik log directory.{% endtrans %}<br>" + data.content.error);
+                                $("#ctrl-info").html("");
+                                break;
+                            case 'starting' :
+                                $("#manager-info").html("<i class='fa fa-smile-o icon-info'></i> " +
+                                    "{% trans %}Plugin manager starting, Zwave controller should discover soon{% endtrans %}.");
+                                $("#ctrl-info").html("");
+                            case 'alive' :
+                                $("#manager-info").html("<i class='fa fa-smile-o icon-success'></i> " +
+                                    "{% trans %}Plugin manager OK{% endtrans %}. " + data.content.init);
+                                if (data.content.Controllers.length > 0) {
+                                    $("#ctrl-info").html("<i class='fa fa-smile-o icon-success'></i> {% trans %}Controller dicovered, choice menu on left{% endtrans %}.");
+                                } else {
+                                $("#ctrl-info").html("<i class='fa fa-exclamation-circle icon-warning'></i> " +
+                                    "{% trans %}There is no controller detected on domogik devices{% endtrans %}.");
+                                };
+                                break;
+                             default :
+                                $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
+                                    "{% trans %}HUMMM Plugin manager is in unknown state {% endtrans %} (" + data.content.status + ")" +
+                                    "{% trans %}check xplplugin_ozwave.log in domogik log directory{% endtrans %}." +
+                                    "<br>{% trans %}Error{% endtrans %} : " + data.content.error );
+                       };
+                    };
+                };
+            };
+        };
+    });
+</script>
 
 {% endblock %}

@@ -245,6 +245,8 @@
                             $("#ozw-status").removeClass().addClass("label status-stopped");
                             $("#manager-status").removeClass().addClass("label status-stopped");
                             $("#manager-init").text("Stopped");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped")
+                            if (data.content['event'] == "starting"){$("[id^='ctrl-tab_']").text('To discover');};
                         };
                     };
                 };

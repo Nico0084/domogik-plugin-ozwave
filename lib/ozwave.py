@@ -69,7 +69,7 @@ class OZWavemanager():
     ZWave class manager
     """
 
-    def __init__(self, xplPlugin,  cb_send_xPL, cb_sendxPL_trig, stop , log,  configPath, userPath, ozwlog = False):
+    def __init__(self, xplPlugin,  cb_send_xPL, cb_sendxPL_trig, stop, log, configPath, userPath, ozwlog = False):
         """ Ouverture du manager py-openzwave
             @ param config : configuration du plugin pour accès aux valeurs paramètrées"
             @ param cb_send_xpl : callback pour envoi msg xpl
@@ -115,8 +115,8 @@ class OZWavemanager():
         print self._configPath, " : ", os.path.exists(self._configPath)
         if not os.path.exists(self._configPath) :
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
-            raise OZwaveManagerException (u"Directory openzwave config not exist : %s"  % self._configPath)
             self._xplPlugin.force_leave()
+            raise OZwaveManagerException (u"Directory openzwave config not exist : %s"  % self._configPath)
         elif not os.access(self._configPath,  os.R_OK) :
             self._log.error(u"User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
             raise OZwaveManagerException ("User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
@@ -200,7 +200,7 @@ class OZWavemanager():
     def _getIfOperationsReady(self):
         """"Retourne True si toutes les conditions sont réunies pour faire des actions dans openzwave.
             Règle : au moins un controleur est ready avec sont node enregistré mais le _initFully pas obligatoirement"""
-        ready =False
+        ready = False
         for ctrl in self._devicesCtrl:
             if ctrl.ready and ctrl.node is not None :
                 ready = True
@@ -1057,7 +1057,7 @@ class OZWavemanager():
         retval['init'] = ""
         # TODO: Gére plusieurs networdID dans les fonction qui appellent.
         retval["Controllers"] = []
-        if self._devicesCtrl is not None :
+        if self._devicesCtrl :
             for ctrl in self._devicesCtrl:
                 ctrlInfos = dict()
                 ctrlInfos["NetworkID"] = ctrl.networkID
@@ -1074,6 +1074,7 @@ class OZWavemanager():
                     ctrlInfos["init"] = NodeStatusNW[3] #In progress - Devices initializing
                     ctrlInfos["state"] = "starting"
                 retval["Controllers"].append(ctrlInfos)
+            if not self.isReady : retval['init'] = "Zwave Controller(s) find and initializing..."
         else :
             retval['init'] = "No controllers registered, you must create domogik zwave controller."
         retval["error"] = ""
@@ -1385,11 +1386,14 @@ class OZWavemanager():
         print "WS - Requete MQ : ", request, data
         try :
             reqRef = request.split('.')
-            if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId
-            if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
-            else : data['homeId'] = self.getCtrlOfNetwork(data['networkId']).homeId
-            if 'nodeId' in data : data['nodeId'] =  int(data['nodeId'])
-            ctrl = self.getCtrlOfNetwork(data['networkId'])
+            if reqRef[0] not in ['openzwave','manager'] :
+                if not 'homeId' in data : data['homeId'] = self._devicesCtrl[0].homeId
+                if not 'networkId' in data : data['networkId'] = self.getNetworkID(data['homeId'])
+                else : data['homeId'] = self.getCtrlOfNetwork(data['networkId']).homeId
+                if 'nodeId' in data : data['nodeId'] =  int(data['nodeId'])
+                ctrl = self.getCtrlOfNetwork(data['networkId'])
+            else :
+                ctrl = None
         except Exception as e:
             self._log.warning(e.message)
             return {'error':'Bad request ({0}) parameters : {1}'.format(request, data)}
@@ -1399,7 +1403,7 @@ class OZWavemanager():
             report = self._handleNodeRequest(request, data)
         elif reqRef[0] == 'value':
             report = self._handleValueRequest(request, data)
-        # Plugin and openzwave request
+        # Plugin and openzwave request don't need controller.
         elif request == 'manager.get' :
             report = self.getManagerInfo()
         elif request == 'openzwave.get' :

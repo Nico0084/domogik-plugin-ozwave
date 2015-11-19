@@ -274,7 +274,6 @@ class ZWaveValueNode:
         """ retourne le label OZW formaté pour les listener domogik, en lowcase et espaces remplacés pas '-',
             pour compatibilité adresse web et appel rest (spec Xpl)."""
         retval = self.valueData['label'].lower().replace(" ", "-")
-        if retval.find('heating') != -1: retval = 'heating'
         return retval
 
     def getDomogikDevice(self):
@@ -415,7 +414,7 @@ class ZWaveValueNode:
                 elif self.valueData['type']  == 'Button' :                                                        # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
                     msgtrig['data']  = {'type': self.labelDomogik, 'current':  self.valueData['value']}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_THERMOSTAT_SETPOINT' :
-                msgtrig['data']  = {'type': self.labelDomogik, 'current': self.valueData['value']}
+                msgtrig['data']  = {'type': 'setpoint', 'current': self.valueData['value']}
                 if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units']  # TODO: A vérifier pas sur que l'unit soit util
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_BINARY' :
                 if self.valueData['type'] == 'Bool' :
