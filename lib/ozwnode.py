@@ -1077,8 +1077,8 @@ class ZWaveNode:
                         retval = self.values[value].setValue(params['setpoint'])
                         sended = True
                         break
-                    if not sended :
-                       self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
+                if not sended :
+                   self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
             else :
                 self.log.info("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
                 retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
