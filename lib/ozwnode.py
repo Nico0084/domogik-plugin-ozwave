@@ -1063,11 +1063,9 @@ class ZWaveNode:
                     self.log.warning(u"Unkwon command select type {0}".format(params))
             elif command == 'temperature' :
                 cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
-                print "Enter in setpoint ", cmdsClass, instance
+                sended = False
                 for value in self.values.keys() :
-                    print ""
                     val = self.values[value].valueData
-                    print "search in value :", val['commandClass'], val['instance'], self.values[value].labelDomogik
 #                  Handle Thermostat setpoint type 'setpoint' to :
 #                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
 #                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating'
@@ -1077,7 +1075,10 @@ class ZWaveNode:
                                                             'furnace', 'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating']:
                         print ("valeur Identifiée comme type setpoint : {0}".format(val))
                         retval = self.values[value].setValue(params['setpoint'])
+                        sended = True
                         break
+                    if not sended :
+                       self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
             else :
                 self.log.info("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
                 retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
