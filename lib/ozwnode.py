@@ -1063,9 +1063,10 @@ class ZWaveNode:
                     self.log.warning(u"Unkwon command select type {0}".format(params))
             elif command == 'temperature' :
                 cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
-                sended = False
+                self.log.debug("Enter in setpoint {0} instance {1}".format(cmdsClass, instance))
                 for value in self.values.keys() :
                     val = self.values[value].valueData
+                    self.log.debug("search in value : {0} instance {1} label {2}".format(val['commandClass'], val['instance'], self.values[value].labelDomogik))
 #                  Handle Thermostat setpoint type 'setpoint' to :
 #                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
 #                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating'
@@ -1073,9 +1074,8 @@ class ZWaveNode:
                     if (val['commandClass'] in cmdsClass) and val['instance'] == instance and \
                         self.values[value].labelDomogik in ['unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6',
                                                             'furnace', 'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating']:
-                        print ("valeur Identifiée comme type setpoint : {0}".format(val))
+                        self.log.debug("valeur Identifiée comme type setpoint : {0}".format(val))
                         retval = self.values[value].setValue(params['setpoint'])
-                        sended = True
                         break
                 if not sended :
                    self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
