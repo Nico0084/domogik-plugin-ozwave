@@ -1063,8 +1063,11 @@ class ZWaveNode:
                     self.log.warning(u"Unkwon command select type {0}".format(params))
             elif command == 'temperature' :
                 cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
+                print "Enter in setpoint ", cmdsClass, instance
                 for value in self.values.keys() :
+                    print ""
                     val = self.values[value].valueData
+                    print "search in value :", val['commandClass'], val['instance'], self.values[value].labelDomogik
 #                  Handle Thermostat setpoint type 'setpoint' to :
 #                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
 #                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating'
