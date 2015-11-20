@@ -1065,7 +1065,13 @@ class ZWaveNode:
                 cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
                 for value in self.values.keys() :
                     val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass)  and val['instance'] == instance and self.values[value].labelDomogik == 'setpoint':
+#                  Handle Thermostat setpoint type 'setpoint' to :
+#                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
+#                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating'
+#                  TODO: must be check if multi setpoint use same instance, i case type of xpl command must be modified or a key added
+                    if (val['commandClass'] in cmdsClass) and val['instance'] == instance and \
+                        self.values[value].labelDomogik in ['unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6',
+                                                            'furnace', 'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating']:
                         print ("valeur Identifiée comme type setpoint : {0}".format(val))
                         retval = self.values[value].setValue(params['setpoint'])
                         break
