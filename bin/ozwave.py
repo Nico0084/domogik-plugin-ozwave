@@ -47,6 +47,7 @@ try:
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
 #    from domogik_packages.plugin_ozwave.lib.ozwdefs import OZwaveException
     import sys
+    import traceback
 
 except ImportError as exc :
     import logging
@@ -121,7 +122,10 @@ class OZwave(XplPlugin):
         }
         """
         self.log.debug("xPL command received from hub : {0}".format(message))
-        if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
+        try :
+            if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
+        except :
+            self.log.error(u"{0}".format(traceback.format_exc()))
         if 'command' in message.data:
             device = self.myzwave.getZWRefFromxPL(message.data)
             if device :
@@ -132,7 +136,8 @@ class OZwave(XplPlugin):
                 self.myzwave.sendNetworkZW(device, message.data['command'], params)
             else :
                 self.log.warning(u"Zwave command not sended : {0}".format(message))
-        self.log.warning("Unknown command format : {0}".format(message))
+        else :
+            self.log.warning("Unknown command format : {0}".format(message))
 
     def getdict2UIdata(self, UIdata):
         """ retourne un format dict en provenance de l'UI (passage outre le format xPL)"""
