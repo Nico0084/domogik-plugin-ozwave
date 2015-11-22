@@ -987,7 +987,6 @@ class ZWaveNode:
                 self.log.warning(u"xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
                 retval['error'] = ("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
         else : # instance secondaire, ou command class non basic utilisation de set value
-            self.log.debug(u"instance secondaire ou pas de COMMAND_CLASS_BASIC")
             if command == 'switch' :
                 key = ''
                 if 'switch' in params : key = 'switch'
@@ -997,13 +996,12 @@ class ZWaveNode:
                     for id, value in self.values.iteritems() :
                         val = value.valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and (value.labelDomogik == key):
-                            self.log.debug(u"params type {0}, {1}".format(type(params[key]), params))
                             if params[key] in ['On', '1', '255', 'on', 'ON'] : newVal = 255
                             elif  params[key] in ['Off', '0', 'off', 'OFF'] : newVal = 0
                             else :
                                 self.log.warning(u"Node {0}.{1} switch command error in params {2}".format(self.homeID, self.nodeId, params))
                                 break
-                            self.log.debug(u"valeur Identifiée comme type switch : {0}".format(val))
+                            self.log.debug(u"Value find as type switch : {0}".format(val))
                             retval = value.setValue(newVal)
                             break
                 elif 'toggle-switch' in params :
@@ -1013,7 +1011,7 @@ class ZWaveNode:
                             if value.instance == instance and value.labelDomogik == 'toggle-switch':
                                 if value.getValue('value') in ['On', '1','255', 'on', 'ON']: newVal = 0
                                 elif value.getValue('value')in ['Off', '0', 'off', 'OFF']: newVal = 255
-                                self.log.debug(u"valeur Identifiée comme type toggle-switch : {0}".format(newVal))
+                                self.log.debug(u"Value find as type toggle-switch : {0}".format(newVal))
                                 retval = value.setValue(newVal)
                                 break
                     else :
@@ -1025,7 +1023,7 @@ class ZWaveNode:
                 for value in self.values.keys() :
                     val = self.values[value].valueData
                     if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == 'level':
-                        self.log.debug(u"valeur Identifiée comme type level : {0}".format(val))
+                        self.log.debug(u"Value find as type level : {0}".format(val))
                         retval = self.values[value].setValue(int(params['level']))
                         break
             elif command == 'pressed':
@@ -1039,7 +1037,7 @@ class ZWaveNode:
                     for value in self.values.keys() :
                         val = self.values[value].valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            self.log.debug(u"valeur Identifiée comme type button {0}: {1}".format(key, val))
+                            self.log.debug(u"Value find as type button {0}: {1}".format(key, val))
                             retval = self.values[value].setValue(True)
                             break
                 else :
@@ -1056,7 +1054,7 @@ class ZWaveNode:
                     for value in self.values.keys() :
                         val = self.values[value].valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            self.log.debug(u"valeur Identifiée comme type select {0}: {1}".format(key, val))
+                            self.log.debug(u"Value find as type select {0}: {1}".format(key, val))
                             retval = self.values[value].setValue(params[key]) #TODO: Must be checked with openzwave thermostat, not sure to do setValue()
                             break
                 else :

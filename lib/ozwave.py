@@ -1154,7 +1154,6 @@ class OZWavemanager():
             @param : command = the command value define in json
             @param : params = extra key with value, mostly the value of DT_Type
         """
-        print ("envoi zwave command %s" % command)
         if device != None :
             node = self._getNode(device['homeId'], device['nodeId'])
             if node : node.sendCmdBasic(device['instance'], command, params)
