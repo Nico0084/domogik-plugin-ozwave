@@ -984,10 +984,10 @@ class ZWaveNode:
                     else :
                         self.log.warning(u"Node {0}.{1} has no COMMAND_CLASS_SWITCH_TOGGLE_BINARY, can't toggle switch".format(self.homeID, self.nodeId))
             else :
-                self.log.info("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
+                self.log.warning(u"xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
                 retval['error'] = ("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
         else : # instance secondaire, ou command class non basic utilisation de set value
-            print ("instance secondaire ou pas de COMMAND_CLASS_BASIC")
+            self.log.debug(u"instance secondaire ou pas de COMMAND_CLASS_BASIC")
             if command == 'switch' :
                 key = ''
                 if 'switch' in params : key = 'switch'
@@ -997,13 +997,13 @@ class ZWaveNode:
                     for id, value in self.values.iteritems() :
                         val = value.valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and (value.labelDomogik == key):
-                            print "params :", type(params[key]), params
+                            self.log.debug(u"params type {0}, {1}".format(type(params[key]), params))
                             if params[key] in ['On', '1', '255', 'on', 'ON'] : newVal = 255
                             elif  params[key] in ['Off', '0', 'off', 'OFF'] : newVal = 0
                             else :
                                 self.log.warning(u"Node {0}.{1} switch command error in params {2}".format(self.homeID, self.nodeId, params))
                                 break
-                            print ("valeur Identifiée comme type switch : {0}".format(val))
+                            self.log.debug(u"valeur Identifiée comme type switch : {0}".format(val))
                             retval = value.setValue(newVal)
                             break
                 elif 'toggle-switch' in params :
@@ -1013,7 +1013,7 @@ class ZWaveNode:
                             if value.instance == instance and value.labelDomogik == 'toggle-switch':
                                 if value.getValue('value') in ['On', '1','255', 'on', 'ON']: newVal = 0
                                 elif value.getValue('value')in ['Off', '0', 'off', 'OFF']: newVal = 255
-                                print ("valeur Identifiée comme type toggle-switch : {0}".format(newVal))
+                                self.log.debug(u"valeur Identifiée comme type toggle-switch : {0}".format(newVal))
                                 retval = value.setValue(newVal)
                                 break
                     else :
@@ -1025,7 +1025,7 @@ class ZWaveNode:
                 for value in self.values.keys() :
                     val = self.values[value].valueData
                     if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == 'level':
-                        print ("valeur Identifiée comme type level : {0}".format(val))
+                        self.log.debug(u"valeur Identifiée comme type level : {0}".format(val))
                         retval = self.values[value].setValue(int(params['level']))
                         break
             elif command == 'pressed':
@@ -1039,7 +1039,7 @@ class ZWaveNode:
                     for value in self.values.keys() :
                         val = self.values[value].valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            print ("valeur Identifiée comme type button {0}: {1}".format(key, val))
+                            self.log.debug(u"valeur Identifiée comme type button {0}: {1}".format(key, val))
                             retval = self.values[value].setValue(True)
                             break
                 else :
@@ -1056,7 +1056,7 @@ class ZWaveNode:
                     for value in self.values.keys() :
                         val = self.values[value].valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            print ("valeur Identifiée comme type select {0}: {1}".format(key, val))
+                            self.log.debug(u"valeur Identifiée comme type select {0}: {1}".format(key, val))
                             retval = self.values[value].setValue(params[key]) #TODO: Must be checked with openzwave thermostat, not sure to do setValue()
                             break
                 else :
@@ -1079,14 +1079,12 @@ class ZWaveNode:
                 if not sended :
                    self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
             else :
-                self.log.info("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
+                self.log.warning("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
                 retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
         if retval['error'] == '' :
             self.log.debug("xPL to ozwave sended command : %s , nodeId : %d",  command,  self.nodeId)
-            print ("commande transmise")
         else :
             self.log.debug("xPL to ozwave not sended command : %s , nodeId : %d, error : %s",  command,  self.nodeId,  retval['error'])
-            print("commande non transmise, erreur : %s" %retval['error'])
 
     def __str__(self):
         return 'homeId: [{0}]  nodeId: [{1}] product: {2}  name: {3}'.format(self._homeId, self._nodeId, self._product, self._name)
