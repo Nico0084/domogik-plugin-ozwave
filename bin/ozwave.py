@@ -117,11 +117,10 @@ class OZwave(XplPlugin):
         node =  The node number
         instance = The instance number
         command = The Label openzwave (property : ZWaveValueNode.labelDomogik)
-        value = new value of command
+        <label ozw> = new value of command
         }
         """
-        print ("commande xpl recue")
-        self.log.debug(message)
+        self.log.debug("xPL command received from hub : {0}".format(message))
         if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
         if 'command' in message.data:
             device = self.myzwave.getZWRefFromxPL(message.data)
@@ -132,7 +131,8 @@ class OZwave(XplPlugin):
                         params[k] = v
                 self.myzwave.sendNetworkZW(device, message.data['command'], params)
             else :
-                self.log.warning("Zwave command not sended : {0}".format(message))
+                self.log.warning(u"Zwave command not sended : {0}".format(message))
+        self.log.warning("Unknown command format : {0}".format(message))
 
     def getdict2UIdata(self, UIdata):
         """ retourne un format dict en provenance de l'UI (passage outre le format xPL)"""
