@@ -401,15 +401,15 @@ class ZWaveValueNode:
             msgtrig = {'typexpl':'xpl-trig', 'schema': 'sensor.basic', 'device': device}
             if self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
                 if self.valueData['type'] == 'Bool' :
-                    if self.valueData['value']  in ['False', False] : current = 0 # "Off"
-                    elif  self.valueData['value'] in ['True',  True] : current = 1 # "On"
+                    if self.valueData['value']  in ['False', False] : current = 'Off'
+                    elif  self.valueData['value'] in ['True',  True] : current = 'On'
                     else : raise OZwaveValueException("Error format in valueToxPLTrig : %s" %str(msgtrig))
                     msgtrig['data'] =  {'type': self.labelDomogik, 'current': current}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_MULTILEVEL' :
                 if self.valueData['type']  == 'Byte' and self.valueData['label']  == 'Level' :  # cas d'un module type dimmer, gestion de l'état on/off
                     if self.valueData['value'] == 0:
-                        msgtrig['msgdump'] = {'type': 'switch','current': 0} #'Off'}
-                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 1} #'On'}
+                        msgtrig['msgdump'] = {'type': 'switch','current': 'Off'}
+                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 'On'}
                     msgtrig['data'] = {'type': self.labelDomogik, 'current': self.valueData['value']}
                 elif self.valueData['type']  == 'Button' :                                                        # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
                     msgtrig['data']  = {'type': self.labelDomogik, 'current':  self.valueData['value']}
