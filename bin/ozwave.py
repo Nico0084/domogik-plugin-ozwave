@@ -121,13 +121,16 @@ class OZwave(XplPlugin):
         <label ozw> = new value of command
         }
         """
-        self.log.debug("xPL command received from hub : {0}".format(message))
+        self.log.debug(u"xPL command received from hub : {0}".format(message))
         try :
             if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(message)
         except :
             self.log.error(u"{0}".format(traceback.format_exc()))
+        self.log.debug(u"xPL command link to node")
         if 'command' in message.data:
+            self.log.debug(u"xPL command format ok")
             device = self.myzwave.getZWRefFromxPL(message.data)
+            self.log.debug(u"xPL command device {0}".format(device))
             if device :
                 params = {}
                 for k, v in message.data.iteritems():
