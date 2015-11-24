@@ -1788,7 +1788,7 @@
             "switch.powerfailure" :{
                 "description" : "A simple switch with power failure detection",
                 "id": "switch",
-                "name" : "Simple Switch",
+                "name" : "Switch with power failure",
                 "commands": ["switch"],
                 "sensors": ["switch_state", "power_failure"],
                 "parameters" : [{

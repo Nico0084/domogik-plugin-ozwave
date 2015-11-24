@@ -198,7 +198,7 @@ class ZWaveValueNode:
                 if not ret :
                     retval ['error']   = 'Value is not a Value Type_Button.'
             else : value = val
-            self.log.debug(u"setValue of {1} instance : {2}, value : {3}, type : {4}".format(self.valueData['commandClass'],
+            self.log.debug(u"setValue of {0} instance : {1}, value : {2}, type : {3}".format(self.valueData['commandClass'],
                                         self.valueData['instance'], value, self.valueData['type']))
             if not button :
                 if not self._node._manager.setValue(self.valueData['id'], value)  :
