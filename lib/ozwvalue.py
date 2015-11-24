@@ -96,7 +96,7 @@ class ZWaveValueNode:
         self._valueData['max'] = self._node._manager.getValueMax(self._valueData['id'])
 
     # On accède aux attributs uniquement depuis les property
-
+    log = property(lambda self: self._node._ozwmanager._log)
     homeId = property(lambda self: self._node._homeId)
     nodeId = property(lambda self: self._node._nodeId)
     instance = property(lambda self: self.valueData['instance'])
@@ -125,10 +125,10 @@ class ZWaveValueNode:
         """Effectue une requette pour rafraichir la valeur réelle lut par openzwave"""
         if self._valueData['genre'] != 'Config' :
             if self._node._manager.refreshValue(self.valueData['id']):
-                print "++++++++++ Node {0} Request a RefreshOZWValue : {1}".format(self.valueData['nodeId'],  self.valueData['label'])
+                self.log.debug(u"++++++++++ Node {0} Request a RefreshOZWValue : {1}".format(self.valueData['nodeId'],  self.valueData['label']))
                 return True
         else :
-            print "RefreshOZWValue : call requestConfigParam waiting ValueChanged..."
+            self.log.debug(u"RefreshOZWValue : call requestConfigParam waiting ValueChanged...")
             self._node._manager.requestConfigParam(self.homeId,  self.nodeId,  self.valueData['index'])
             return True
         return False
@@ -141,7 +141,7 @@ class ZWaveValueNode:
             if self.valueData['commandClass']  in ['COMMAND_CLASS_SWITCH_MULTILEVEL']:
                 if self.labelDomogik in ['dim', 'bright'] :
                     retval = {'commandClass': self.valueData['commandClass'],  'label': 'level', 'instance': self.valueData['instance']}
-            print 'A type button return his associate value : {0}'.format(retval)
+            self.log.debug(u"A type button return his associate value : {0}".format(retval))
         return retval
 
     def setValue(self, val):
@@ -150,14 +150,14 @@ class ZWaveValueNode:
                 value : valeur envoyée
                 error : texte de l'erreur éventuelle }
         """
-        print type (val)
+        self.log.debug(u"Set Value of type : {0}".format(type (val)))
         button = False
         retval = {'value': False,  'error':  '' }
         if self.valueData['genre'] != 'Config' or self.valueData['type'] == 'List' : # TODO: Pas encore de gestion d'une config en type list, force envoie par setvalue
             if self.valueData['type'] == 'Bool':
                 value = False if val in [False, 'FALSE', 'False',  'false', '',  0,  0.0, (),  [],  {},  None ] else True
                 val = value
-                print type(value), value,   "----",  type(val),  val
+                self.log.debug(u"set value conversion {0} ({1}) to {2} ({3})".format(type(value), value, type(val), val))
             elif self.valueData['type'] == 'Byte' :
                 try: value = int(val)
                 except ValueError, ex:
@@ -189,22 +189,21 @@ class ZWaveValueNode:
                 button = True
                 value = bool(val)
                 retval ['value']   = val
-                print "--Gestion du type button"
                 if val :
                     ret = self._node._manager.pressButton(self.valueData['id'])
-                    print "type button , presscommand :",  val
+                    self.log.debug(u"Set value a type button , presscommand : {0}".format(val))
                 else :
                     ret = self._node._manager.releaseButton(self.valueData['id'])
-                    print "type button , releasecommand :",  val
+                    self.log.debug(u"Set value a type button , releasecommand :".format(val))
                 if not ret :
                     retval ['error']   = 'Value is not a Value Type_Button.'
             else : value = val
-            print ("setValue de ", self.valueData['commandClass'], " instance :", self.valueData['instance'], " value : ",  value,
-                       " on valueId :" , self.valueData['id'], " type : ",  self.valueData['type'])
+            self.log.debug(u"setValue of {1} instance : {2}, value : {3}, type : {4}".format(self.valueData['commandClass'],
+                                        self.valueData['instance'], value, self.valueData['type']))
             if not button :
                 if not self._node._manager.setValue(self.valueData['id'], value)  :
-                    self._node._ozwmanager._log.error ("setValue return bad type : %s, instance :%d, value : %s, on valueId : %d" %(self.valueData['commandClass'], self.valueData['instance'],  val, self.valueData['id']))
-                    print("return bad type value")
+                    self.log.error (u"setValue return bad type : {0}, instance :{1}, value : {2}, on valueId : {3}".format(self.valueData['commandClass'],
+                                            self.valueData['instance'],  val, self.valueData['id']))
                     retval ['value'] = False
                     retval['error'] = "Return bad type value."
                 else :
@@ -213,8 +212,8 @@ class ZWaveValueNode:
                     retval ['value'] = val
         else :
             if not self._node._manager.setConfigParam(self.homeId,  self.nodeId,  self.valueData['index'], int(val))  :
-                self._node._ozwmanager._log.error ("setConfigParam no send message : %s, index :%d, value : %s, on valueId : %d" %(self.valueData['commandClass'], self.valueData['index'],  val, self.valueData['id']))
-                print("setConfigParam : no send message")
+                self.log.error (u"setConfigParam no send message : {0}, index :{1}, value : {2}, on valueId : {3}".format(self.valueData['commandClass'],
+                                        self.valueData['index'],  val, self.valueData['id']))
                 retval ['value'] = False
                 retval['error'] = "setConfigParam : no send message."
             else :
@@ -223,7 +222,7 @@ class ZWaveValueNode:
                 retval ['value'] = val
         if self.valueData['genre'] == 'Config' :
             self._node._manager.requestConfigParam(self.homeId,  self.nodeId,  self.valueData['index'])
-            print "setValue : call requestConfigParam..."
+            self.log.debug(u"setValue : call requestConfigParam...")
         report = {'Value' : str(self),  'report': retval}
         self._node.updateLastMsg('setValue', self.valueData)
         self._node._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, report)
@@ -236,10 +235,10 @@ class ZWaveValueNode:
         """valueData update from callback argument. return true/false if value is different from old."""
         if self._tempConv and valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
             valueData['units'] = '°C'
-            print '************** Conversion : ',  float(valueData['value'])
-            print float(valueData['value'])*(5.0/9)
+            self.log.debug(u"************** Conversion : {0}".format(float(valueData['value'])))
+            self.log.debug(u"{0}".format(float(valueData['value'])*(5.0/9)))
             valueData['value'] = (float(valueData['value'])*(5.0/9))-(160.0/9)
-            print valueData['value']
+            self.log.debug("{0}".format(valueData['value']))
         new = True if self._valueData['value'] != valueData['value'] else False
         self._valueData.update(dict(valueData))
         self._realValue = self._valueData['value']
@@ -334,7 +333,7 @@ class ZWaveValueNode:
         try :
             intensity = int(intensity)
         except Exception as e:
-            self._log.error('value.enablePoll(intensity) :' + e.message)
+            self.log.error(u'value.enablePoll(intensity) :' + e.message)
             return {"error" : "Enable poll, error : %s" %e.message}
         if self.isPolled :
             self.setPollIntensity(intensity)
@@ -389,7 +388,7 @@ class ZWaveValueNode:
                 node =  The node number
                 instance = The instance number
                 type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
-                state = new state of alarm 'high' or 'low'
+                current = new state of alarm 'high' or 'low'
                 }
         """
         # TODO: Traiter le formattage en fonction du type de message à envoyer à domogik rajouter ici le traitement pour chaque command_class
@@ -429,6 +428,8 @@ class ZWaveValueNode:
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_BATTERY' :
                 msgtrig ['data'] = {'type': self.labelDomogik, 'current':self.valueData['value']}
                 if self.valueData['units'] != '': msgtrig ['data'] ['units'] = self.valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
+            elif self.valueData['commandClass'] == 'COMMAND_CLASS_POWERLEVEL' :
+                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self.valueData['value']}
             elif self.valueData['commandClass'] == 'COMMAND_CLASS_METER' :
                 if self.valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
                     value = round(self.valueData['value'], 2)
@@ -444,7 +445,7 @@ class ZWaveValueNode:
                 msgtrig['schema'] = 'alarm.basic'
                 msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 'high' if self.valueData['value'] else 'low'} # gestion du sensor binary pour widget binary
 
-        print "*** valueToxPLTrig : {0}".format(msgtrig)
+        self.log.debug(u"*** valueToxPLTrig : {0}".format(msgtrig))
         return msgtrig
 
     def __str__(self):

@@ -182,6 +182,21 @@
                     "round_value": 0
             }
         },
+        "power_failure" : {
+            "name" : "Power failure",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+
         "temperature_c" : {
             "name" : "Temperature Celcius",
             "incremental": false,
@@ -1216,6 +1231,30 @@
                 ]
             }
         },
+        "power_failure": {
+            "name" : "Power failure",
+            "schema" : "sensor.basic",
+            "parameters" : {
+                "static" : [{
+                        "key" : "type",
+                        "value" : "power-failure"
+                    }
+                ],
+                "device" : [{
+                        "key" : "instance",
+                        "description" : "Zwave node instance id",
+                        "type" : "integer",
+                        "default": 1
+                        }
+                ],
+                "dynamic" : [{
+                        "key" : "current",
+                        "ignore_values" : "",
+                        "sensor" : "power_failure"
+                    }
+                ]
+            }
+        },
         "tamper_event": {
             "name" : "tamper event",
             "schema" : "alarm.basic",
@@ -1240,116 +1279,21 @@
                 ]
             }
         },
-        "smoke": {
-            "name" : "Smoke alarm",
+        "alarm": {
+            "name" : "Alarm",
             "schema" : "alarm.basic",
             "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "smoke"
-                    }
-                ],
+                "static" : [],
                 "device" : [{
                         "key" : "instance",
                         "description" : "Zwave node instance id",
                         "type" : "integer",
                         "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "sensor_alarm"
-                    }
-                ]
-            }
-        },
-        "carbonmonoxide": {
-            "name" : "Carbonmonoxide alarm",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [{
+                        },{
                         "key" : "type",
-                        "value" : "carbonmonoxide"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "sensor_alarm"
-                    }
-                ]
-            }
-        },
-        "carbondioxide": {
-            "name" : "Carbondioxide alarm",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "carbondioxide"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "sensor_alarm"
-                    }
-                ]
-            }
-        },
-        "heat": {
-            "name" : "Heat alarm",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "heat"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "sensor_alarm"
-                    }
-                ]
-            }
-        },
-        "flood": {
-            "name" : "Flood alarm",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "flood"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
+                        "description" : "Zwave alarm type (smoke, heat, flood, carbonmonoxide, carbondioxide)",
+                        "type" : "string",
+                        "default": ""
                         }
                 ],
                 "dynamic" : [{
@@ -1827,6 +1771,26 @@
                 "name" : "Switch-Power meter +",
                 "commands": ["switch"],
                 "sensors": ["switch_state", "energy", "energy_k", "power"],
+                "parameters" : [{
+                    "key" : "networkid",
+					"xpl": true,
+                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
+                    "type" : "string"
+                },{
+                    "key" : "node",
+					"xpl": true,
+                    "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                }]
+            },
+            "switch.powerfailure" :{
+                "description" : "A simple switch with power failure detection",
+                "id": "switch",
+                "name" : "Simple Switch",
+                "commands": ["switch"],
+                "sensors": ["switch_state", "power_failure"],
                 "parameters" : [{
                     "key" : "networkid",
 					"xpl": true,

@@ -158,7 +158,7 @@ DomogikLabelAvailable = ['temperature', 'relative-humidity', 'humidity', 'batter
                           'power', 'energy', 'previous-reading', 'luminance',  'general', 'motion',
                           'count', 'instant-energy-production', 'total-energy-production',
                           'energy-production-today', 'total-production-time', 'indicator', 'locked', 'level',
-                          'power-applied', 'tamper-event',  'low-battery', 'smoke',
+                          'power-applied', 'power-failure', 'tamper-event',  'low-battery', 'smoke',
                           'carbonmonoxide', 'carbondioxide', 'heat', 'flood',
                           'switch', 'inc', 'dec', 'bright', 'dim',  'toggle-switch',  # actuator
                           'fan-mode',  'fan-state', 'mode',  'operating-state',  'setpoint',
