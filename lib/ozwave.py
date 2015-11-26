@@ -36,6 +36,9 @@ Implements
 """
 
 from domogik.common.database import DbHelper
+from domogikmq.reqrep.client import MQSyncReq
+from domogikmq.message import MQMessage
+
 import threading
 import libopenzwave
 from libopenzwave import PyManager
@@ -100,6 +103,7 @@ class OZWavemanager():
         self._devicesCtrl = []
         self._openingDriver = None
         self._completMsg = self._xplPlugin.get_config('cpltmsg')
+        self._dataTypes = []
         self._device = self._xplPlugin.get_config('device')
         autoPath = self._xplPlugin.get_config('autoconfpath')
         user = pwd.getpwuid(os.getuid())[0]
@@ -157,7 +161,17 @@ class OZWavemanager():
         self._xplPlugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         self.getManufacturers()
         self._xplPlugin.add_stop_cb(self.stop)
-        # "List les devices de type primary.controler.""
+        # get the data_types
+        mq_client  = MQSyncReq(self._xplPlugin.zmq)
+        msg = MQMessage()
+        msg.set_action('datatype.get')
+        result = mq_client.request('manager', msg.get(), timeout=10)
+        if result :
+            self._dataTypes = result.get_data()['datatypes']
+            print self._dataTypes
+            self._log.info(u"data_types list loaded.")
+        else :
+            self._log.warning(u"Error on retreive data_types list from MQ.")
         # get the devices list
         self.refreshDevices()
         for a_device in self._xplPlugin.devices:
@@ -235,6 +249,12 @@ class OZWavemanager():
             while self._openingDriver and not self._stop.isSet(): self._stop.wait(0.1)
             self.openDeviceCtrl(device)
         self._xplPlugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
+
+    def getDataType(self, name):
+        """Return Datatype dict corresponding to name """
+        for dT in self._dataTypes :
+            if dT == name : return self._dataTypes[dT]
+        return {}
 
     def getDeviceCtrl(self, key, value ):
         """Retourne le device ctrl de type primary.controler.
@@ -933,10 +953,9 @@ class OZWavemanager():
         # formatage infos générales
         # ici l'idée est de passer tout les valeurs stats et trig en identifiants leur type par le label forcé en minuscule.
         # les labels sont listés le fichier json du plugin.
-        # Le traitement pour chaque command_class s'effectue dans la ValueNode correspondante.
+        # Le traitement pour chaque command_class s'effectue dans la valueNode correspondante.
         msgtrig = valueNode.valueToxPLTrig()
         if msgtrig : self._cb_sendxPL_trig(msgtrig)
-        else : print ('Value non implémentee vers xPL : %s'  % valueId['commandClass'] )
 
     def _handleNodeEvent(self, args):
         """Un node à envoyé une Basic_Set command  au controleur.
@@ -1405,6 +1424,9 @@ class OZWavemanager():
         # Plugin and openzwave request don't need controller.
         elif request == 'manager.get' :
             report = self.getManagerInfo()
+        elif request == 'manager.refreshdeviceslist':
+            self.refreshDevices()
+            report = {'error':''}
         elif request == 'openzwave.get' :
             report = self.getOpenzwaveInfo()
         elif request == 'openzwave.getallproducts':

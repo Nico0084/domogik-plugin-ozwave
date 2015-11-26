@@ -16,7 +16,7 @@
             "documentation" : "http://www.fibaro.com/en/support",
             "type": "switch"
         }, {
-            "name" : "HSM02 Mini Door/Window Detector",
+            "name" : "HSM02 Mini Door-Window Detector",
             "documentation" : "http://www.everspring.com/Products/SecuritySystem/HSM02.aspx",
             "id" : "HSM02",
             "type": "opening.sensor.security.battery"
@@ -296,10 +296,10 @@
             }
         },
         "opening_sensor" : {
-            "name" : "Opening sensor",
+            "name" : "Opening sensor with inversion",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "",
+            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
             "timeout": 0,
             "history": {
                     "store": true,
