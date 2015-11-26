@@ -172,7 +172,7 @@
             "name" : "Power applied",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "form_Power_applied_to_DT_Binary",
+            "conversion" : "from_Power_applied_to_DT_Binary",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -467,7 +467,7 @@
             "name" : "Tamper event",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "form_Tamper_Event_to_DT_OpenClose",
+            "conversion" : "from_Tamper_Event_to_DT_OpenClose",
             "timeout": 0,
             "history": {
                     "store": true,
