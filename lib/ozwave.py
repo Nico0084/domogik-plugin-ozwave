@@ -207,9 +207,10 @@ class OZWavemanager():
         devices = self._xplPlugin.get_device_list(quit_if_no_device = False, max_attempt = 2)
         if devices :
             self._xplPlugin.devices = devices
+            self._xplPlugin.publishMsg('ozwave.manager.refreshdeviceslist', {'error': ""})
         else :
-            if not self._xplPlugin.devices :
-                self._log.error(u"Can't retrieve the device list, Check your domogik device, try to restart plugin.")
+            self._log.error(u"Can't retrieve the device list, MQ no response, try again or restart plugin.")
+            self._xplPlugin.publishMsg('ozwave.manager.refreshdeviceslist', {'error': "Can't retrieve the device list after {0} attempt".format(max_attempt)})
 
     def _getIfOperationsReady(self):
         """"Retourne True si toutes les conditions sont réunies pour faire des actions dans openzwave.
@@ -1425,7 +1426,7 @@ class OZWavemanager():
         elif request == 'manager.get' :
             report = self.getManagerInfo()
         elif request == 'manager.refreshdeviceslist':
-            self.refreshDevices()
+            self.threadingRefreshDevices()
             report = {'error':''}
         elif request == 'openzwave.get' :
             report = self.getOpenzwaveInfo()

@@ -26,6 +26,12 @@
             </a>
         </h4>
         <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
+            <div class="row" style="margin:10px" >
+                <button class="btn btn-default center-block" id="refrechdevList" title="{% trans %}If you modify (create/remove/edit) domogik device, click to refresh plugin data.{% endtrans %}">
+                    <i class="fa fa-refresh" id="refrechdevList-ic"></i>
+                    <span id="runctrl-text"> {% trans %}Refresh domogik device list{% endtrans %}</span>
+                </button>
+            </div>
             <li><b>{% trans %}Openzwave path{% endtrans %} : </b><span id="ozw-config">{{ openzwaveInfo.ConfigPath }}</span></li>
             <li><b>{% trans %}User path{% endtrans %} : </b><span id="ozw-user">{{ openzwaveInfo.UserPath }}</span></li>
             <div class="container-fluid">
@@ -231,6 +237,28 @@
                 updateBtSavedConf(data.content.NetworkID, data.content.saved);
             });
         });
+        $("#refrechdevList").click(function() {
+            var NetworkID = this.id.split("_")[1];
+            $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh fa-spin");
+            sendRequest("ozwave.manager.refreshdeviceslist", {}, function(data, result) {
+                if (result == "error" || data.content.error != "") {
+                    $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                    new PNotify({
+                        type: 'error',
+                        title: 'Fail to refresh domogik device list',
+                        text: data.content.error,
+                        delay: 6000
+                    });
+                } else {
+                    new PNotify({
+                        type: 'success',
+                        title: 'Refresh domogik device list',
+                        text: 'Refresh sended, waiting response...',
+                        delay: 4000
+                    });
+                };
+            });
+        });
 
     $( document ).ready(function() {
         var ws_onmessage_menu = ws.onmessage;
@@ -344,6 +372,24 @@
                         };
                         <!-- debug infos -->
                         $("#debug-manager").text(JSON.stringify(data.content));
+                    } else if (msgId[2] == "refreshdeviceslist"){
+                        if (data.content.error == '') {
+                            $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                            new PNotify({
+                                type: 'success',
+                                title: 'Refresh domogik device list',
+                                text: 'Refresh done.',
+                                delay: 4000
+                            });
+                        } else {
+                            $("#refrechdevList-ic").removeClass().addClass("fa fa-exclamation-triangle");
+                            new PNotify({
+                                type: 'error',
+                                title: 'Refresh domogik device list',
+                                text: 'Refresh failed : ' + data.content.error,
+                                delay: 4000
+                            });
+                        };
                     };
                 };
             };
