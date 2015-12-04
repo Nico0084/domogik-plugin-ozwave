@@ -1,0 +1,16 @@
+.. _index:
+
+========================
+Development informations
+========================
+
+
+Detailed architecture
+=====================
+
+.. |principe-schema.png| image:: ozwave_principe-schema.png
+    :width: 700px
+
+|principe-schema.png|
+
+

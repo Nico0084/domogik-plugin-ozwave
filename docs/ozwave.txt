@@ -33,13 +33,6 @@ Viewing and setting Zwave devices is accessed via a special plugin page from the
 
 Development is in progress, features will get gradually
 
-Detailed architecture
----------------------
-
-.. |principe-schema.png| image:: ozwave_principe-schema.png
-    :width: 700px
-
-|principe-schema.png|
 
 Dependencies
 ============
