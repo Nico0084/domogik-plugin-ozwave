@@ -128,7 +128,7 @@ function buildValuesTab (data) {
                                                 "<li class='text-left' title='"+ ozwInfo.Options.PollInterval.doc +"'>Interval : " + ozwInfo.Options.PollInterval.value + " msec</li>" +
                                                 "<li class='text-left' title='"+ ozwInfo.Options.IntervalBetweenPolls.doc +"'>Interval Between Polls: " + ozwInfo.Options.IntervalBetweenPolls.value + "</li></ul>" +
                                             "<h5 class='alert-info'>Save openzwave network configuration to keep change.</h5>" +
-                                          "</div>" +  
+                                          "</div>" +
                                           "<div class='row'>" +
                                             "<div class='col-md-12'> " +
                                                 "<label for='intensity'>Intensity</label>" +
@@ -145,15 +145,15 @@ function buildValuesTab (data) {
                                           "</div>",
                             data: valueData,
                             buttons: [{
-                                id: 'btn-cancel',   
+                                id: 'btn-cancel',
                                 label: 'Cancel',
-                                className: 'btn-danger', 
+                                className: 'btn-danger',
                                 autospin: false,
-                                callback: function(dialogRef){    
+                                callback: function(dialogRef){
                                     console.log("Cancel set polling value : " + refId[1]+ "." + refId[2]);
                                 }
                             },{
-                                id: 'btn-ok',   
+                                id: 'btn-ok',
                                 label: 'Ok',
                                 className: 'btn-primary',
                                 autospin: false,
@@ -203,7 +203,7 @@ function buildValuesTab (data) {
                         bdiag.modal('show');
                     });
                 });
-                
+
                 // activate inputs
                 $( "[name='CmdClssValue']").not("[isHandled]" ).each(function(rowN, nData) {
                     var refId =  this.id.split("_");
@@ -281,35 +281,35 @@ function renderCmdClssStatus(data, type, full, meta) {
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
         var textRW = "Read and Write";
-        var st ='inactive';
+        var st ='danger';
         if (valueData.readOnly==true) {
             textRW = "Read only";
-            st ='active';
+            st ='success';
         };
-        var rw=  " <span id='st"+valueRef +"' class='glyphicon btnspacing icon16-status-" + st +"' title='" + textRW + "'></span>";
+        var rw=  " <span id='st"+valueRef +"' class='fa fa-circle extbtn icon-" + st +"' title='" + textRW + "'></span>";
         var extra ="";
         if (valueData.help!="") {
-            extra = "  <span id='hn"+valueRef +"' class='glyphicon btnspacing icon16-status-info' title='" + valueData.help + "'></span>";
+            extra = "  <span id='hn"+valueRef +"' class='fa fa-info-circle fa-lg extbtn icon-info' title='" + valueData.help + "'></span>";
         };
         var textstatus = "Not available for domogik device";
-        var st = 'false';
+        var st = 'fa-ban icon-warning';
         if (valueData.domogikdevice) { //Available for domogik device
-            textstatus = "Domogik device parameters: \n" + 
+            textstatus = "Domogik device parameters: \n" +
                          "  networkid: " + valueData.domogikdevice.networkid + "\n" +
                          "  node: " + valueData.domogikdevice.node + "\n" +
                          "  instance: " + valueData.domogikdevice.instance;
-            st = 'primary';
+            st = 'fa-star icon-success';
         };
         var poll ="";
         var tpoll =  "Check to poll this value.";
-        if (valueData.polled) { 
+        if (valueData.polled) {
             poll = " checked";
             tpoll = "Value is polled with intensity : " + valueData.pollintensity;
         };
 
-        return  "<span id='value"+valueRef +"'class='glyphicon btnspacing icon16-status-" + st + "' title='" + textstatus +
-                "'></span>" + rw + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
-                "title='"+ tpoll + "' />" + extra;
+        return  "<span id='value"+valueRef +"'class='fa extbtn " + st + "' title='" + textstatus +
+                "'></span>" + rw + extra + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
+                "title='"+ tpoll + "' />";
     } else {
         return "No data :(";
     };
@@ -358,7 +358,7 @@ function renderCmdClssValue(data, type, full, meta) {
                 case 'Decimal' :
                     ret = "<div class='input-group'><span class='input-group-addon label-warning hidden' id='stch"+ valueRef +
                             "' title='Value is actually "+valueData.realvalue+". You must validate your change by enter key.'><i class='fa fa-recycle'></i></span>";
-                    ret +="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' aria-describedby='stch"+ valueRef + "' min='" + 
+                    ret +="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' aria-describedby='stch"+ valueRef + "' min='" +
                             valueData.min  +" ' max='"+ valueData.max  +"' value='"+ valueData.value +"' title='range "+valueData.min+" to "+valueData.max+"'></input>" +
                             modify + "</div>";
                     break;
@@ -382,7 +382,7 @@ function renderCmdClssValue(data, type, full, meta) {
                     ret +="</select>" + modify + "</div>";
                     break;
                 case 'Button' :
-                    ret ="<button id='" + id + "' name='CmdClssValue' class='btn btn-default btn-xs' type='button' value='" + valueData.label +"' title=''>"+ valueData.label +"</v>"; 
+                    ret ="<button id='" + id + "' name='CmdClssValue' class='btn btn-default btn-xs' type='button' value='" + valueData.label +"' title=''>"+ valueData.label +"</v>";
                     break;
                 default :
                     ret = "No data :(";

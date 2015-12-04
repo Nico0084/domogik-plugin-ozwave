@@ -2170,10 +2170,10 @@
             }
 		],
 		"description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
-		"domogik_min_version" : "0.4.1",
+		"domogik_min_version" : "0.5.0",
         "name": "ozwave",
 		"type" : "plugin",
-		"version" : "0.4.0b1"
+		"version" : "0.5.0b1"
 	},
     "json_version" : 2
 	}

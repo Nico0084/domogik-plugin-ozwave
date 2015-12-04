@@ -1,6 +1,6 @@
 {% block content %}
-  
-<div class='container-fluid'> 
+
+<div class='container-fluid'>
     <h3>{% trans %}Zwave Controller administration{% endtrans %}
         <div class="pull-right">
             <h4>
@@ -9,42 +9,42 @@
             </h4>
         </div>
     </h3>
-    <div class='row'> 
-        <div class='col-md-6'> 
-            <div class='panel panel-default'> 
+    <div class='row'>
+        <div class='col-md-6'>
+            <div class='panel panel-default'>
                 <div class='panel-heading'>
-                    <a class="bg-info" href="#" onclick="toggleVisible('caracCTRL', 'toggle-caracCTRL');return false;"> 
+                    <a class="bg-info" href="#" onclick="toggleVisible('caracCTRL', 'toggle-caracCTRL');return false;">
                         <h4>
-                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-caracCTRL" aria-hidden="true" data-target="caracCTRL"></span> 
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-caracCTRL" aria-hidden="true" data-target="caracCTRL"></span>
                             <span>&nbsp;&nbsp;{% trans %}Characteristic{% endtrans %}</span>
                             <div class="pull-right"><small>{{ network_state['Model'] }}</small></div>
-                        </h4> 
-                    </a> 
+                        </h4>
+                    </a>
                 </div>
-                <div class='panel-body' id="caracCTRL" style="width: 95%; display: none;" hidden> 
-                    <h4>{% trans %}Identification{% endtrans %}</h4> 
-                    <ul> 
-                        <li>{% trans %}Network ID{% endtrans %} : <b>{{ network_active }}</b></li> 
+                <div class='panel-body' id="caracCTRL" style="width: 95%; display: none;" hidden>
+                    <h4>{% trans %}Identification{% endtrans %}</h4>
+                    <ul>
+                        <li>{% trans %}Network ID{% endtrans %} : <b>{{ network_active }}</b></li>
                         <li>{% trans %}Home ID{% endtrans %} : <b>{{ network_state.HomeID }}</b></li>
                         <li>{% trans %}Primary controller{% endtrans %} : <b>{{ network_state['Primary controller'] }}</b></li>
                         <li>{% trans %}Model{% endtrans %} : <b>{{ network_state['Model'] }}</b></li>
                         <li>{% trans %}Node ID{% endtrans %} : <b>{{ network_state['Node'] }}</b></li>
-                    </ul> 
-                    <h4>{% trans %}Type{% endtrans %}</h4> 
-                    <ul> 
-                        <li>{% trans %}Protocol{% endtrans %} : <b>{{ network_state.Protocol }}</b></li> 
-                        <li>{% trans %}Library{% endtrans %} : <b>{{ network_state.Library }}</b></li> 
-                        <li>{% trans %}Version{% endtrans %} : <b>{{ network_state.Version }}</b></li> 
-                    </ul> 
-                </div> 
-            </div> 
-        </div> 
-        <div class='col-md-6'> 
-            <div class='panel panel-default'> 
+                    </ul>
+                    <h4>{% trans %}Type{% endtrans %}</h4>
+                    <ul>
+                        <li>{% trans %}Protocol{% endtrans %} : <b>{{ network_state.Protocol }}</b></li>
+                        <li>{% trans %}Library{% endtrans %} : <b>{{ network_state.Library }}</b></li>
+                        <li>{% trans %}Version{% endtrans %} : <b>{{ network_state.Version }}</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class='panel panel-default'>
                 <div class='panel-heading'>
-                    <a class="bg-info" href="#" onclick="toggleVisible('nodesCTRL', 'toggle-nodesCTRL');return false;"> 
+                    <a class="bg-info" href="#" onclick="toggleVisible('nodesCTRL', 'toggle-nodesCTRL');return false;">
                         <h4>
-                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-nodesCTRL" aria-hidden="true" data-target="nodesCTRL"></span> 
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-nodesCTRL" aria-hidden="true" data-target="nodesCTRL"></span>
                             <span>&nbsp;&nbsp;{% trans %}Nodes{% endtrans %}</span>
                             &nbsp;&nbsp;<span id="count_sleep" class="badge badge-warning {% if network_state['Node sleeping'] == 0 %}hidden{% endif %}" title="Sleep">
                             {{ network_state['Node sleeping'] }}</span>
@@ -54,7 +54,7 @@
                         </h4>
                     </a>
                 </div>
-                <div class='panel-body' id="nodesCTRL" style="width: 95%; display: none;" hidden> 
+                <div class='panel-body' id="nodesCTRL" style="width: 95%; display: none;" hidden>
                     <h4>{% trans %}Statistic{% endtrans %}</h4>
                     <ul>
                         <li>{% trans %}Number of nodes{% endtrans %} : <b id="statistic_count">{{ network_state['Node count'] }}</b></li>
@@ -70,8 +70,8 @@
             </div>
         </div>
     </div>
-    <div class='row'> 
-        <div class='col-md-12'> 
+    <div class='row'>
+        <div class='col-md-12'>
             <div class='panel panel-default'>
                 <div class='panel-heading'>
                     <h4>{% trans %}Basic controller commands{% endtrans %}</h4>
@@ -99,20 +99,20 @@
                     </div>
                     <div class="col-xs-3 col-md-3">
                         <button class="btn btn-default center-block" id="softreset" title="{% trans %}Resets a controller without erasing its network configuration settings.{% endtrans %}">
-                            <i class="fa icon16-action-btreset"></i> {% trans %}Soft reset{% endtrans %}
+                            <i class="fa fa-recycle icon-warning"></i> {% trans %}Soft reset{% endtrans %}
                         </button>
                     </div>
                     <div class="col-xs-3 col-md-3">
                         <button class="btn btn-default center-block" id="hardreset" title="{% trans %}Resets a controller and erases its network configuration settings. The controller becomes a primary controller ready to add devices to a new network.{% endtrans %}">
-                            <i class="fa icon16-action-btreset" style="color:red"></i> {% trans %}Hard reset{% endtrans %}
+                            <i class="fa fa-recycle icon-danger"></i> {% trans %}Hard reset{% endtrans %}
                         </button>
                     </div>
                     </div>
             </div>
         </div>
     </div>
-    <div class='row'> 
-        <div class='col-md-12'> 
+    <div class='row'>
+        <div class='col-md-12'>
             <div class='panel panel-default'>
                 <div class='panel-heading'>
                     <h4>{% trans %}Controller actions{% endtrans %}
@@ -123,7 +123,7 @@
                 </div>
                 <div class='panel-body'>
                     <h5>{% trans %}Some actions block controller activity, you must unlock it after session action fisnished.{% endtrans %}</h5>
-                    <div class='row row-spacing'> 
+                    <div class='row row-spacing'>
                         <div class="col-xs-6 col-md-4">
                             <div class='input-group placeholder'>
                                 <label for="ctrlactions">{% trans %}Chose action{% endtrans %} :</label>
@@ -136,7 +136,7 @@
                             <div id='actiondoc' class="alert alert-info">{% trans %}Select a action{% endtrans %}</div>
                         </div>
                     </div>
-                    <div class='row row-spacing'> 
+                    <div class='row row-spacing'>
                         <div class="col-xs-6 col-md-4 ">
                             <div class='input-group placeholder'>
                                 <label id="listnodesOptLabel" for="listnodesOpt">{% trans %}Apply on node{% endtrans %} :</label>
@@ -145,7 +145,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div id="dosecurityOpt" class="col-xs-4 col-md-2" title="{% trans %}Whether to initialize the Network Key on the device if it supports the Security CC.{% endtrans %}">                    
+                        <div id="dosecurityOpt" class="col-xs-4 col-md-2" title="{% trans %}Whether to initialize the Network Key on the device if it supports the Security CC.{% endtrans %}">
                             <label for="dosecurity">{% trans %}do security CC{% endtrans %} :</label>
                             <input id="dosecurity" class="actdisable" type="checkbox" data-on-text="{% trans %}Unable{% endtrans %}" data-off-text="{% trans %}Disable{% endtrans %}">
                         </div>
@@ -157,7 +157,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class='row row-spacing'> 
+                    <div class='row row-spacing'>
                         <div class="col-xs-6 col-md-4">
                              <h5>{% trans %}Status and user informations last action{% endtrans %} :
                              <span id='lastaction' class='alert-success'></span></h5>

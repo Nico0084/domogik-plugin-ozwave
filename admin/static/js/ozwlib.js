@@ -365,10 +365,10 @@ function updateBtMonitored(nodeData) {
     var nodeRef = GetNodeRefId(nodeData.NetworkID, nodeData.NodeID);
     if (nodeData.Monitored != '') {
         $("#monitornode" + nodeRef).attr('title', "Node monitoring file : " + nodeData.Monitored + "&#10;Click to stop monitoring.");
-        $("#monitornodeic" + nodeRef).removeClass("icon16-action-play").addClass("icon16-action-processing_ffffff");
+        $("#monitornodeic" + nodeRef).removeClass("fa-play").addClass("fa-refresh fa-spin icon-danger");
     } else {
         $("#monitornode" + nodeRef).attr('title', "Start Monitor Node and log it.");
-        $("#monitornodeic" + nodeRef).removeClass("icon16-action-processing_ffffff").addClass("icon16-action-play");
+        $("#monitornodeic" + nodeRef).removeClass("fa-refresh fa-spin icon-danger").addClass("fa-play");
     };
 };
 
@@ -422,23 +422,23 @@ function renderNodeStatusCol(data, type, full, meta) {
         // console.log(err);
         var initState ='uninitialized';
         };
-    if (initState =='uninitialized') {status = 'status-unknown';};
-    if (initState =='initialized - not known') {status = 'status-active';};
-    if (initState =='completed') {status ='status-active';};
-    if (initState.indexOf('in progress') !=-1) {status ='action-processing_ffffff';};
-    if (initState =='out of operation') {status ='status-warning';};
+    if (initState =='uninitialized') {status = 'fa-question-circle icon-unknown';};
+    if (initState =='initialized - not known') {status = 'fa-circle icon-info';};
+    if (initState =='completed') {status ='fa-circle icon-success';};
+    if (initState.indexOf('in progress') !=-1) {status ='fa-spinner fa-spin icon-info';};
+    if (initState =='out of operation') {status ='fa-warning icon-warning';};
     var str = '' + nodeData.NodeID;
     while (str.length < 3) {str = '0' + str;};
     var bat = '';
     if (nodeData.BatteryLevel != -1) {
-        var st = '0'
-            if (nodeData.BatteryLevel >= 85) {st = '100';
-            } else if (nodeData.BatteryLevel >= 60) {st = '80';
-            } else if (nodeData.BatteryLevel >= 40) {st = '50';
-            } else if (nodeData.BatteryLevel >= 25) {st = '30';
-            } else if (nodeData.BatteryLevel >= 15) {st = '20';
-            } else if (nodeData.BatteryLevel >= 5) {st = '10';};
-        bat = "<span id='battery" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-status-battery-" + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
+        var st = 'fa-battery-empty icon-unknown'
+            if (nodeData.BatteryLevel >= 85) {st = 'fa-battery-full icon-success';
+            } else if (nodeData.BatteryLevel >= 70) {st = 'fa-battery-three-quarters icon-success';
+            } else if (nodeData.BatteryLevel >= 50) {st = 'fa-battery-half icon-success';
+            } else if (nodeData.BatteryLevel >= 25) {st = 'fa-battery-quarter icon-warning';
+            } else if (nodeData.BatteryLevel >= 15) {st = 'fa-battery-quarter icon-warning';
+            } else if (nodeData.BatteryLevel >= 5) {st = 'fa-battery-empty icon-danger';};
+        bat = "<span id='battery" + nodeData.NodeID + "' class='fa btnspacing fa-rotate-270 " + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
         var bCheck = "";
         var tCheck =  "Check to request battery level at each awake.";
         if (nodeData.BatteryChecked) {
@@ -447,7 +447,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
     };
-    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='glyphicon btnspacing icon16-" + status +
+    return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
                "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat;
 };
 
@@ -504,7 +504,7 @@ function renderNodeTypeCol(data, type, full, meta) {
         for (i=0; i<nodeData.Capabilities.length; i++) {
             text = text + " -- " + nodeData.Capabilities[i] + '\n';
         }
-        return  nodeData.Type + "  <span id='infotypenode" + nodeData.NodeID +"' class='icon-info glyphicon glyphicon-info-sign' title='" + text + "' /span>";
+        return  nodeData.Type + "  <span id='infotypenode" + nodeData.NodeID +"' class='fa fa-info-circle fa-lg icon-info' title='" + text + "' /span>";
     } else {
         return 'No Data';
     };
@@ -527,18 +527,18 @@ function renderNodeActionColl(data, type, full, meta) {
         ret += "<span id='refreshnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='Force Refresh Node'>" +
                         "<span id='refreshnodeic" + nodeRef + "' class='glyphicon glyphicon-refresh'></span></span>"
         if (nodeData.Groups.length > 0) {
-            ret += "<span id='updassoc" + nodeRef + "' type='nodeaction' class='btn btn-xs extbtn btn-info' title='Edit association'>" +
-                        "<span id='updassocic" + nodeRef + "' class='glyphicon icon16-action-groups'></span></span>"
+            ret += "<span id='updassoc" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='Edit association'>" +
+                        "<span id='updassocic" + nodeRef + "' class='fa fa-link'></span></span>"
             };
-        var stMonitored = "action-play";
+        var stMonitored = "fa-play";
         var tMonitored = "Start Monitor Node and log it.";
         if (nodeData.Monitored != '') {
-            stMonitored = "action-processing_ffffff";
+            stMonitored = "fa-refresh fa-spin icon-danger";
             tMonitored = "Node monitoring file : " + nodeData.Monitored + "/n/nClick to stop monitoring.";
             };
 
-        ret += "<span id='monitornode" + nodeRef + "' type='nodeaction' class='btn btn-xs extbtn btn-info' title='" +tMonitored + "'>" +
-                "<span id='monitornodeic" + nodeRef + "' class='glyphicon icon16-" + stMonitored + "'></span></span>"
+        ret += "<span id='monitornode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='" +tMonitored + "'>" +
+                "<span id='monitornodeic" + nodeRef + "' class='fa " + stMonitored + "'></span></span>"
         return  ret;
     } else {
         return 'No Data';

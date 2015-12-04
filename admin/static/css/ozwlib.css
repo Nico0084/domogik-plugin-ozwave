@@ -1,0 +1,81 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* bootstrap glyphicons extend */
+
+.row-spacing {
+    margin-bottom: 10px;
+}
+
+.btnspacing, .extbtn {
+    margin: 1px;
+}
+
+.extbtn {
+    padding:  1px 3px;
+    line-height: 1;
+}
+
+.input-addon-xs {
+    height: 30px;
+    padding: 1px 1px;
+    font-size: 12px;
+    line-height:1.5;
+    border-radius: 3px;
+}
+
+.badge-error {
+  background-color: #b94a48 !important;
+}
+
+.badge-warning {
+    background-color: #f89406 !important;
+}
+
+.badge-success {
+  background-color: #468847 !important;
+}
+
+.badge-info {
+  background-color: #3a87ad !important;
+}
+
+.pull-bottom {
+    display: inline-block;
+    float: none;
+    position: relative;
+    bottom: 0px;
+}
+
+.pull-top {
+    display: inline-block;
+    float: none;
+    position: relative;
+    top: 0px;
+}
+
+/* Datattable Header cells cmdclss  */
+.headcmdclss {
+    text-align: center !important;
+    background: #6CC8C8 !important;
+}
+
+  .icon-unknown {
+      color : #8C8C8C;
+  }
+
+  .icon-info {
+      color : #5BC0DE;
+  }
+
+  .icon-success {
+      color : #26CB34;
+  }
+
+  .icon-warning {
+      color : #FFAE00;
+  }
+
+  .icon-danger {
+      color : #FF0000;
+  }
