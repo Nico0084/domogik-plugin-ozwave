@@ -136,29 +136,6 @@ class OZwave(XplPlugin):
         else :
             self.log.warning(u"Unknown command format : {0}".format(message))
 
-    def getdict2UIdata(self, UIdata):
-        """ retourne un format dict en provenance de l'UI (passage outre le format xPL)"""
-        retval = UIdata.replace('&quot;', '"').replace('&squot;', "'").replace("&ouvr;", '{').replace("&ferm;", '}') ;
-        try :
-            return eval(retval)
-        except Exception as e:
-            print retval
-            self.log.debug ("Format data to UI : eval in getdict2UIdata error : " +   retval)
-            return {'error': 'invalid format'}
-
-    def getUIdata2dict(self, ddict):
-        """Retourne le dict formatter pour UI (passage outre le format xPL)"""
-        print "conversion pour transfertvers UI , " , str(ddict)
-        for k in ddict :   # TODO: pour passer les 1452 chars dans RINOR, à supprimer quand MQ OK,
-            if isinstance(ddict[k], str) :
-                ddict[k] = ddict[k].replace("'", "&squot;")  # remplace les caractères interdits pour rinor
-                if len(str(ddict[k])) >800 :
-                    ddict[k] = ddict[k][:800]
-                    print("value raccourccis : ", k, ddict[k])
-                    self.log.debug ("Format data to UI : value to large, cut to 800, key : %s, value : %s" % (str(k), str(ddict[k])))
-        return str(ddict).replace('{', '&ouvr;').replace('}', '&ferm;').replace('"','&quot;').replace("'",'&quot;').replace('False', 'false').replace('True', 'true').replace('None', '""')
-
-
     def on_mdp_request(self, msg):
         # display the req message
         print(msg)
@@ -191,51 +168,6 @@ class OZwave(XplPlugin):
             if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
 
-    def ui_cmd_cb(self, message):
-        """xpl en provenace de l'UI (config/special)"""
-        response = True
-        info = "essais"
-        request = self.getdict2UIdata(message.data['value'])
-        print("Commande UI")
-        if message.data['group'] =='UI' :
-            mess = XplMessage()
-            mess.set_type('xpl-trig')
-            mess.set_schema('ozwave.basic')
-            if request['request'] == 'ctrlAction' :
-                action = dict(request)
-                del action['request']
-                report = self.myzwave.handle_ControllerAction(action)
-                info = self.getUIdata2dict(report)
-                mess.add_data({'command' : 'Refresh-ack',
-                                    'group' :'UI',
-                                    'ctrlaction' : request['action'],
-                                    'data': info})
-                if request['cmd'] =='getState' and report['cmdstate'] != 'stop' : response = False
-            elif request['request'] == 'ctrlSoftReset' :
-                info = self.getUIdata2dict(self.myzwave.handle_ControllerSoftReset())
-                mess.add_data({'command' : 'Refresh-ack',
-                                    'group' :'UI',
-                                    'data': info})
-            elif request['request'] == 'ctrlHardReset' :
-                info = self.getUIdata2dict(self.myzwave.handle_ControllerHardReset())
-                mess.add_data({'command' : 'Refresh-ack',
-                                    'group' :'UI',
-                                    'data': info})
-            elif request['request'] == 'GetPluginInfo' :
-                info = self.getUIdata2dict(self.myzwave.getPluginInfo())
-                mess.add_data({'command' : 'Refresh-ack',
-                                    'group' :'UI',
-                                    'node' : 0,
-                                    'data': info})
-            else :
-                mess.add_data({'command' : 'Refresh-ack',
-                                    'group' :'UI',
-                                    'data': "unknown request",
-                                    'error': "unknown request"})
-                print "commande inconnue"
-            if response : self.myxpl.send(mess)
-
-
     def send_xPL(self, xPLmsg,  args = None):
         """ Envoie une commande ou message zwave vers xPL"""
         # TODO: Vérifier le format xpl d'adresse du device
@@ -244,7 +176,7 @@ class OZwave(XplPlugin):
         mess.set_schema(xPLmsg['schema'])
         if xPLmsg.has_key('data') : mess.add_data(xPLmsg['data'])
         if args :
-            mess.add_data({'data': self.getUIdata2dict(args)})
+            mess.add_data({'data': args})
         print mess
         self.log.debug("************ sending xPL :{0}, {1} : {2}".format(mess.type, mess.schema, mess.data))
         self.myxpl.send(mess)
