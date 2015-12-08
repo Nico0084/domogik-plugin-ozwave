@@ -2169,11 +2169,11 @@
                 "type": "python"
             }
         ],
-        "description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
+        "description" : "Z-Wave is a wireless communications system designed to allow devices in the home to communicate with one another for the purposes of home automation",
         "domogik_min_version" : "0.5.0",
         "name": "ozwave",
         "type" : "plugin",
-        "version" : "0.5.0b1"
+        "version" : "0.5.0"
     },
     "json_version" : 2
     }
