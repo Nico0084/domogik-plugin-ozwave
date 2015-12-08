@@ -2,13 +2,14 @@
 Dependencies installation
 *************************
 
-Install tailer library for Python
-*********************************
+Install the tailer library for Python
+*************************************
 - `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_
 
-Installation with  "pip install tailer" or "easy_install tailer"
+Install **tailer** : ::
 
-That all.
+    $ sudo pip install tailer
+
 
 Install python-openzwave
 ************************
@@ -18,13 +19,15 @@ Purpose
 
 This not a plugin, but an external library for zwave plugin, is based on `python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ software.
 
-python-openzawe and `openzawe <https://github.com/OpenZWave/open-zwave>`_ are in hight development, by two different teams, so installing it can be sometimes not so easy. So we propose you different methods to install it.
+python-openzawe and `openzawe <https://github.com/OpenZWave/open-zwave>`_ are in high development, by two different teams, so installing it can be sometimes not so easy. So we propose you different methods to install it.
+
+.. todo:: not clear
 
 For the operation of ozwave domogik plugin there is only need part python-openzwave Lib.
 
 Of course you can install part python-openzwave API
 
-Get information form `bibi21000 home site <http://bibi21000.gallet.info/index.php/en/home-uk/88-home-automation-uk/126-python-openzwave-documentation.html>`_ form more python-openzwave details.
+Get information from `bibi21000 home site <http://bibi21000.gallet.info/index.php/en/home-uk/88-home-automation-uk/126-python-openzwave-documentation.html>`_ form more python-openzwave details.
 
 All information are extracted from the git repository https://github.com/OpenZWave/python-openzwave
 
