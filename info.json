@@ -68,35 +68,35 @@
         }
     ],
     "configuration" : [{
-			"key": "autoconfpath",
+            "key": "autoconfpath",
             "name": "Auto openzwave lib path detection",
-			"description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
-			"default" : true,
-			"required": true,
-			"type" : "boolean"
-		},{
-			"key" : "configpath",
+            "description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
+            "default" : true,
+            "required": true,
+            "type" : "boolean"
+        },{
+            "key" : "configpath",
             "name": "Openzwave Configuration Path",
-			"description" : "Path for openzwave files configuration (see your openzwave installation).",
-			"default" : "/usr/local/share/python-openzwave/config",
-			"required": true,
-			"type" : "string"
-		},{
-			"key" : "cpltmsg",
+            "description" : "Path for openzwave files configuration (see your openzwave installation).",
+            "default" : "/usr/local/share/python-openzwave/config",
+            "required": true,
+            "type" : "string"
+        },{
+            "key" : "cpltmsg",
             "name" : "Send complet message",
-			"description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
-			"default" : false,
-			"required": true,
-			"type" : "boolean"
-		},{
-			"key" : "ozwlog",
+            "description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
+            "default" : false,
+            "required": true,
+            "type" : "boolean"
+        },{
+            "key" : "ozwlog",
             "name": "Enable openzwave log",
-			"description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
-			"default" : false,
-			"required": true,
-			"type" : "boolean"
-		}
-	],
+            "description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
+            "default" : false,
+            "required": true,
+            "type" : "boolean"
+        }
+    ],
     "sensors" : {
         "node_id" : {
             "name" : "Node Id",
@@ -113,7 +113,7 @@
             }
         },
         "ctrl_status" : {
-			"name" : "Zwave controler status",
+            "name" : "Zwave controler status",
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
@@ -125,7 +125,7 @@
                     "expire": 0,
                     "round_value": 0
             }
-		},
+        },
         "user_msg" : {
             "name" : "User message",
             "incremental": false,
@@ -1685,7 +1685,7 @@
             }
         }
     },
-	"device_types": {
+    "device_types": {
             "primary.controller" :{
                 "description": "Primary Controller",
                 "id": "primary.controller",
@@ -1713,12 +1713,12 @@
                 "sensors": [],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1733,12 +1733,12 @@
                 "sensors": ["switch_state"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1753,12 +1753,12 @@
                 "sensors": ["switch_state", "energy", "power"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1773,12 +1773,12 @@
                 "sensors": ["switch_state", "energy", "energy_k", "power"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1793,12 +1793,12 @@
                 "sensors": ["switch_state", "power_failure"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1813,19 +1813,19 @@
                 "sensors": ["opening_sensor", "power_applied", "battery_level", "low_battery", "tamper_event"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1838,12 +1838,12 @@
                 "sensors": ["temperature_c"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1858,19 +1858,19 @@
                 "sensors": ["temperature_c", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1883,19 +1883,19 @@
                 "sensors": ["temperature_c", "humidity", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1908,12 +1908,12 @@
                 "sensors": ["temperature_c", "humidity"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1928,19 +1928,19 @@
                 "sensors": ["temperature_c", "humidity", "relative_humidity", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1953,12 +1953,12 @@
                 "sensors": ["temperature_c", "humidity", "relative_humidity"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1973,19 +1973,19 @@
                 "sensors": ["level", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1998,12 +1998,12 @@
                 "sensors": ["level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -2018,19 +2018,19 @@
                 "sensors": ["power", "energy", "energy_k", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2043,12 +2043,12 @@
                 "sensors": ["power", "energy", "energy_k"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -2063,19 +2063,19 @@
                 "sensors": ["motion_sensor_level", "luminance", "temperature_c", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2088,19 +2088,19 @@
                 "sensors": ["sensor_alarm", "tamper_event","low_battery", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2113,19 +2113,19 @@
                 "sensors": ["sensor_alarm", "low_battery", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2138,42 +2138,42 @@
                 "sensors": ["thermostat_setpoint", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-					"xpl": true,
+                    "xpl": true,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
                     "key" : "batterycheck",
-					"xpl": false,
+                    "xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
             }
         },
-	"identity" : {
-		"author" : "Nicolas VIGNAL",
-		"author_email" : "nico84dev at gmail.com",
+    "identity" : {
+        "author" : "Nicolas VIGNAL",
+        "author_email" : "nico84dev at gmail.com",
         "tags": ["z-wave"],
-		"dependencies" : [{
-				"id" : "python-openzwave-lib (>=0.3.0)",
-				"type" : "python"
-			},
+        "dependencies" : [{
+                "id" : "python-openzwave-lib (>=0.3.0)",
+                "type" : "python"
+            },
             {
                 "id": "tailer (>=0.2.1)",
                 "type": "python"
             }
-		],
-		"description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
-		"domogik_min_version" : "0.5.0",
+        ],
+        "description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
+        "domogik_min_version" : "0.5.0",
         "name": "ozwave",
-		"type" : "plugin",
-		"version" : "0.5.0b1"
-	},
+        "type" : "plugin",
+        "version" : "0.5.0b1"
+    },
     "json_version" : 2
-	}
+    }

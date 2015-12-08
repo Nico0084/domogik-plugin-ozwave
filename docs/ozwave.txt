@@ -33,13 +33,6 @@ Viewing and setting Zwave devices is accessed via a special plugin page from the
 
 Development is in progress, features will get gradually
 
-Detailed architecture
----------------------
-
-.. |principe-schema.png| image:: ozwave_principe-schema.png
-    :width: 700px
-
-|principe-schema.png|
 
 Dependencies
 ============
@@ -90,15 +83,15 @@ Create the udev rule for controller
 
 You may create a udev rule for this device. The rule and filename are given in the **Requirements** tab of the plugin configuration page.
 
-Currently, your PC controller is known as "/dev/ttyUSBx" (by default). This is not very convenient nor meaningful.
-We will then create a new udev rule that will create a link called "/dev/zwave" that will point to "/dev/ttyUSBx".
+Currently, your PC controller is known as **/dev/ttyUSBx** (by default). This is not very convenient nor meaningful.
+We will then create a new udev rule that will create a link called **/dev/zwave** that will point to **/dev/ttyUSBx**.
 
 Gather information about your device controller (USB)
 -----------------------------------------------------
 
 - Example using Aeon Stick2 on USB port. For ohter model it's should different.
 
-* Use "lsusb" command for listing of USB devices, check before and after plug your USB controller.
+* Use **lsusb** command for listing of USB devices, check before and after plug your USB controller.
 
 .. code-block:: bash
 
@@ -117,7 +110,7 @@ Gather information about your device controller (USB)
     Bus 004 Device 006: ID 0403:6001 Future Technology Devices International, Ltd FT232 USB-Serial (UART) IC
     Bus 007 Device 002: ID 0b05:179c ASUSTek Computer, Inc.
 
-* Use "ls /dev/ttyUSB*" to check your num USB, check before and after plug your USB controller.
+* Use **ls /dev/ttyUSB*** to check your num USB, check before and after plug your USB controller.
 
 * Before
 
@@ -133,7 +126,7 @@ Gather information about your device controller (USB)
     $ ls /dev/ttyUSB*
     /dev/ttyUSB0  /dev/ttyUSB2
 
-* Use "udevadm" command to gather information about your device :
+* Use **udevadm** command to gather information about your device :
 
 .. code-block:: bash
 
@@ -255,12 +248,12 @@ Gather information about your device controller (USB)
         SUBSYSTEMS==""
         DRIVERS==""
 
-Those information will be useful to determinate for sure that this device is your Zwave controller. We will use several information, flagged above as "DRIVERS", "ATTRS{manufacturer}" and "ATTRS{product}". With that, we will be sure that we'll be talking to our controller. You can chose others attributs.
+Those information will be useful to determinate for sure that this device is your Zwave controller. We will use several information, flagged above as **DRIVERS** **ATTRS{manufacturer}** and **ATTRS{product}** With that, we will be sure that we'll be talking to our controller. You can chose others attributs.
 
 Create rule.
 ------------
 
-* Create a new file, in folder "/etc/udev/rules.d". Let's call it "98-usbcp210x.rules".
+* Create a new file, in folder **etc/udev/rules.d** Let's call it **98-usbcp210x.rules**
 
 * Enter those information in the file :
 
@@ -269,7 +262,7 @@ Create rule.
     # for z-Stick serie 2 to domogik /dev/zwave
     DRIVERS=="usb", ATTRS{manufacturer}=="Silicon Labs", ATTRS{product}=="CP2102 USB to UART Bridge Controller", SYMLINK+="zwave", MODE="0666"
 
-The "DRIVERS", "ATTRS{manufacturer}", "ATTRS{product}" values must be coherent with what you have found above.
+The **DRIVERS** **ATTRS{manufacturer}** **ATTRS{product}** values must be coherent with what you have found above.
 * Ask udev to rediscover your device :
 
 .. code-block:: bash
@@ -331,7 +324,7 @@ In Domogik administration section, go to client plugin-ozwave details page.
 |                |               |                                                                                      |
 |                |               | When activate all openzwave C++ lib events are logged in OZW_Log.txt.                |
 |                |               |                                                                                      |
-|                |               | You cant read it in user path "share/domogik/data/ozwave/OZW_Log.txt"                |
+|                |               | You cant read it in user path **share/domogik/data/ozwave/OZW_Log.txt**                |
 |                |               |                                                                                      |
 |                |               | .. warning ::                                                                        |
 |                |               |                                                                                      |
@@ -341,7 +334,7 @@ In Domogik administration section, go to client plugin-ozwave details page.
 
 Creating devices for ozwave
 -----------------------------
-In clients page of admin UI, go to **plugin-ozwave-<your_host_domogik>**, select tab **"Devices"**, **"New"** to create your devices.
+In clients page of admin UI, go to **plugin-ozwave-<your_host_domogik>**, select tab **Devices**, **New** to create your devices.
 
 .. |menudevices| image:: ozwave_menu-devices.png
     :width: 500px
@@ -360,7 +353,7 @@ Or all other device type who are a controller (Z-Stick2)
 |creat_ctrldevice|
 
 That device create a link between the driver and openzwave, also between the zwave homeId and your networkId used by domogik for devices adresse.
-You can create it after starting the plugin, so it is possible to find its address in the devices table of the "controller and devices".
+You can create it after starting the plugin, so it is possible to find its address in the devices table of the **controller and devices**
 You can create as many **Zwave Controler** you have primary controllers.
 
 .. note ::
