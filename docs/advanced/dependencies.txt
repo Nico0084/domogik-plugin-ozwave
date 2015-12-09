@@ -1,10 +1,11 @@
-*************************
-Dependencies installation
-*************************
+************************************
+Advanced - Dependencies installation
+************************************
 
 Install the tailer library for Python
 *************************************
-- `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_
+
+* `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_
 
 Install **tailer** : ::
 

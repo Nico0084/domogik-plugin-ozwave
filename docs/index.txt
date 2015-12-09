@@ -14,4 +14,7 @@ Table of content
     /supporttools
     /dev
     /changelog
+    /advanced
+    /advanced/dependencies
+    /advanced/udev_rules
 
