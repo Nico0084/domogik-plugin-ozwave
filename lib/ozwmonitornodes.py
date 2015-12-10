@@ -63,7 +63,7 @@ class ManageMonitorNodes(threading.Thread):
         self._pluginLog = ozwManager._log
         self._stop = ozwManager._stop
         self._running = False
-        self._pluginLog.info('Monitor node(s) manager is initialized.')
+        self._pluginLog.info(u'Monitor node(s) manager is initialized.')
 
     def refNode(self, homeId, nodeId):
         return self._ozwManager.refNode(homeId, nodeId)
@@ -75,12 +75,12 @@ class ManageMonitorNodes(threading.Thread):
         if self._ozwManager._ozwLog :
             ozwfile = os.path.join(self._ozwManager._userPath + "OZW_Log.txt")
             if not os.path.isfile(ozwfile) :
-                self._pluginLog.info( "No existing openzwave log file : " + ozwfile + " Monitor Nodes don't monitor openzwave lib.")
+                self._pluginLog.info(u"No existing openzwave log file : '{0}'. Monitor Nodes don't monitor openzwave lib.".format(ozwfile))
             else :
                 rOZW = MonitorOZW(self.logOZW_report,  ozwfile, self._stop,  self._pluginLog)
                 rOZW.start()
-        else : self._pluginLog.info( "No log activate for openzwave. Monitor Nodes don't monitor openzwave lib.")
-        self._pluginLog.info('Monitor node(s) manager is started.')
+        else : self._pluginLog.info(u"No log activate for openzwave. Monitor Nodes don't monitor openzwave lib.")
+        self._pluginLog.info(u'Monitor node(s) manager is started.')
         while not self._stop.isSet() and self._running :
             if self.__reports :
                 report = self.__reports.popleft()
@@ -94,8 +94,7 @@ class ManageMonitorNodes(threading.Thread):
             self.nodesMonitor[node].close()
             del self.nodesMonitor[node]
         if rOZW is not None : rOZW.stop()
-        self._pluginLog.info('Monitor node(s) manager is stopped.')
-        print 'Monitor node(s) manager is stopped.'
+        self._pluginLog.info(u'Monitor node(s) manager is stopped.')
 
     def stop(self):
         """Stop all thread of monitoring"""
@@ -116,10 +115,10 @@ class ManageMonitorNodes(threading.Thread):
                     device['nodeId'] = self._ozwManager.getCtrlOfNetwork(device['homeId']).node.nodeId
                 if self.isMonitored(device['homeId'], device['nodeId']) :
                     self.__reports.append({'date': datetime.now(),'type': "Xpl report : ", 'homeid': device['homeId'], 'nodeId': device['nodeId'], 'datas': str(xplMsg.data)})
-            except Exception as e :
-                self._pluginLog.warning("Can't do Xpl report, domogik device controler of networkid unknown : {0} ".format(device))
+            except :
+                self._pluginLog.warning(u"Can't do Xpl report, domogik device controler of networkid unknown : {0} ".format(device))
 #                raise OZwaveMonitorNodeException("xpl_report error for device {0} : {1} \n -- xplMsg : {2}".format(device, e, xplMsg))
-    #    else : self._pluginLog.debug("Monitoring nodes, No 'device' key defined in xPL msg ({0})".format(xplMsg))
+    #    else : self._pluginLog.debug(u"Monitoring nodes, No 'device' key defined in xPL msg ({0})".format(xplMsg))
 
     def nodeChange_report(self,  homeId,  nodeId,  msg):
         """Callback de node lui même"""
@@ -174,7 +173,7 @@ class ManageMonitorNodes(threading.Thread):
             if not self.isMonitored(homeId, nodeId) :
                 fName = self.getFileName(homeId, nodeId)
                 fLog = open(fName,  "w")
-                self._pluginLog.info('Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
+                self._pluginLog.info(u'Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
                 retval.update({'state': 'started','usermsg':'Start monitor node {0} in log file.'.format(nodeId), 'file': fName})
                 fLog.write("{0} - Started monitor log for node {1}.\n".format(datetime.now(),  nodeId))
                 infos = node.getInfos()
@@ -188,7 +187,7 @@ class ManageMonitorNodes(threading.Thread):
                 self.nodesMonitor.update({self.refNode(homeId, nodeId) : fLog})
             else :
                 retval.update({'state': 'started','usermsg': 'Monitor node {0} in log already started.'.format(nodeId), 'file': fName})
-                self._pluginLog.debug('Monitor node {0} in log already started.'.format(nodeId))
+                self._pluginLog.debug(u'Monitor node {0} in log already started.'.format(nodeId))
         else :
             retval['error'] = u"Can't start Monitor, Node is registered in manager (homeid: {0}, nodeId: {0})".format(homeId,  nodeId)
         return retval
@@ -201,7 +200,7 @@ class ManageMonitorNodes(threading.Thread):
             if self.isMonitored(homeId, nodeId) :
                 fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
                 retval.update({'state': 'stopped','usermsg': 'Stop monitor node {0} in log file.'.format(nodeId), 'file': self.getFileName(homeId, nodeId)})
-                self._pluginLog.info('Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(homeId, nodeId)))
+                self._pluginLog.info(u'Stop monitor node {0} in log file : {1}.'.format(nodeId,  self.getFileName(homeId, nodeId)))
                 fLog.write("{0} - Stopped monitor log for node {1}.".format(datetime.now(),  nodeId))
                 fLog.close()
                 del self.nodesMonitor[self.refNode(homeId, nodeId)]
@@ -235,19 +234,19 @@ class MonitorOZW(threading.Thread):
         self.ozwlogfile = ozwlogfile
         self._stop = stop
         self._pluginLog = pluginLog
-        self._pluginLog.info('Monitor openzwave manager is initialized.')
+        self._pluginLog.info(u'Monitor openzwave manager is initialized.')
         self.running = False
 
     def run(self):
         """Démarre le thread d'écoute du log openzwave."""
-        self._pluginLog.info('Monitor openzwave manager is started.')
+        self._pluginLog.info(u'Monitor openzwave manager is started.')
         self.running = True
         ozwTail = Tailer(open(self.ozwlogfile,  'rb'))
         for line in ozwTail.follow(delay=0.01):
             if line : self.cb_logNode(line)
             if self._stop.isSet() or not self.running : break
         self.running = False
-        self._pluginLog.info('Monitor openzwave manager is stopped.')
+        self._pluginLog.info(u'Monitor openzwave manager is stopped.')
 
     def stop(self):
         """Stop le thread d'écoute du log openzwave au prochain log."""
