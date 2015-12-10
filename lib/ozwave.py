@@ -172,6 +172,8 @@ class OZWavemanager():
             self._log.info(u"data_types list loaded.")
         else :
             self._log.warning(u"Error on retreive data_types list from MQ.")
+        # create DomogikLabelAvailable list from json
+        self.InitDomogikLabelAvailable()
         # get the devices list
         self.refreshDevices()
         for a_device in self._plugin.devices:
@@ -258,18 +260,30 @@ class OZWavemanager():
             if dT == name : return self._dataTypes[dT]
         return {}
 
+    def InitDomogikLabelAvailable(self):
+        DomogikLabelAvailable = []
+        for sensor in self._plugin.json_data['sensors']:
+            DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())
+        for cmd in self._plugin.json_data['commands']:
+            DomogikLabelAvailable.append(self._plugin.json_data['commands'][sensor]['name'].lower())
+        self._log.info(u"Domogik label available list initialized with {0} labels.".format(len(DomogikLabelAvailable)))
+        self._log.debug(u"  -- list in lower case : {0}".format(DomogikLabelAvailable))
+
     def getSensorByName(self, name):
         """Return the sensor(s) set in json corresponding to name """
         sensors = {}
+        name = name.lower()
         for sensor in self._plugin.json_data['sensors']:
-            if self._plugin.json_data['sensors'][sensor]['name'] == name : sensors[sensor] = self._plugin.json_data['sensors'][sensor]
+            if self._plugin.json_data['sensors'][sensor]['name'].lower() == name : sensors[sensor] = self._plugin.json_data['sensors'][sensor]
         return sensors
 
     def getCommandByName(self, name):
         """Return the command(s) set in json corresponding to name """
         cmds = {}
+        name = name.lower()
         for cmd in self._plugin.json_data['commands']:
-            if self._plugin.json_data['commands'][cmd]['name'] == name : cmds[cmd] = self._plugin.json_data['commands'][cmd]
+            for param in self._plugin.json_data['commands'][cmd]['parameters']:
+                if param['key'].lower() == name : cmds[cmd] = self._plugin.json_data['commands'][cmd]
         return {}
 
     def getDeviceCtrl(self, key, value ):

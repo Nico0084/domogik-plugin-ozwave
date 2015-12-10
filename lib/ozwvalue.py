@@ -273,12 +273,12 @@ class ZWaveValueNode:
         """Return unit string convert to domogik DT_Type used"""
         if self._valueData['units'].lower() == "seconds" : return "s"
         elif self._valueData['units'].lower() == "c" : return "°C"
+        elif self._valueData['units'].lower() == "f" : return "°F"
         return self._valueData['units']
 
     def _getLabelDomogik(self):
-        """ retourne le label OZW formaté pour les listener domogik, en lowcase et espaces remplacés pas '-',
-            pour compatibilité adresse web et appel rest (spec Xpl)."""
-        retval = self.valueData['label'].lower().replace(" ", "-")
+        """ Return OZW label formated in lowcase."""
+        retval = self.valueData['label'].lower()
         return retval
 
     def getDataTypesFromZW(self):
@@ -286,34 +286,33 @@ class ZWaveValueNode:
             Depending of Label, Type and Units.
         """
 #        for DType in self._node._ozwmanager._dataTypes :
-        if self.valueData['type'] == 'Bool':
+        if self._valueData['type'] == 'Bool':
             # DT_Bool and childs DT_Switch, DT_Enable, DT_Binary, DT_Step, DT_UpDown, DT_OpenClose, DT_Start, DT_State
-            if self.valueData['label'] == 'Switch' : return ['DT_Switch']
+            if self.labelDomogik == 'switch' :
+                return ['DT_Switch']
             return ['DT_Bool', 'DT_Enable', 'DT_Binary', 'DT_Step', 'DT_UpDown', 'DT_OpenClose', 'DT_Start', 'DT_State']
-        elif self.valueData['type'] == 'Byte' :
-            sensors = self._node._ozwmanager.getSensorByName(self.valueData['label'])
-            types =[]
-            if sensors :
-                for sensor in sensors :
-                    if 'unit' in sensors[sensor] :
-                        if sensors[sensor]['unit'] == self._getDmgUnitFromZW(): types.append(sensors[sensor]['data_type'])
+        elif self._valueData['type'] in ['Byte', 'Decimal', 'Int', 'Short', 'List', 'Schedule', 'String', 'Button'] :
+            if self._valueData['readOnly'] : # value set as sensor
+                sensors = self._node._ozwmanager.getSensorByName(self.labelDomogik)
+                types =[]
+                unit = self._getDmgUnitFromZW()
+                if sensors :
+                    for sensor in sensors :
+                        if unit != "" :
+                            if 'unit' in sensors[sensor] :
+                                if sensors[sensor]['unit'] == unit :
+                                    types.append(sensors[sensor]['data_type'])
+                        else :
+                            if not 'unit' in sensors[sensor] or not sensors[sensor]['unit'] :
+                                types.append(sensors[sensor]['data_type'])
+                    return types
+            else : # value set as command
+                cmds = self._node._ozwmanager.getCommandByName(self.labelDomogik)
+                types =[]
+                if cmds :
+                    for cmd in cmds :
+                        for param in cmds[cmd]['parameters'] : types.append(param['data_type'])
                 return types
-#        elif self.valueData['type'] == 'Decimal' :
-#        elif self.valueData['type'] == 'Int' :
-#        elif self.valueData['type'] == 'List' : value = str(val)
-#        elif self.valueData['type'] == 'Schedule' :
-#        elif self.valueData['type'] == 'Short' :
-#        elif self.valueData['type'] == 'String' : value = str(val)
-#        elif self.valueData['type'] == 'Button' : # TODO: type button set value ?
-#
-#
-#
-#
-#            if 'unit' in DType :
-#                if self._valueData['units'] == DType['unit']:
-#                    if self._valueData
-#                    return "DT_Temp"
-#            if self._valueData['label'] == Temperature :
         return []
 
     def getDomogikDevice(self):
@@ -326,15 +325,40 @@ class ZWaveValueNode:
     def getDmgSensor(self):
         """Return Sensor of domogik device corresponding to value"""
         dmgDevice = self.dmgDevice
-        labelDomogik = self._getLabelDomogik()
         sensors = {}
+        labelDomogik = self.labelDomogik
         if dmgDevice is not None :
             for sensor in dmgDevice['sensors']:
-                if sensor['name'] == self.valueData['label'] :
-#                   sensor['data_type'] == Unit:
-                    sensors[dyParam['key']] = dmgDevice['sensors'][sensor]
-        if sensors : return sensors
+                if dmgDevice['sensors'][sensor]['name'].lower() == labelDomogik :
+                    # handle praticular labels
+                    if labelDomogik == 'temperature' : # °C, F, K
+                        if dmgDevice['sensors'][sensor]['data_type'] in self.getDataTypesFromZW():
+                            sensors[sensor] = dmgDevice['sensors'][sensor]
+                    else : # generic labels
+                        sensors[sensor] = dmgDevice['sensors'][sensor]
+            if sensors :
+                if len(sensors) > 1 :
+                    self.log.warning(u"More than one compatibility of domogik sensor. Device_type : {0}, sensors : {1}".format(dmgDevice['device_type_id'], sensors))
+                return sensors
         return sensors
+
+    def getDmgCommand(self):
+        """Return Command of domogik device corresponding to value"""
+        dmgDevice = self.dmgDevice
+        labelDomogik = self.labelDomogik
+        cmds = {}
+        if dmgDevice is not None :
+            for cmd in dmgDevice['commands']:
+                for param in dmgDevice['commands'][cmd] :
+                    if param['key'].lower() == labelDomogik :
+                        # handle praticular labels
+                        # generic labels
+                        cmds[cmd] = dmgDevice['commands'][cmd]
+                if cmds :
+                    if len(sensors) > 1 :
+                        self.log.warning(u"More than one compatibility of domogik commmand. Device_type : {0}, sensors : {1}".format(dmgDevice['device_type_id'], sensors))
+                return cmds
+        return {}
 
     def getInfos(self):
         """ Retourne les informations de la value , format dict{} """

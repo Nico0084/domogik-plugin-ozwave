@@ -153,18 +153,19 @@ CmdsClassAvailable = [ 'COMMAND_CLASS_SWITCH_BINARY', 'COMMAND_CLASS_SENSOR_BINA
                        'COMMAND_CLASS_SENSOR_ALARM', 'COMMAND_CLASS_THERMOSTAT_FAN_MODE', 'COMMAND_CLASS_THERMOSTAT_FAN_STATE',
                        'COMMAND_CLASS_THERMOSTAT_MODE', 'COMMAND_CLASS_THERMOSTAT_HEATING', 'COMMAND_CLASS_THERMOSTAT_OPERATING_STATE']
 
-# Listes des types reconnues comme device domogik (label openzwave)
-DomogikLabelAvailable = ['temperature', 'relative-humidity', 'humidity', 'battery-level', 'sensor', 'status', # sensor / actuator
-                          'power', 'energy', 'previous-reading', 'luminance',  'general', 'motion',
-                          'count', 'instant-energy-production', 'total-energy-production',
-                          'energy-production-today', 'total-production-time', 'indicator', 'locked', 'level',
-                          'power-applied', 'power-failure', 'tamper-event',  'low-battery', 'smoke',
-                          'carbonmonoxide', 'carbondioxide', 'heat', 'flood',
-                          'switch', 'inc', 'dec', 'bright', 'dim',  'toggle-switch',  # actuator
-                          'fan-mode',  'fan-state', 'mode',  'operating-state',  'setpoint',
-                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
-                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating' # Thermostat setpoint type
-                        ]
+# List off all recognized Label as device domogik (label openzwave) - List loaded directly from json sensors and commands
+DomogikLabelAvailable = []
+#                        ['temperature', 'relative-humidity', 'humidity', 'battery-level', 'sensor', 'status', # sensor / actuator
+#                          'power', 'energy', 'previous-reading', 'luminance',  'general', 'motion',
+#                          'count', 'instant-energy-production', 'total-energy-production',
+#                          'energy-production-today', 'total-production-time', 'indicator', 'locked', 'level',
+#                          'power-applied', 'power-failure', 'tamper-event',  'low-battery', 'smoke',
+#                          'carbonmonoxide', 'carbondioxide', 'heat', 'flood',
+#                          'switch', 'inc', 'dec', 'bright', 'dim',  'toggle-switch',  # actuator
+#                          'fan-mode',  'fan-state', 'mode',  'operating-state',  'setpoint',
+#                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
+#                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating' # Thermostat setpoint type
+#                        ]
 
 # Notifications reportés sur le hub xPL pour l'UI
 UICtrlReportType = ['plugin-state', 'driver-ready', 'driver-remove', 'init-process', 'ctrl-error', 'ctrl-action',
