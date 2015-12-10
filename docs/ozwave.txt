@@ -9,13 +9,22 @@ Plugin documentation
 
 |icon|
 
-Last change
-===========
+Last changes
+============
 
 Before installation a new release of this plugin, please check the :doc:`changelog <changelog>`.
 
 Purpose
 =======
+
+.. note::
+
+    Please notice that this plugin is **still in development**!
+
+    If you find any issue, please create a ticket on the Gihub repository : https://github.com/Nico0084/domogik-plugin-ozwave/issues
+    
+    In the same way, if something is not clear or wrong in this documentation, feel free to open a ticket!
+
 Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control. This plugin allows to control zwave devices.
 
 It uses the open source `library openZwave c++ project <https://github.com/OpenZWave/open-zwave>`_ and `python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ as interfacing cython,
