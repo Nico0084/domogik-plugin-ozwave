@@ -28,7 +28,7 @@ Implements
 
 -Zwave
 
-@author: Nico <nico84dev@gmail.com> 
+@author: Nico <nico84dev@gmail.com>
 @author: bibi21000 aka Sébastien GALLET <bibi21000@gmail.com>
 @copyright: (C) 2007-2012 Domogik project
 @license: GPL(v3)
@@ -38,15 +38,15 @@ Implements
 import libopenzwave
 from ozwnode import ZWaveNode
 from ozwdefs import *
-import time 
+import time
 
 class OZwaveCtrlException(OZwaveException):
     """"Zwave Controller exception  class"""
-            
+
     def __init__(self, value):
         OZwaveException.__init__(self, value)
         self.msg = "OZwave Controller exception:"
-        
+
 class ZWaveController(ZWaveNode):
     '''
     The controller manager.
@@ -106,19 +106,19 @@ Callbacks :
         self.networkId = networkId if self._isPrimaryCtrl else ""
         self._lastCtrlState = {'update' : time.time(),
                                   'state': libopenzwave.PyControllerState[0],
-                                  'stateMsg': libopenzwave.PyControllerState[0].doc, 
-                                  'stateId': 0, 
-                                  'error' : libopenzwave.PyControllerError[0], 
-                                  'errorMsg' : libopenzwave.PyControllerError[0].doc, 
-                                  'errorId' : 0, 
-                                  'nodeId': 0, 
+                                  'stateMsg': libopenzwave.PyControllerState[0].doc,
+                                  'stateId': 0,
+                                  'error' : libopenzwave.PyControllerError[0],
+                                  'errorMsg' : libopenzwave.PyControllerError[0].doc,
+                                  'errorId' : 0,
+                                  'nodeId': 0,
                                   'command': libopenzwave.PyControllerCommand[0]
                                   }
- 
+
 # On accède aux attributs uniquement depuis les property
     isPrimaryCtrl = property(lambda self: self._isPrimaryCtrl)
     getNetworkCtrl = property(lambda self: self._ozwmanager.getCtrlOfNetwork(self._homeId))
-    
+
     def __str__(self):
         """
         The string representation of the node.
@@ -130,7 +130,7 @@ Callbacks :
     def getLastState(self):
         """Retourne le dernier etat connus du zwctrl controlleur et issue du callback des messages action"""
         return self._lastCtrlState
-        
+
     def reportChangeToUI(self, report):
         """Envois un report de changement/notification du réseau zwave en générant un evénement
             à destination de l'UI a travers la MQ.
@@ -141,9 +141,9 @@ Callbacks :
         msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
         msg["Node fail"] = self.getNetworkCtrl.getFailedNodeCount()
         print 'Send report to MQ: '
-        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.report', msg)
+        self._ozwmanager._plugin.publishMsg('ozwave.ctrl.report', msg)
         print '**************************************'
-        
+
     def stats(self):
         """
         Retrieve statistics from driver.
@@ -182,23 +182,23 @@ Callbacks :
         if self._manager.isNodeBeamingDevice(self._homeId, self._nodeId): nodecaps.add('Beaming')
         if self._manager.isNodeSecurityDevice(self._homeId, self._nodeId): nodecaps.add('Security')
         if self._manager.isNodeFrequentListeningDevice(self._homeId, self._nodeId): nodecaps.add('FLiRS')
-        if self.isPrimaryCtrl: 
+        if self.isPrimaryCtrl:
             nodecaps.add('Primary Controller')
             if self._manager.isStaticUpdateController(self._homeId): nodecaps.add('Static Update Controller')
             if self._manager.isBridgeController(self._homeId): nodecaps.add('Bridge Controller')
         else : nodecaps.add('Secondary Controller')
         self._capabilities = nodecaps
         self._ozwmanager._log.debug('Node [%d] capabilities are: %s', self._nodeId, self._capabilities)
-        
+
     def handle_Action(self,  action):
         """Handle request controlleur action from MQ"""
         retval = action
         retval['error'] = ''
         if action['action'] =='getState':
-            retval.update({'state': self._lastCtrlState['state'], 
-                                 'usermsg' : self._lastCtrlState['stateMsg'], 
-                                 'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'], 
-                                 'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'], 
+            retval.update({'state': self._lastCtrlState['state'],
+                                 'usermsg' : self._lastCtrlState['stateMsg'],
+                                 'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'],
+                                 'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'],
                                  'nodeId': self._lastCtrlState['nodeId']
                                 })
             return retval
@@ -212,10 +212,10 @@ Callbacks :
                 retval['message'] = 'User have stop command.'
             else :
                 retval['error'] = 'Fail to stop controller commande.'
-                if self._lastCtrlState['state'] == libopenzwave.PyControllerState[0] : 
+                if self._lastCtrlState['state'] == libopenzwave.PyControllerState[0] :
                     retval['message'] = 'User have try stop command. But no action processing.'
-                else : 
-                    retval['message'] = 'User have try stop command. ' + self._lastCtrlState['command'] 
+                else :
+                    retval['message'] = 'User have try stop command. ' + self._lastCtrlState['command']
         elif action['action'] == 'start' :
             retval['message'] ='Command will be root soon as possible, be patient....'
             self._lastCtrlState['command'] = action['command']
@@ -224,22 +224,22 @@ Callbacks :
                 if self.add_node(doSecurity) :
                     retval['message'] ='It is up to you to perform the action on the local device(s) to add. Usually a switch to actuate 2 or 3 times.'
                 else : retval.update(errorCom)
-                
+
             elif action['command'] == 'CreateNewPrimary' :
                 if self.create_new_primary() :
                     retval['message'] ='Wait for refresh, be patient...'
-                else : retval.update(errorCom)   
-    
+                else : retval.update(errorCom)
+
             elif action['action'] == 'ReceiveConfiguration' :
                 if self.receive_configuration() :
                     retval['message'] ='Wait for refresh, be patient...'
-                else : retval.update(errorCom)    
-    
+                else : retval.update(errorCom)
+
             elif action['command'] == 'RemoveDevice' :
                 if self.remove_node() :
                     retval['message'] ='It is up to you to perform the action on the local device(s) to renove. Usually a switch to actuate 2 or 3 times.'
                 else : retval.update(errorCom)
-                
+
             elif action['command'] =='RemoveFailedNode':
                 if action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -250,8 +250,8 @@ Callbacks :
                     if self.remove_failed_node(action['nodeid']) :
                         retval['message'] ='Wait for removing node, be patient...'
                     else : retval.update(errorCom)
-                else : retval.update(errorNode)            
-                
+                else : retval.update(errorNode)
+
             elif action['command'] =='HasNodeFailed':
                 if action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -264,7 +264,7 @@ Callbacks :
                         retval['message'] ='Wait for research, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
-                    
+
             elif action['command'] =='ReplaceFailedNode':
                 if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -276,20 +276,20 @@ Callbacks :
                     if self.replace_failed_node(action['nodeid']) :
                         retval['message'] ='Wait for replace node failed, be patient...'
                     else : retval.update(errorCom)
-                else : retval.update(errorNode)                    
-                    
+                else : retval.update(errorNode)
+
             elif action['command'] == 'TransferPrimaryRole' :
                 if self.transfer_primary_role() :
                     retval['message'] = 'Add a new controller to the network and make it the primary. The existing primary will become a secondary controller.'
                 else : retval.update(errorCom)
-                    
+
             elif action['command'] == 'RequestNetworkUpdate' :
                 if  action['nodeid'] is not None and action['nodeid'] != 0 :
                     if self.request_network_update(action['nodeid']) :
                         retval['message'] ='Wait for refresh, be patient...'
                     else : retval.update(errorCom)
-                else : retval.update(errorNode)                    
-                    
+                else : retval.update(errorNode)
+
             elif action['command'] =='RequestNodeNeighborUpdate':
                 if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -302,7 +302,7 @@ Callbacks :
                         retval['message'] ='Wait for refresh, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
- 
+
             elif action['command'] =='AssignReturnRoute':
                 if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -328,7 +328,7 @@ Callbacks :
                         retval['message'] ='Wait for deleting return route, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
- 
+
             elif action['command'] =='SendNodeInformation':
                 if  action['nodeid'] is None or action['nodeid'] == 0 :
                     self._ozwmanager._log.error('No action.nodeid for controleur command, quit')
@@ -340,7 +340,7 @@ Callbacks :
                         retval['message'] ='Wait get node information, be patient...'
                     else : retval.update(errorCom)
                 else : retval.update(errorNode)
-                
+
             elif action['command'] == 'ReplicationSend' :
                 if  action['nodeid'] is not None and action['nodeid'] != 0 :
                     if self.replication_send(action['nodeid']) :
@@ -349,14 +349,14 @@ Callbacks :
                 else : retval.update(errorNode)
             if retval['error'] != '' :
                 retval['message'] ='Command not sended.'
- # TODO: CreateButton , DeleteButton 
- 
+ # TODO: CreateButton , DeleteButton
+
         else :
             retval['error'] = 'Unknown action : ' + action['action']
             retval['message'] ='Command error'
             retval['state']  = 'Stop'
         return retval
-        
+
     def _getValue(self, valueId):
         """Retourn l'objet Value correspondant au valueId"""
         retval= None
@@ -365,14 +365,14 @@ Callbacks :
                 retval = node._values[valueId]
                 break
         return retval
-        
+
     def hard_reset(self):
         """
         Hard Reset a PC Z-Wave Controller.
         Resets a controller and erases its network configuration settings.  The
         controller becomes a primary controller ready to add devices to a new network.
         """
-        if self.isPrimaryCtrl : 
+        if self.isPrimaryCtrl :
             self._manager.resetController(self.homeId)
             print('************  Hard Reset du controlleur ***********')
             self._ozwmanager._log.debug('Hard Reset of ZWave controller')
@@ -386,7 +386,7 @@ Callbacks :
         Soft Reset a PC Z-Wave Controller.
         Resets a controller without erasing its network configuration settings.
         """
-        if self.isPrimaryCtrl : 
+        if self.isPrimaryCtrl :
             self._manager.softResetController(self.homeId)
             print('************  Soft Reset du controlleur ***********')
             self._ozwmanager._log.debug('Soft Reset of ZWave controller')
@@ -394,7 +394,7 @@ Callbacks :
         else:
             self._ozwmanager._log.debug('No Soft Reset on secondary controller')
             return False
-    
+
     def cmdsAvailables(self):
         """
         Return all availables crontroller commands with associate documentations
@@ -405,16 +405,16 @@ Callbacks :
         for elem in  libopenzwave.PyControllerCommand :
             if elem != 'None' : retval[elem] = str(elem.doc)
         return retval
-        
+
     def add_node(self, doSecurity = False):
         """
         Start the Inclusion Process to add a Node to the Network.
         The Status of the Node Inclusion is communicated via Notifications. Specifically, you should
         monitor ControllerCommand Notifications.
-                 
+
         Results of the AddNode Command will be send as a Notification with the Notification type as
         Notification::Type_ControllerCommand
-                 
+
         :param _homeId: The Home ID of the Z-Wave network where the device should be added.
         :param _doSecurity: Whether to initialize the Network Key on the device if it supports the Security CC
         :return: True if the Command was sent succcesfully to the Controller
@@ -426,10 +426,10 @@ Callbacks :
         Remove a Device from the Z-Wave Network
         The Status of the Node Removal is communicated via Notifications. Specifically, you should
         monitor ControllerCommand Notifications.
-        
+
         Results of the AddNode Command will be send as a Notification with the Notification type as
         Notification::Type_ControllerCommand
-        
+
         :param _homeId: The HomeID of the Z-Wave network where you want to remove the device
         :return: True if the Command was send succesfully to the Controller
         """
@@ -443,10 +443,10 @@ Callbacks :
         believes the Node has Failed.
         The Status of the Node Removal is communicated via Notifications. Specifically, you should
         monitor ControllerCommand Notifications.
-        
+
         Results of the AddNode Command will be send as a Notification with the Notification type as
         Notification::Type_ControllerCommand
-        
+
         :param _homeId: The HomeID of the Z-Wave network where you want to remove the device
         :param _nodeId: The NodeID of the Failed Node.
         :return: True if the Command was send succesfully to the Controller
@@ -645,7 +645,7 @@ Callbacks :
         """
         self._ozwmanager._log.debug('Try to cancel controller {0} command : {1}'.format(self._ozwmanager.getHomeID(self.homeId), self._lastCtrlState))
         return self._manager.cancelControllerCommand(self.homeId)
-        
+
     def checkActionCtrl(self):
         """
         Check if controller action is in state finished return None is not finish or all state if finished
@@ -659,34 +659,34 @@ Callbacks :
 
     def handleNotificationCommand(self, args):
         """Handle notification ControllerCommand from openzwave."""
-        if args['controllerState'] == libopenzwave.PyControllerState[0] : 
+        if args['controllerState'] == libopenzwave.PyControllerState[0] :
             self._lastCtrlState['nodeId'] = args['nodeId']
             self._lastCtrlState['command'] = libopenzwave.PyControllerCommand[0]
-        if args['nodeId'] != 0 : 
+        if args['nodeId'] != 0 :
             self._lastCtrlState['nodeId'] = args['nodeId']
         self._lastCtrlState.update({ 'update' : time.time(),
                                               'state': args['controllerState'],
-                                              'stateMsg': args['controllerStateDoc'], 
+                                              'stateMsg': args['controllerStateDoc'],
                                               'stateId': args['controllerStateInt'],
-                                              'error' : args['controllerError'], 
-                                              'errorMsg' : args['controllerErrorDoc'], 
+                                              'error' : args['controllerError'],
+                                              'errorMsg' : args['controllerErrorDoc'],
                                               'errorId' : args['controllerErrorInt']
                                               })
         self.publishCommandState()
-                                              
+
     def publishCommandState(self):
         """Publish a controller command state over MQ"""
-        self._ozwmanager._xplPlugin.publishMsg('ozwave.ctrl.command', {'NetworkID': self.networkID,
-                'state': self._lastCtrlState['state'], 
-                'usermsg' : self._lastCtrlState['stateMsg'], 
-                'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'], 
-                'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'], 
+        self._ozwmanager._plugin.publishMsg('ozwave.ctrl.command', {'NetworkID': self.networkID,
+                'state': self._lastCtrlState['state'],
+                'usermsg' : self._lastCtrlState['stateMsg'],
+                'error' : '' if self._lastCtrlState['errorId'] == 0 else self._lastCtrlState['errorMsg'],
+                'command' : 'Internal' if self._lastCtrlState['command'] == 'None' else self._lastCtrlState['command'],
                 'nodeId': self._lastCtrlState['nodeId']
                 })
-        
+
 #@DEPRECIATE
 #TODO: delete after all begin_command_* modifed to direct command
-#    def zwcallback(self, args): 
+#    def zwcallback(self, args):
 #        """
 #        The Callback Handler used when sendig commands to the controller.
 #
@@ -704,7 +704,7 @@ Callbacks :
 #        message = args['message']
 #        print 'zwcallback Action State :', state, ' -- message :', message, ' -- controller', self
 #        self._ozwmanager.reportCtrlMsg(self.homeId,  self._lastCtrlState)
-#        
+#
 # -----------------------------------------------------------------------------
 # Polling Z-Wave devices
 # -----------------------------------------------------------------------------
@@ -714,7 +714,7 @@ Callbacks :
 #
     def getPollInterval(self):
         """Get the time period between polls of a nodes state
-            
+
             :return: The number of milliseconds between polls
             :rtype: int"""
         return self._manager.getPollInterval()
@@ -747,7 +747,7 @@ Callbacks :
                 return {'error': ""}
             else: {'error' : "Fail enable poll node {0}, value {1}, with intensity : {3}, {4}".format(nodeId,  valueId, intensity,  retval['error'])}
         else : return {'error' : "Unknown value %d" % valueId}
-    
+
     def disablePoll(self, nodeId,  valueId):
         node = self._ozwmanager._getNode(self.homeId,  nodeId)
         value = node.getValue(valueId)

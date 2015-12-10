@@ -184,7 +184,7 @@ class ZWaveNode:
                 if dmgDevice :
                     print dmgDevice
                     if 'batterycheck' in dmgDevice['parameters']:
-                        oldCheck = self._ozwmanager._xplPlugin.get_parameter(dmgDevice, 'batterycheck')
+                        oldCheck = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
                         self._ozwmanager.udpate_device_param(dmgDevice['parameters']['batterycheck']['id'], 'batterycheck', 'y' if check else 'n')
                         print "Set the db for batteryCheck parameter : ", oldCheck, check
                     else : print "Domogik device exist but without batterycheck parameters, using memory value : ", check
@@ -198,7 +198,7 @@ class ZWaveNode:
             for value in values:
                 dmgDevice = value.dmgDevice
                 if dmgDevice :
-                    check = self._ozwmanager._xplPlugin.get_parameter(dmgDevice, 'batterycheck')
+                    check = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
                     if check is not None : self._batteryCheck = True if check == 'y' else False
                     else : self.log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {1}".format(self.refName, self._batteryCheck))
                 else : self.log.debug("Node {0}. No domogik device created with batterycheck parameters, using memory value : {1}".format(self.refName, self._batteryCheck))
@@ -588,8 +588,8 @@ class ZWaveNode:
                 if self._lastMsg['type'] == 'setValue' :
                     valueNode = self.getValue(self._lastMsg['zwMsg']['id'])
                     if valueNode :
-                        msgtrig = valueNode.valueToxPLTrig()
-                        if msgtrig : self._ozwmanager._cb_sendxPL_trig(msgtrig)
+                        sensor_msg = valueNode.valueToSensorMsg()
+                        if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg)
                 if empty : self._lastMsg= None
                 self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
                 return lastMsg
@@ -604,10 +604,10 @@ class ZWaveNode:
                 if self._lastMsg['type'] == 'setValue' :
                     valueNode = self.getValue(self._lastMsg['zwMsg']['id'])
                     if valueNode :
-                        msgtrig = valueNode.valueToxPLTrig()
-                        if msgtrig :
+                        sensor_msg = valueNode.valueToSensorMsg()
+                        if sensor_msg :
                             self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId, self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
-                            self._ozwmanager._cb_sendxPL_trig(msgtrig)
+                            self._ozwmanager._cb_send_sensor(sensor_msg)
                     return True
                 else: return False
             else: return False

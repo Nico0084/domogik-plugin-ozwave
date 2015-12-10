@@ -37,11 +37,7 @@ Implements
 """
 # A debugging code checking import error
 try:
-    from domogik.xpl.common.xplconnector import Listener
-    from domogik.xpl.common.plugin import XplPlugin
-    from domogik.xpl.common.xplmessage import XplMessage
-    from domogik.xpl.common.xplconnector import XplTimer
-
+    from domogik.common.plugin import Plugin
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
@@ -56,30 +52,27 @@ except ImportError as exc :
     print err
     logging.error(err)
 
-class OZwave(XplPlugin):
-    """ Implement a listener for Zwave command messages
+class OZwave(Plugin):
+    """ Implement Zwave command messages
         and launch background  manager to listening zwave events by callback
     """
 
     def __init__(self):
-        """ Create listener and background zwave manager
+        """ Create background zwave manager
         """
-        XplPlugin.__init__(self, name = 'ozwave')
+        Plugin.__init__(self, name = 'ozwave')
         # check if the plugin is configured. If not, this will stop the plugin and log an error
         if not self.check_configured():
             return
-        # Récupère la config
-        ozwlogConf = self.get_config('ozwlog')
         self.myzwave = None
         self._ctrlHBeat = None
-        print ('Mode log openzwave :',  ozwlogConf)
-        # Recupère l'emplacement des fichiers de configuration OZW
+        # Get some config value
+        ozwlogConf = self.get_config('ozwlog')
         pathUser = self.get_data_files_directory()
         pathConfig = self.get_config('configpath') + '/'
-        # Initialise le manager Open zwave
-
+        # Initialize plugin Manager
         try:
-            self.myzwave = OZWavemanager(self, self.send_xPL, self.sendxPL_trig, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
+            self.myzwave = OZWavemanager(self, self.send_status, self.send_sensor, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
             print 'OZWmanager demarré :-)'
         except Exception as e:
             raise
@@ -87,18 +80,17 @@ class OZwave(XplPlugin):
             self.get_stop().wait(2)
             try:
                 self.log.debug('try second attempt after 2s.{0}'.format(sys.exc_info()))
-                self.myzwave = OZWavemanager(self, self.send_xPL, self.sendxPL_trig, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
+                self.myzwave = OZWavemanager(self, self.send_status, self.send_sensor, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
                 print 'OZWmanager demarré :-)'
             except Exception as e2:
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))
                 self.force_leave()
                 return
 
-        # Crée le listener pour les messages de commande xPL traités par les devices zwave
-        Listener(self.ozwave_cmd_cb, self.myxpl,{'schema': 'ozwave.basic','xpltype': 'xpl-cmnd'})
-        self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
-        self._ctrlHBeat.start()
-        #lancement du thread de démarrage des sercices ozwave
+#        # Crée le listener pour les messages de commande xPL traités par les devices zwave
+#        self._ctrlHBeat = XplTimer(60, self.myzwave.sendXplCtrlState, self.myxpl)
+#        self._ctrlHBeat.start()
+#        #lancement du thread de démarrage des sercices ozwave
         self.myzwave.starter.start()
         self.log.info('****** Init OZWave xPL manager completed ******')
         self.ready()
@@ -139,7 +131,7 @@ class OZwave(XplPlugin):
     def on_mdp_request(self, msg):
         # display the req message
         print(msg)
-        XplPlugin.on_mdp_request(self, msg)
+        Plugin.on_mdp_request(self, msg)
         # call a function to reply to the message depending on the header
         action = msg.get_action().split(".")
         handled = False
@@ -168,7 +160,7 @@ class OZwave(XplPlugin):
             if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
 
-    def send_xPL(self, xPLmsg,  args = None):
+    def send_status(self, xPLmsg,  args = None):
         """ Envoie une commande ou message zwave vers xPL"""
         # TODO: Vérifier le format xpl d'adresse du device
         mess = XplMessage()
@@ -182,8 +174,16 @@ class OZwave(XplPlugin):
         self.myxpl.send(mess)
         if self.myzwave is not None and self.myzwave.monitorNodes is not None : self.myzwave.monitorNodes.xpl_report(mess)
 
-    def sendxPL_trig(self, msgtrig):
-        """Envoie un message trig sur le hub xPL"""
+    def send_sensor(self, msgtrig):
+        """Send pub message over MQ"""
+        # find the sensor
+#+        ind =  (str(dev),str(chan),str(dt_type))
+#+        if ind in self._sens.keys():
+#+            sen = self._sens[ind]
+#+            self.log.info("Sending MQ status: sen:%s, value:%s" % (sen, value))
+#+            self._pub.send_event('client.sensor',
+#+                         {sen : value})
+
         mess = XplMessage()
         messDup = None
         # TODO: Récupérer le format xpl d'adresse du device
@@ -192,7 +192,7 @@ class OZwave(XplPlugin):
         elif 'Find' in msgtrig:
             print("node enregistré : %s" % msgtrig['Find'])
         elif 'typexpl' in msgtrig :
-            print "sendxPL_trig  +++++++++++++++++++ ", msgtrig
+            print "send_sensor  +++++++++++++++++++ ", msgtrig
             mess.set_type(msgtrig['typexpl'])
             mess.set_schema(msgtrig['schema'])
             mess.add_data(msgtrig['device'])
