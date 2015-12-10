@@ -27,6 +27,20 @@ Viewing and setting Zwave devices is accessed via a special plugin page from the
 
 Development is in progress, features will get gradually added.
 
+Steps to set up your first Zwave device
+---------------------------------------
+
+To set up your first Zwave device, you will have to :
+
+* install this plugin on domogik
+* install this plugin dependencies
+* create an udev rule for your Zwave controller (the usb device you plug on the computer)
+* configure this plugin
+* create a Domogik device for your Zwave controller
+* start the plugin
+* in the *Advanced* pages, look for your Zwave device and get informations about it
+* create the Domogik device for your Zwave device
+
 
 Dependencies
 ============
@@ -40,17 +54,17 @@ If ou are using a **Debian based** Linux release, you can install the dependenci
 
 **Else**, you can :doc:`follow the detailed instructions <advanced/dependencies>`.
 
-Controller/devices Compatibility List
-=====================================
+Zwave Controller and devices Compatibility List
+===============================================
 
-The following interfaces are supported and verified with Domogik:
+The following controller interfaces are supported and verified with Domogik:
 
 * Aeon Labs Z-Stick Series 2
 * RaZberry (using rule with /dev/ttyAMA0 instead of /dev/ttyUSBx)
 
 Other controllers are also supported by openzwave, `you can check here <https://github.com/OpenZWave/open-zwave/wiki/Controller-Compatibility-List>`_
 
-The Ffllowing devices are supported :
+The following devices are supported :
 
 * Everspring
 
@@ -83,16 +97,22 @@ The Ffllowing devices are supported :
   * Living connect (thermost heating)
 
 
-Create the udev rule for controller
-===================================
+Create the udev rule for the Zwave controller
+=============================================
 
 You may create a udev rule for this device. The rule and filename are given in the **Requirements** tab of the plugin configuration page.
 
 Currently, your PC controller is known as **/dev/ttyUSBx** (by default). This is not very convenient nor meaningful.
 
-We will then create a new udev rule that will create a link called **/dev/zwave** that will point to **/dev/ttyUSBx**.
+We will so create a new udev rule that will create a link called **/dev/zwave** that will point to **/dev/ttyUSBx**.
 
-.. todo:: explain how to install a udev rule file
+To install a udev rule, copy the appropriate file in the udev rules folder on your system. Example ::
+
+    $ sudo cp udev/98-usbcp210x.rules /etc/udev/rules.d/
+
+Then, you can use the following command to apply the udev rule, or unplug/plug the Zwave controller. ::
+
+    $ sudo udevadm test $(udevadm info --query path --name ttyUSB0)
 
 If your controller is not handled by any of the proposed udev rules, please check the :doc:`tutorial on how to create your own udev rule <advanced/udev_rules>`.
 
@@ -100,58 +120,48 @@ If your controller is not handled by any of the proposed udev rules, please chec
 
 Plugin configuration
 ====================
+
 Configuration
 -------------
-In Domogik administration section, go to client plugin-ozwave details page.
 
-.. |menuconf| image:: ozwave_menu-config.png
-    :width: 500px
+In Domogik administration section, go to the plugin ozwave configuration page.
 
-|menuconf|
 
-.. |configuration1| image:: ozwave_configuration1.png
+================= ======== =======================================================================================
+Key               Type     Description
+================= ======== =======================================================================================
+autoconfpath      boolean  If checked, the plugin will try to automatically find the Openzwave library path.
 
-|configuration1|
+                           If not checked, you will have to manually set the Openzwave library path with the 
+                           parameter **configpath**.
 
-+----------------+---------------+--------------------------------------------------------------------------------------+
-|Key             | Default value | Description                                                                          |
-+================+===============+======================================================================================+
-| startup-plugin | false         | Automatically start plugin at Domogik startup                                        |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| autoconfpath   | true          | Openzwave configuration path auto detection, else use configpath parameter.          |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| configpath     | Show default  | Path for openzwave files configuration (see your openzwave installation).            |
-|                | path          |                                                                                      |
-|                |               | This is the path that openzwave xml files are located, it can be shared with others  |
-|                |               | using openzwave C++ library                                                          |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| cpltmsg        | false         | Message confirmation is receive by notification when transaction complete            |
-|                |               | Notifications  is reported.                                                          |
-|                |               |                                                                                      |
-|                |               | .. warning ::                                                                        |
-|                |               |                                                                                      |
-|                |               |     A bug can arrived with lib openzwave, set this option false or modify file       |
-|                |               |                                                                                      |
-|                |               |     openzwavecpp/src/Manager.cpp at line 320, in Driver* Manager::GetDriver          |
-|                |               |     function, comment assert(0) function : // assert(0);                             |
-|                |               |                                                                                      |
-|                |               |     You must compile and reinstall python-openzwave.                                 |
-|                |               |                                                                                      |
-|                |               |     This modification is not recommended if you don't control svn repposit,          |
-|                |               |                                                                                      |
-|                |               |     the next update of openzwave revision could require manual intervention.         |
-+----------------+---------------+--------------------------------------------------------------------------------------+
-| ozwlog         | false         | Activate openzwave log. Only for debuging action.                                    |
-|                |               |                                                                                      |
-|                |               | When activate all openzwave C++ lib events are logged in OZW_Log.txt.                |
-|                |               |                                                                                      |
-|                |               | You cant read it in user path **share/domogik/data/ozwave/OZW_Log.txt**                |
-|                |               |                                                                                      |
-|                |               | .. warning ::                                                                        |
-|                |               |                                                                                      |
-|                |               |     There is no log rotate, so file will increased enormously.                       |
-|                |               |                                                                                      |
-+----------------+---------------+--------------------------------------------------------------------------------------+
+configpath        string   If **autoconfpath** is not checked, set up the Openzwave library path. Example : ::
+
+                               /usr/local/lib/python2.7/dist-packages/libopenzwave-0.3.0b7-py2.7-linux-x86_64.egg
+
+                           In this folder you will find all the Openzwave xml files.
+
+cpltmsg           boolean  Notifications  is reported.    
+
+                           .. warning ::                                                                        
+                           
+                                A bug can arrived with lib openzwave, set this option false or modify file       
+                                openzwavecpp/src/Manager.cpp at line 320, in Driver* Manager::GetDriver         
+                                function, comment assert(0) function : // assert(0);                           
+                                                                                                              
+                                You must compile and reinstall python-openzwave.                               
+                                                                                                             
+                                This modification is not recommended if you don't control svn repposit,     
+                                                                                                           
+                                the next update of openzwave revision could require manual intervention.  
+
+ozwlog            boolean  If checked, activate the Openzwave logger.
+
+                           Please do this only for debug purpose as the logs are very verbose!
+
+                           The file is located in the **date** folder of the plugin and named **OZW_Log.txt**.
+================= ======== =======================================================================================
+
 
 Creating devices for ozwave
 -----------------------------
