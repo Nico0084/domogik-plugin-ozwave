@@ -301,7 +301,6 @@ class ZWaveValueNode:
     def getInfos(self):
         """ Retourne les informations de la value , format dict{} """
         retval = {}
-        self.log.debug(u"Get info valueId {0}, type : {1}".format(self._valueData['id'], type(self._valueData['id'])))
         retval = dict(self._valueData)
         retval['homeId'] = int(retval['homeId']) # Pour etre compatible avec javascript
         retval['id'] = str(retval['id']) # Pour etre compatible avec javascript
