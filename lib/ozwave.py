@@ -72,10 +72,9 @@ class OZWavemanager():
     ZWave class manager
     """
 
-    def __init__(self, plugin,  cb_send_xPL, cb_send_sensor, stop, log, configPath, userPath, ozwlog = False):
+    def __init__(self, plugin, cb_send_sensor, stop, log, configPath, userPath, ozwlog = False):
         """ Ouverture du manager py-openzwave
             @ param config : configuration du plugin pour accès aux valeurs paramètrées"
-            @ param cb_send_xpl : callback pour envoi msg xpl
             @ param cb_send_trig : callback pour trig xpl
             @ param stop : flag d'arrêt du plugin
             @ param log : log instance domogik
@@ -90,7 +89,6 @@ class OZWavemanager():
         self._manager = None
         self._db = DbHelper()
         self._log = log
-        self._cb_send_xPL = cb_send_xPL
         self._cb_send_sensor = cb_send_sensor
         self._stop = stop
         self.pluginVers = self._plugin.json_data['identity']['version']
@@ -114,8 +112,11 @@ class OZWavemanager():
             self._configPath = libopenzwave.configPath()
             print "----",  self._configPath
             if self._configPath is None :
-                self._log.warning(u"libopenzwave can't autoconfigure path to config, try user config : {0}".format(configPath))
-                self._configPath = configPath
+                self._log.warning(u"libopenzwave can't autoconfigure path to config, try python path.")
+                self._configPath = os.path.abspath(libopenzwave.__file__) + "/config"
+                if not self._configPath or not os.path.exists(self._configPath) :
+                    self._log.warning(u"Python can't autoconfigure path to config, try user config : {0}".format(configPath))
+                    self._configPath = configPath
         print self._configPath, " : ", os.path.exists(self._configPath)
         if not os.path.exists(self._configPath) :
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
@@ -261,11 +262,13 @@ class OZWavemanager():
         return {}
 
     def InitDomogikLabelAvailable(self):
-        DomogikLabelAvailable = []
         for sensor in self._plugin.json_data['sensors']:
-            DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())
+            if self._plugin.json_data['sensors'][sensor]['name'].lower() not in DomogikLabelAvailable :
+                DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())
         for cmd in self._plugin.json_data['commands']:
-            DomogikLabelAvailable.append(self._plugin.json_data['commands'][sensor]['name'].lower())
+            for param in self._plugin.json_data['commands'][cmd]['parameters']:
+                if param['key'].lower() not in DomogikLabelAvailable :
+                    DomogikLabelAvailable.append(param['key'].lower())
         self._log.info(u"Domogik label available list initialized with {0} labels.".format(len(DomogikLabelAvailable)))
         self._log.debug(u"  -- list in lower case : {0}".format(DomogikLabelAvailable))
 
@@ -302,7 +305,7 @@ class OZWavemanager():
         if dmgDevice['device_type_id'] == 'primary.controller' :
             driver = self._plugin.get_parameter(dmgDevice, 'driver')
             if not self.getDeviceCtrl('driver',  driver) :
-                networkID = self._plugin.get_parameter_for_feature(dmgDevice, 'xpl_stats',  'ctrl_status',  'networkid')
+                networkID = self._plugin.get_parameter(dmgDevice, 'networkid')
                 self._devicesCtrl.append(PrimaryController(self, driver, networkID, None))
                 self._log.info(u"Domogik device primary controller registered : {0}".format(self._devicesCtrl[-1]))
             else : self._log.info("Device primary controller allready exist on {0}".format(driver))
@@ -378,9 +381,7 @@ class OZWavemanager():
             self._stop.wait(2)
         self._log.info(u"Adding driver to openzwave : {0}".format(ctrl.driver))
         self._plugin.publishMsg('ozwave.ctrl.opening', {'NetworkID': ctrl.networkID,  'Driver': ctrl.driver})
-#        self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                    'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'started', 'usrmsg': "Openzwave opening driver, init process ...",  'data': "None"}})
-        self._manager.addDriver(ctrl.driver)  # ajout d'un driver dans le manager
+        self._manager.addDriver(ctrl.driver)  # Add driver in driver manager list
         ctrl.status = 'open'
         self._openingDriver = ctrl.driver
 
@@ -393,8 +394,6 @@ class OZWavemanager():
             ctrl.status = 'close'
             ctrl.ready = False
             self._plugin.publishMsg('ozwave.ctrl.closed', {"NetworkID": ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'driver-remove', 'usermsg' : 'Driver removed.', 'data': False})
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                            'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'close', 'usrmsg': "Openzwave driver closed",  'data': "None"}})
 
     def stop(self):
         """ Stop class OZWManager."""
@@ -415,8 +414,6 @@ class OZWavemanager():
                 data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'status'}
                 data.update(ctrl.getStatus())
                 self._plugin.publishMsg('ozwave.ctrl.state', data)
-#                self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                                    'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':st, 'usermsg': "None", 'data': "None"}})
 
     def getManufacturers(self):
         """"Return list of all manufacturer and product known by openzwave lib."""
@@ -708,8 +705,6 @@ class OZWavemanager():
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
             data.update(ctrl.getStatus())
             self._plugin.publishMsg('ozwave.ctrl.state', data)
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                                           'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'init...', 'usrmsg': "Openzwave opening driver, init process ...",  'data': "None"}})
 
     def _handleDriverReset(self, args):
         """ Le driver à été recu un reset, tous les nodes, sauf le controlleur, sont détruis."""
@@ -725,13 +720,9 @@ class OZWavemanager():
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.'}
             data.update(ctrl.getStatus())
             self._plugin.publishMsg('ozwave.ctrl.state', data)
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                            'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'reseted', 'usrmsg': "Openzwave driver reseted, All nodes must be recovered.",'data': "None"}})
         else :
             self._log.warning(u"A driver reset is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
             self._plugin.publishMsg('ozwave.ctrl.state', {'NetworkID': ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted but not registered, All nodes must be recovered.', 'state' : 'dead', 'init': NodeStatusNW[6]})
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                            'data': {'type': 'status', 'networkid': 'unknown', 'status':'reseted', 'usrmsg': "Driver reseted but not registered, All nodes must be recovered.",'data': "None"}})
             self._nodes = None
 
     def _handleDriverRemoved(self,  args):
@@ -749,15 +740,11 @@ class OZWavemanager():
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
             data.update(ctrl.getStatus())
             self._plugin.publishMsg('ozwave.ctrl.state', data)
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                            'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'removed', 'usrmsg': "Openzwave driver removed, All nodes deleted.",'data': "None"}})
             self._devicesCtrl.pop(ctrl)
             del (ctrl)
         else :
             self._log.warning(u"A driver removed is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
             self._plugin.publishMsg('ozwave.ctrl.state', {'NetworkID': ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'state' : 'dead', 'init': NodeStatusNW[6]})
-#            self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                            'data': {'type': 'status', 'networkid': 'unknown', 'status':'removed', 'usrmsg': "Driver removed but not registered, All nodes deleted.",'data': "None"}})
             self._devicesCtrl = None
             self._nodes = None
 
@@ -772,8 +759,6 @@ class OZWavemanager():
         data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-failed', 'usermsg' : 'Openzwave opening driver {0} fail.'.format(ctrl.driver)}
         data.update(ctrl.getStatus())
         self._plugin.publishMsg('ozwave.ctrl.state', data)
-#        self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                                       'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'fail', 'usrmsg': "Openzwave opening driver {0} fail.".format(ctrl.driver),  'data': "None"}})
 
     def _handleInitializationComplete(self, args):
         """La séquence d'initialisation du controleur zwave est terminée."""
@@ -797,8 +782,6 @@ class OZWavemanager():
         data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-init', 'usermsg' :'Zwave network Initialized.'}
         data.update(ctrl.getStatus())
         self._plugin.publishMsg('ozwave.ctrl.state', data)
-#        self._cb_send_xPL({'type':'xpl-trig', 'schema':'ozwctrl.basic',
-#                                    'data': {'type': 'status', 'networkid': ctrl.networkID, 'status':'ok'}})
         self._log.info("OpenZWave initialization completed for driver {0}. Found {1} Z-Wave Device Nodes ({2} sleeping, {3} Dead)".format(ctrl.driver, ctrl.getNodeCount(), ctrl.getSleepingNodeCount(), ctrl.getFailedNodeCount()))
 
     def _handleNodeLinked(self, args):
@@ -956,14 +939,17 @@ class OZWavemanager():
         node = self._fetchNode(args['homeId'], args['nodeId'])
         node._lastUpdate = time.time()
         valueNode = node.getValue(valueId['id'])
-        if valueNode.updateData(valueId) and (valueNode.valueData['genre'] in ['System', 'Config']) :
-            self.getCtrlOfNode(node).setSaveConfig(False)
+        try :
+            if valueNode.updateData(valueId) and (valueNode.valueData['genre'] in ['System', 'Config']) :
+                self.getCtrlOfNode(node).setSaveConfig(False)
         # formatage infos générales
         # ici l'idée est de passer tout les valeurs stats et trig en identifiants leur type par le label forcé en minuscule.
         # les labels sont listés le fichier json du plugin.
         # Le traitement pour chaque command_class s'effectue dans la valueNode correspondante.
-        sensor_msg = valueNode.valueToSensorMsg()
-        if sensor_msg : self._cb_send_sensor(sensor_msg)
+            sensor_msg = valueNode.valueToSensorMsg()
+            if sensor_msg : self._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
+        except :
+            print(u"Error while reporting to ValueChanged : {0}".format(traceback.format_exc()))
 
     def _handleNodeEvent(self, args):
         """Un node à envoyé une Basic_Set command  au controleur.
@@ -1177,28 +1163,32 @@ class OZWavemanager():
 
     def _getDmgDevice(self, device):
         """Return the domogik device if exist else None."""
+        print u"--- Search device : {0}".format(device)
         for dmgDevice in self._plugin.devices :
+            print "  --- in dmg device :", dmgDevice
             if 'instance' in dmgDevice['parameters']: # Value sensor or command level
                 if isinstance(device, ZWaveValueNode):
                     try :
-                        if dmgDevice['parameters']['instance'] == device.instance and \
-                           dmgDevice['parameters']['node'] == device.node and \
-                           dmgDevice['parameters']['networkid'] == device.networkid :
+                        if int(dmgDevice['parameters']['instance']['value']) == device.instance and \
+                           int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
+                           dmgDevice['parameters']['networkid']['value'] == device.networkID :
                             return dmgDevice
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'node' in dmgDevice['parameters']: # Node level
-                if 'node' in device and not 'instance' in device :
+                if isinstance(device, ZWaveNode):
                     try :
-                        if dmgDevice['parameters']['node'] == device['node'] and \
-                           dmgDevice['parameters']['networkid'] == device['networkid'] :
+                        if int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
+                           dmgDevice['parameters']['networkid']['value'] == device.networkID :
                             return dmgDevice
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'networkid' in dmgDevice['parameters']: # primary controller level
-                if 'networkid' in device and not 'node' in device and not 'instance' in device :
-                    if dmgDevice['parameters']['networkid'] == device['networkid'] :
+                if isinstance(device, ZWaveController):
+                    if dmgDevice['parameters']['networkid']['value'] == device.networkID :
                         return dmgDevice
+            else :
+                print "   --- no key find"
         return None
 
     def sendNetworkZW(self, device, command, params):
@@ -1854,6 +1844,3 @@ class PrimaryController():
                 'command' : 'Internal',
                 'nodeId': args['nodeId']
                })
-
-
-

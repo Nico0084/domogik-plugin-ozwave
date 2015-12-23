@@ -43,6 +43,7 @@ from ozwdefs import *
 import time
 import threading
 import sys
+import traceback
 
 class OZwaveNodeException(OZwaveException):
     """"Zwave Node exception class"""
@@ -216,18 +217,22 @@ class ZWaveNode:
         self._failed = False
         self.reportToUI({'type': 'init-process', 'usermsg' : 'Node marked good, should be reinit ', 'data': NodeStatusNW[0]})
 
-    def reportToUI(self,  msg):
-        """ transfert à l'objet controlleur  le message à remonter à l'UI"""
+    def reportToUI(self, msg):
+        """ transfert à l'objet controlleur le message à remonter à l'UI"""
         if msg :
-            ctrlNode = self._ozwmanager.getCtrlOfNode(self)
-            if ctrlNode is not None and ctrlNode.node is not None :
-                msg['NodeID'] = self.nodeId
-                print '******** Node Object report vers UI ******** '
-                ctrlNode.node.reportChangeToUI(msg)
-                print '******** Node Object report vers monitorNodes ******** '
-                self._ozwmanager.monitorNodes.nodeChange_report(self.homeId,  self.nodeId, msg)
-            else :
-                self.log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
+            try :
+                ctrlNode = self._ozwmanager.getCtrlOfNode(self)
+                if ctrlNode is not None and ctrlNode.node is not None :
+                    msg['NodeID'] = self.nodeId
+                    print '******** Node Object report vers UI ******** '
+                    ctrlNode.node.reportChangeToUI(msg)
+                    print '******** Node Object report vers monitorNodes ******** '
+                    self._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, msg)
+                else :
+                    self.log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
+            except :
+                print(u"Error while reporting to UI : {0}".format(traceback.format_exc()))
+
 
     def _getIsLocked(self):
         return False
