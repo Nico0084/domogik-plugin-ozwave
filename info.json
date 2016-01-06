@@ -823,7 +823,7 @@
             "parameters" : [{
                     "key" : "switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : "from_DT_Switch_to_switch"
+                    "conversion" : ""
                 }
             ]
         },
@@ -833,7 +833,7 @@
             "parameters" : [{
                     "key" : "Toggle switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : "from_DT_Switch_to_switch"
+                    "conversion" : ""
                 }
             ]
         },

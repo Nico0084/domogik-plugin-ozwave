@@ -262,6 +262,11 @@ class OZWavemanager():
         return {}
 
     def InitDomogikLabelAvailable(self):
+        # Add additionnal setpoint openzwave labels
+        for label in  ['unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6',
+                          'furnace', 'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ',
+                          'away heating'] :
+            if label not in DomogikLabelAvailable : DomogikLabelAvailable.append(label)
         for sensor in self._plugin.json_data['sensors']:
             if self._plugin.json_data['sensors'][sensor]['name'].lower() not in DomogikLabelAvailable :
                 DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())
@@ -550,13 +555,6 @@ class OZWavemanager():
             return True
         else :
             return False
-
-    def _castXplCmd(self, value, type):
-        """Proper cast of xpl_command value for ozwave plugin, doesn't profide by domogik Class Plugin."""
-        if type == 'networkid' :
-            return u"{0}".format(value)
-        else :
-            return int(value)
 
     def _getNode(self, homeId, nodeId):
         """ Renvoi l'objet node correspondant"""
@@ -949,7 +947,7 @@ class OZWavemanager():
             sensor_msg = valueNode.valueToSensorMsg()
             if sensor_msg : self._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
         except :
-            print(u"Error while reporting to ValueChanged : {0}".format(traceback.format_exc()))
+            self._log.error(u"Error while reporting to ValueChanged : {0}".format(traceback.format_exc()))
 
     def _handleNodeEvent(self, args):
         """Un node à envoyé une Basic_Set command  au controleur.
@@ -1130,19 +1128,39 @@ class OZWavemanager():
             retval["state"] = "unknown"
             return retval
 
-    def getZWRefFromxPL(self, xplParams):
-        """ Retourne  les références Zwave envoyées depuis le xPL domogik
-            @param : xplParams format : dict avec le référence du device """
+    def getZWRefFromDB(self, deviceID, id, type = 'cmd'):
+        """ Return Zwave references from domogik DB
+            @param : deviceID, Id of device in DB
+            @param : id, id of sensor or command in DB
+            @param : type, type of storage in DB, cmd (default) or sensor"""
         retval = {}
-        if "networkid" in xplParams :
-            retval['homeId'] = self.getHomeID(xplParams["networkid"])
-        if "node" in xplParams :
-            retval['nodeId'] = int(xplParams['node'])
-        if "instance" in xplParams :
-            retval['instance'] = int(xplParams['instance'])
-        if not retval or retval['homeId'] is None :
-            self._log.warning(u"xPL message doesn't refer a node : {0}".format(xplParams))
-            retval = None
+        logLine = u"--- Search ZWRef From DB, device_id : {0}, type :{1}, sensor/cmd id : {2}".format(deviceID, type, id)
+        for dmgDevice in self._plugin.devices :
+            logLine += u"        - in dmg device : {0}".format(dmgDevice)
+            if dmgDevice['id'] == deviceID :
+                if type == 'cmd' :
+                    logLine += ""
+                    for cmd in dmgDevice['commands'] :
+                        if dmgDevice['commands'][cmd]['id'] == id :
+                            retval = {'networkid': dmgDevice['parameters']['networkid']['value'],
+                                      'node': int(dmgDevice['parameters']['node']['value']),
+                                      'instance': int(dmgDevice['parameters']['instance']['value']),
+                                      'cmdParams': dmgDevice['commands'][cmd]['parameters']}
+                            node = self._getNode(self.getHomeID(retval['networkid']), retval['node'])
+                            self._log.debug(u"--- ZWRef Command Find : {0}, {1}".format(retval, node))
+                            return retval
+#            dmgDevice['parameters']['device']['value']
+#        if "networkid" in xplParams :
+#            retval['homeId'] = self.getHomeID(xplParams["networkid"])
+#        if "node" in xplParams :
+#            retval['nodeId'] = int(xplParams['node'])
+#        if "instance" in xplParams :
+#            retval['instance'] = int(xplParams['instance'])
+#        if not retval or retval['homeId'] is None :
+#            self._log.warning(u"xPL message doesn't refer a node : {0}".format(xplParams))
+#            retval = None
+        logLine += u"\n    --- ZWRef NOT find"
+        self._log.debug(logLine)
         return retval
 
     def getDmgDevRefFromZW(self, device):
@@ -1163,9 +1181,9 @@ class OZWavemanager():
 
     def _getDmgDevice(self, device):
         """Return the domogik device if exist else None."""
-        print u"--- Search device : {0}".format(device)
+        logLine = u"--- Search dmg device for : {0}".format(device)
         for dmgDevice in self._plugin.devices :
-            print "  --- in dmg device :", dmgDevice
+            logLine += u"\n        - in dmg device : {0}".format(dmgDevice)
             if 'instance' in dmgDevice['parameters']: # Value sensor or command level
                 if isinstance(device, ZWaveValueNode):
                     try :
@@ -1186,20 +1204,23 @@ class OZWavemanager():
             elif 'networkid' in dmgDevice['parameters']: # primary controller level
                 if isinstance(device, ZWaveController):
                     if dmgDevice['parameters']['networkid']['value'] == device.networkID :
+                        self._log.debug(u"--- Dmg device find : {0}".format(dmgDevice))
                         return dmgDevice
             else :
-                print "   --- no key find"
+                logLine += u"\n    --- no key find"
+        logLine += u"\n    --- Dmg device NOT find"
+        self._log.debug(logLine)
         return None
 
-    def sendNetworkZW(self, device, command, params):
-        """Message come from xPL hub. Send command to wave network
-            @param : device = dict{'homeId', 'nodeId', 'instance'}
+    def sendCmdToZW(self, device, command, cmdValue):
+        """Message come from MQ. Send command to wave network
+            @param : device = dict{'homeId', 'nodeId', 'instance', 'cmdParams'}
             @param : command = the command value define in json
-            @param : params = extra key with value, mostly the value of DT_Type
+            @param : cmdValue = extra key with value, mostly the value of DT_Type
         """
         if device != None :
-            node = self._getNode(device['homeId'], device['nodeId'])
-            if node : node.sendCmdBasic(device['instance'], command, params)
+            node = self._getNode(self.getHomeID(device['networkid']), device['node'])
+            if node : node.sendCmdBasic(device, command, cmdValue)
 
     def getNodeInfos(self, homeId, nodeId):
         """ Retourne les informations d'un device, format dict{} """
@@ -1488,42 +1509,47 @@ class OZWavemanager():
         """Handle all zwave controller request coming from MQ"""
         ctrl = self.getCtrlOfNetwork(data['networkId'])
         report = {}
-        if request == 'ctrl.get' :
-            report = self.getNetworkInfo(data['networkId'])
-        elif request == 'ctrl.nodes' :
-            report['nodes'] = []
-            for nodeId in ctrl.getNodesId():
-                report['nodes'].append(self.getNodeInfos(data['homeId'], nodeId))
-        elif request == 'ctrl.action' :
-            report = self.handle_ControllerAction(data['networkId'],  json.loads(data['action']))
-        elif request == 'ctrl.saveconf':
-            report = ctrl.saveNetworkConfig()
-        elif request == 'ctrl.start':
-            if ctrl.status != 'open' :
-                self.openDeviceCtrl(ctrl)
-                report = {'error':'',  'running': True}
-            else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
-            print 'Start Driver : ',  report
-        elif request == 'ctrl.stop':
-            if ctrl.status =='open' :
-                self.closeDeviceCtrl(ctrl)
-                report = {'error':'',  'running': False}
-            else : report = {'error':'No Driver knows.',  'running': False}
-            print 'Stop Driver : ',  report
-        elif request == 'ctrl.healnetwork' :
-            report = self.healNetwork(data['networkId'], data['forceroute'])
-        elif request == 'ctrl.softreset' :
-            report = self.handle_ControllerSoftReset(data['networkId'])
-        elif request == 'ctrl.hardreset' :
-            report = self.handle_ControllerHardReset(data['networkId'])
-        elif request == 'ctrl.getlistcmdsctrl':
-            report = ctrl.getListCmdsCtrl()
-        elif request == 'ctrl.getnetworkstats':
-            report = self.getGeneralStatistics(data['networkId'])
-        elif request == 'ctrl.testnetwork':
-            report = self.testNetwork(data["networkId"], int(data['count']),  10000, True)
+        if ctrl is not None :
+            if request == 'ctrl.get' :
+                report = self.getNetworkInfo(data['networkId'])
+            elif request == 'ctrl.nodes' :
+                report['nodes'] = []
+                for nodeId in ctrl.getNodesId():
+                    report['nodes'].append(self.getNodeInfos(data['homeId'], nodeId))
+            elif request == 'ctrl.action' :
+                report = self.handle_ControllerAction(data['networkId'],  json.loads(data['action']))
+            elif request == 'ctrl.saveconf':
+                report = ctrl.saveNetworkConfig()
+            elif request == 'ctrl.start':
+                if ctrl.status != 'open' :
+                    self.openDeviceCtrl(ctrl)
+                    report = {'error':'',  'running': True}
+                else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
+                print 'Start Driver : ',  report
+            elif request == 'ctrl.stop':
+                if ctrl.status =='open' :
+                    self.closeDeviceCtrl(ctrl)
+                    report = {'error':'',  'running': False}
+                else : report = {'error':'No Driver knows.',  'running': False}
+                print 'Stop Driver : ',  report
+            elif request == 'ctrl.healnetwork' :
+                report = self.healNetwork(data['networkId'], data['forceroute'])
+            elif request == 'ctrl.softreset' :
+                report = self.handle_ControllerSoftReset(data['networkId'])
+            elif request == 'ctrl.hardreset' :
+                report = self.handle_ControllerHardReset(data['networkId'])
+            elif request == 'ctrl.getlistcmdsctrl':
+                report = ctrl.getListCmdsCtrl()
+            elif request == 'ctrl.getnetworkstats':
+                report = self.getGeneralStatistics(data['networkId'])
+            elif request == 'ctrl.testnetwork':
+                report = self.testNetwork(data["networkId"], int(data['count']),  10000, True)
+            else :
+                report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
         else :
-            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+            report["error"] = "Network ID <{0}> not registered, wait or check configuration and hardware.".format(data['networkId'])
+            report["init"] = NodeStatusNW[0] # Uninitialized
+            report["state"] = "unknown"
         return report
 
     def _handleNodeRequest(self, request, data):

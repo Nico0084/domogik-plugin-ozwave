@@ -166,6 +166,10 @@ DomogikLabelAvailable = []
 #                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
 #                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating' # Thermostat setpoint type
 #                        ]
+# List of labels corresponding to setpoint
+DmgSetpointLabels = ['unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6',
+                     'furnace', 'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ',
+                     'away heating', 'setpoint']
 
 # Notifications reportés sur le hub xPL pour l'UI
 UICtrlReportType = ['plugin-state', 'driver-ready', 'driver-remove', 'init-process', 'ctrl-error', 'ctrl-action',

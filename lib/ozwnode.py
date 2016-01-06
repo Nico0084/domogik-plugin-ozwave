@@ -293,7 +293,6 @@ class ZWaveNode:
         """
         return self._manager.getNodeQueryStage(self._homeId,  self._nodeId)
 
-
     def GetNodeStateNW(self):
         """Retourne une chaine décrivant l'état d'initialisation du device
            Status = {0:'Uninitialized',
@@ -324,21 +323,21 @@ class ZWaveNode:
             size += self._values[v].getMemoryUsage()
         return size
 
-    def  requestNodeDynamic(self)  :
+    def requestNodeDynamic(self)  :
         """Force un rafraichissement des informations du node depuis le reseaux zwave"""
         if self._manager.requestNodeDynamic(self._homeId,  self._nodeId):
             return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} dynamics data.".format(self.networkID, self.nodeId)}
         else :
             return {'erreur': "Failed request refresh node %d Dynamic." % self._nodeId}
 
-    def  requestNodeInfo(self)  :
+    def requestNodeInfo(self)  :
         """Force un rafraichissement des informations du node depuis le reseaux zwave"""
         if self._manager.refreshNodeInfo(self._homeId,  self._nodeId):
             return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} infos.".format(self.networkID, self.nodeId)}
         else :
             return {'erreur': "Failed request refresh node %d information." % self._nodeId}
 
-    def  requestNodeState(self) :
+    def requestNodeState(self) :
         """Force un rafraichissement des valeurs primaires du node depuis le reseaux zwave"""
         if self._manager.requestNodeState(self._homeId,  self._nodeId):
             return {'erreur': "", "usermsg": "Controller received refresh node {0}.{1} state.".format(self.networkID, self.nodeId)}
@@ -502,7 +501,6 @@ class ZWaveNode:
             else : self.markAsOK()
         return self._failed
 
-
     def _updateNeighbors(self):
         """Mise à jour de la liste des nodes voisins"""
         # TODO: I believe this is an OZW bug, but sleeping nodes report very odd (and long) neighbor lists
@@ -581,8 +579,8 @@ class ZWaveNode:
         self._lastMsg = {'type': type,  'zwMsg' : ZWMsg}
 
     def receivesCompletMsg(self, completMsg):
-        """Vérifie si le dernier message completé est bien pour ce node, retourne le message d'origine si vrai, False si non.
-           envoi un trig xpl si le last message est un setvalue."""
+        """Check if last message is completed and for this node, Return original message if True, else False.
+           Send MQ sensor message if last message is a setvalue."""
         if self._lastMsg :
             if self.nodeId == completMsg['nodeId'] :
                 lastMsg = self._lastMsg.copy()
@@ -594,7 +592,10 @@ class ZWaveNode:
                     valueNode = self.getValue(self._lastMsg['zwMsg']['id'])
                     if valueNode :
                         sensor_msg = valueNode.valueToSensorMsg()
-                        if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg)
+                        if sensor_msg :
+                            self.log.debug(u"Report last sensor message on Complet Msg")
+                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.valueData})
+                            self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
                 if empty : self._lastMsg= None
                 self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
                 return lastMsg
@@ -602,8 +603,8 @@ class ZWaveNode:
         else: return False
 
     def receiveSleepState(self, sleepMsg):
-        """Vérifie si le dernier message à pu etre envoyé pour ce node, retourne le message d'origine si vrai, False si non.
-           envoi un trig xpl si le last message est un setvalue mais n'efface pas le last message."""
+        """Check if last message could be send for this node, Return original message if True, else False.
+           Send MQ sensor message if last message is a setvalue but last message is not removed."""
         if self._lastMsg :
             if self.nodeId == sleepMsg['nodeId'] :
                 if self._lastMsg['type'] == 'setValue' :
@@ -611,8 +612,10 @@ class ZWaveNode:
                     if valueNode :
                         sensor_msg = valueNode.valueToSensorMsg()
                         if sensor_msg :
+                            self.log.debug(u"Report last sensor message on going sleeping node")
                             self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId, self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
-                            self._ozwmanager._cb_send_sensor(sensor_msg)
+                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.valueData})
+                            self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
                     return True
                 else: return False
             else: return False
@@ -968,129 +971,139 @@ class ZWaveNode:
         print ('set members association remove members result :'), newGroups
         return newGroups
 
-    def sendCmdBasic(self, instance, command, params):
+    def checkAvailableLabel(self, valueLabel, label):
+        print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)
+        if label in DmgSetpointLabels :
+            if valueLabel in DmgSetpointLabels :
+                return True
+        elif label == valueLabel : return True
+        print u"************ Label not available **************"
+        return  False
+
+    def sendCmdBasic(self, device, command, newValue):
         """Send command to node"""
         retval = {'error' : ''}
         blockonoff = True # TODO: Cmd on/off/level désactivé, inspecter bug probable  depuis rev 650 ?"
-        if instance == 1 and self.getValuesForCommandClass('COMMAND_CLASS_BASIC') and not blockonoff :
-            if command == 'level':
-                self.setLevel(int(params['level']))
-            elif command == 'switch':
-                if 'switch' in params:
-                    if params['switch'] in ['On', '1','255', 'on', 'ON']: self.setOn()
-                    elif params['switch'] in ['Off', '0', 'off', 'OFF']: self.setOff()
-                elif 'toggle-switch' in params:
+        newVal = newValue
+        paramCmd = None
+        for p in device['cmdParams'] :
+            if command == p['key'] :
+                paramCmd = p
+                break
+        if paramCmd is not None :
+            command = command.lower()
+            dataType = self._ozwmanager.getDataType(paramCmd['data_type'])
+            if device['instance'] == 1 and self.getValuesForCommandClass('COMMAND_CLASS_BASIC') and not blockonoff :
+                if paramCmd['key'] == 'level':
+                    self.setLevel(int(newValue))
+                elif command == 'switch':
+                    if paramCmd['key'] == 'switch' :
+                        if newValue in [1, 255, 'On', '1','255', 'on', 'ON']: self.setOn()
+                        elif newValue in [0, 'Off', '0', 'off', 'OFF']: self.setOff()
+                elif command == 'toggle switch':
                     values = self._getValuesForCommandClass(0x28)  # COMMAND_CLASS_SWITCH_TOGGLE_BINARY
                     if values:
                         for value in values:
-                            if value.instance == instance and value.labelDomogik == 'toggle-switch':
-                                if value.getValue('value') in ['On', '1','255', 'on', 'ON']: self.setOff()
-                                elif value.getValue('value')in ['Off', '0', 'off', 'OFF']: self.setOn()
+                            if value.instance == device['instance'] and value.labelDomogik == 'toggle switch':
+                                if value.getValue('value') in [255, 'On', '1','255', 'on', 'ON']:
+                                    self.setOff()
+                                    newVal = 0
+                                elif value.getValue('value')in [0, 'Off', '0', 'off', 'OFF']:
+                                    self.setOn()
+                                    newVal = 255
                     else :
                         self.log.warning(u"Node {0}.{1} has no COMMAND_CLASS_SWITCH_TOGGLE_BINARY, can't toggle switch".format(self.homeID, self.nodeId))
-            else :
-                self.log.warning(u"xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
-                retval['error'] = ("xPL to ozwave unknown command : %s , nodeId : %d",  command,  self.nodeId)
-        else : # instance secondaire, ou command class non basic utilisation de set value
-            if command == 'switch' :
-                key = ''
-                if 'switch' in params : key = 'switch'
-                elif 'level' in params : key = 'level'
-                if key :
+                else :
+                    self.log.warning(u"MQ to ozwave unknown command : {0} , node : {1}".format(command,  self.refName))
+                    retval['error'] = (u"MQ to ozwave unknown command : {0} , node : {1}".format(command,  self.refName))
+            else : # instance secondaire, ou command class non basic utilisation de set value
+                if command == 'switch' : # include 'level'
                     cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL, COMMAND_CLASS_SWITCH_TOGGLE_BINARY']
                     for id, value in self.values.iteritems() :
                         val = value.valueData
-                        if (val['commandClass'] in cmdsClass) and val['instance'] == instance and (value.labelDomogik == key):
-                            if params[key] in ['On', '1', '255', 'on', 'ON'] : newVal = 255
-                            elif  params[key] in ['Off', '0', 'off', 'OFF'] : newVal = 0
-                            else :
-                                self.log.warning(u"Node {0}.{1} switch command error in params {2}".format(self.homeID, self.nodeId, params))
-                                break
+                        if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and (value.labelDomogik == paramCmd['key']):
+#                                if newValue in [1, 255, 'On', '1', '255', 'on', 'ON'] : newVal = 255
+#                                elif newValue in [0, 'Off', '0', 'off', 'OFF'] : newVal = 0
+#                                else :
+#                                    self.log.warning(u"Node {0} switch command error in params {1}".format(self.refName, cmdValue))
+#                                    break
                             self.log.debug(u"Value find as type switch : {0}".format(val))
-                            retval = value.setValue(newVal)
+                            retval = value.setValue(newValue)
                             break
-                elif 'toggle-switch' in params :
-                    values = self._getValuesForCommandClass(0x28)  # COMMAND_CLASS_SWITCH_TOGGLE_BINARY
+                elif command == 'toggle-switch' :
+                    values = self._getValuesForCommandClass(0x28) # COMMAND_CLASS_SWITCH_TOGGLE_BINARY
                     if values:
                         for value in values:
-                            if value.instance == instance and value.labelDomogik == 'toggle-switch':
-                                if value.getValue('value') in ['On', '1','255', 'on', 'ON']: newVal = 0
-                                elif value.getValue('value')in ['Off', '0', 'off', 'OFF']: newVal = 255
+                            if value.instance == device['instance'] and \
+                                    self.checkAvailableLabel(value.labelDomogik, command) :
+                                if value.getValue('value') in [True, 1, 255, 'On', '1','255', 'on', 'ON']: newVal = 0
+                                elif value.getValue('value')in [False, 0, 'Off', '0', 'off', 'OFF']: newVal = 255
                                 self.log.debug(u"Value find as type toggle-switch : {0}".format(newVal))
                                 retval = value.setValue(newVal)
                                 break
                     else :
-                        self.log.warning(u"Node {0}.{1} has no COMMAND_CLASS_SWITCH_TOGGLE_BINARY, can't toggle switch".format(self.homeID, self.nodeId))
-                else :
-                    self.log.warning(u"Unknown command switch type {0}".format(params))
-            elif command == 'level' :
-                cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_MULTILEVEL']
-                for value in self.values.keys() :
-                    val = self.values[value].valueData
-                    if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == 'level':
-                        self.log.debug(u"Value find as type level : {0}".format(val))
-                        retval = self.values[value].setValue(int(params['level']))
-                        break
-            elif command == 'pressed':
-                cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL']
-                key = ''
-                if 'inc' in params : key = 'inc'
-                elif 'dec' in params : key = 'dec'
-                elif 'bright' in params : key = 'bright'
-                elif 'dim' in params : key = 'dim'
-                if key :
+                        self.log.warning(u"Node {0} has no COMMAND_CLASS_SWITCH_TOGGLE_BINARY, can't toggle switch".format(self.refName))
+                elif command == 'level' :
+                    cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_MULTILEVEL']
                     for value in self.values.keys() :
                         val = self.values[value].valueData
-                        if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            self.log.debug(u"Value find as type button {0}: {1}".format(key, val))
-                            retval = self.values[value].setValue(True)
+                        if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
+                                            self.checkAvailableLabel(self.values[value].labelDomogik, command) :
+                            self.log.debug(u"Value find as type level : {0}".format(val))
+                            retval = self.values[value].setValue(int(newValue))
+                            newVal = int(newValue)
                             break
-                else :
-                    self.log.warning(u"Unkwon command pressed type {0}".format(params))
-            elif command == 'select' :
-                if 'fan-mode' in params : key = 'fan-mode'
-                elif 'fan-state' in params : key = 'fan-state'
-                elif 'mode' in params : key = 'mode'
-                elif 'operating-state' in params : key = 'operating-state'
-                elif 'heating' in params : key = 'heating'
-                if key :
+                elif command in ['inc', 'dec', 'bright','dim']:
+                    cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL']
+                    for value in self.values.keys() :
+                        val = self.values[value].valueData
+                        if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
+                                            self.checkAvailableLabel(self.values[value].labelDomogik, command) :
+                            self.log.debug(u"Value find as type button {0}: {1}".format(command, val))
+                            retval = self.values[value].setValue(True)
+                            newVal = True
+                            break
+                elif command in['fan-mode', 'fan-state', 'mode', 'operating-state', 'heating'] :
                     cmdsClass = ['COMMAND_CLASS_THERMOSTAT_FAN_MODE', 'COMMAND_CLASS_THERMOSTAT_FAN_STATE', 'COMMAND_CLASS_THERMOSTAT_MODE',
                                 'COMMAND_CLASS_THERMOSTAT_HEATING', 'COMMAND_CLASS_THERMOSTAT_OPERATING_STATE']
                     for value in self.values.keys() :
                         val = self.values[value].valueData
-                        if (val['commandClass'] in cmdsClass) and val['instance'] == instance and self.values[value].labelDomogik == key :
-                            self.log.debug(u"Value find as type select {0}: {1}".format(key, val))
-                            retval = self.values[value].setValue(params[key]) #TODO: Must be checked with openzwave thermostat, not sure to do setValue()
+                        if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
+                                            self.checkAvailableLabel(self.values[value].labelDomogik, command) :
+                            self.log.debug(u"Value find as type select {0}: {1}".format(command, val))
+                            retval = self.values[value].setValue(newValue) #TODO: Must be checked with openzwave thermostat, not sure to do setValue()
                             break
+                elif command == 'setpoint' :
+                    cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
+                    sended = False
+                    for value in self.values.keys() :
+                        val = self.values[value].valueData
+    #                  Handle Thermostat setpoint type 'setpoint' to :
+    #                          'unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6', 'furnace',
+    #                          'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ','away heating'
+    #                  TODO: must be check if multi setpoint use same instance, i case type of xpl command must be modified or a key added
+                        if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
+                                            self.checkAvailableLabel(self.values[value].labelDomogik, command) :
+                            retval = self.values[value].setValue(newValue)
+                            sended = True
+                            break
+                    if not sended :
+                        retval['error'] = "Setpoint have no link to labels."
+                        self.log.warning(u"COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for node {0} instance {1} no find value for label {2}".format(self.refName, device['instance'], command))
                 else :
-                    self.log.warning(u"Unkwon command select type {0}".format(params))
-            elif command == 'temperature' :
-                cmdsClass = ['COMMAND_CLASS_THERMOSTAT_SETPOINT']
-                sended = False
-                for value in self.values.keys() :
-                    val = self.values[value].valueData
-#                  Handle Thermostat setpoint type 'setpoint' to :
-#                          'unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6', 'furnace',
-#                          'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating'
-#                  TODO: must be check if multi setpoint use same instance, i case type of xpl command must be modified or a key added
-                    if (val['commandClass'] in cmdsClass) and val['instance'] == instance and \
-                        self.values[value].labelDomogik in ['unused-0', 'heating-1', 'cooling-1', 'unused-3', 'unused-4', 'unused-5', 'unused-6',
-                                                            'furnace', 'dry-air', 'moist-air', 'auto-changeover', 'heating-econ', 'cooling-econ','away-heating']:
-                        retval = self.values[value].setValue(params['setpoint'])
-                        sended = True
-                        break
-                if not sended :
-                   self.log.warning("COMMAND_CLASS_THERMOSTAT_SETPOINT temperature setpoint for nodeId {0} instance {1} no find value for label {2}".format(self.nodeId, instance, self.values[value].labelDomogik))
+                    self.log.warning(u"MQ to ozwave unknown command : {0}, value : {1}, node : {2}".format(command, newVal, self.refName))
+                    retval['error'] = (u"MQ to ozwave unknown command : {0}, value : {1}, node : {2}".format(command, newVal, self.refName))
+            if retval['error'] == '' :
+                self.log.debug(u"MQ to ozwave sended command : {0} ({1}) to node : {2}".format(command, newVal, self.refName))
             else :
-                self.log.warning("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
-                retval['error'] = ("xPL to ozwave unknown command : {0}, valeur : {1}, nodeId : {2}".format(command, newVal, self.nodeId))
-        if retval['error'] == '' :
-            self.log.debug("xPL to ozwave sended command : %s , nodeId : %d",  command,  self.nodeId)
+                self.log.debug(u"MQ to ozwave not sended command : {0} ({1}) to node : {2}, error : {3}".format(command, newVal, self.refName, retval['error']))
         else :
-            self.log.debug("xPL to ozwave not sended command : %s , nodeId : %d, error : %s",  command,  self.nodeId,  retval['error'])
+            retval['error'] = u"MQ to ozwave not sended command : {0} ({1}) to node : {2}, error : Command not exist in parameters.".format(command, newVal, self.refName)
+            self.log.debug(u"MQ to ozwave not sended command : {0} ({1}) to node : {2}, error : Command not exist in parameters.".format(command, newVal, self.refName))
+        return retval
 
     def __str__(self):
-        return 'homeId: [{0}]  nodeId: [{1}] product: {2}  name: {3}'.format(self._homeId, self._nodeId, self._product, self._name)
+        return u'homeId: {0} nodeId: {1} product: {2}  name: {3}'.format(self.homeID, self._nodeId, self._product, self._name)
 
 class TestNetworkNode(threading.Thread):
     '''Gère un process de test réseaux du node'''
@@ -1120,7 +1133,7 @@ class TestNetworkNode(threading.Thread):
         """Demarre le test en mode forever, methode appelee depuis le start du thread, Sortie sur fin de test ou timeout"""
         self._startTime = time.time()
         self._lastTime = self._startTime
-        if self._log: self._log.info('Starting Test Node {0}'.format(self._node.refName))
+        if self._log: self._log.info(u'Starting Test Node {0}'.format(self._node.refName))
         self._running = True
         state = 'Stopped'
         self._node.reportToUI({'type': 'node-test-msg', 'state': 'starting',
@@ -1132,7 +1145,7 @@ class TestNetworkNode(threading.Thread):
                 state = 'timeout'
                 self._running = False
         if state == 'timeout' : self._node.endTest(state, self._cptMsg, self._countMsg, tRef,  self._timeOut)
-        if self._log: self._log.info('Stop Test Node {0}, status : {1}'.format(self._node.refName, state))
+        if self._log: self._log.info(u'Stop Test Node {0}, status : {1}'.format(self._node.refName, state))
 
     def decMsg(self, lastTest = 0):
         '''Décrémente le compteur de test'''
