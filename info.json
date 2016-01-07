@@ -311,6 +311,20 @@
                     "round_value": 0
             }
         },
+        "door_window_sensor" : {
+            "name" : "Door/Window Sensor",
+            "incremental": false,
+            "data_type" : "DT_OpenClose",
+            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "binary_sensor" : {
             "name" : "Sensor",
             "incremental": false,
@@ -326,10 +340,10 @@
             }
         },
         "motion_sensor_binary" : {
-            "name" : "Motion",
+            "name" : "Motion Sensor",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -344,6 +358,20 @@
             "incremental": false,
             "data_type" : "DT_Number",
             "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "tamper_sensor" : {
+            "name" : "Tamper sensor",
+            "incremental": false,
+            "data_type" : "DT_OpenClose",
+            "conversion" : "from_Tamper_Event_to_DT_OpenClose",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -1550,6 +1578,38 @@
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
+            },
+            "motion.multi.sensor.battery" :{
+                "description" : "Motion, (battery)",
+                "id": "motion.multi.sensor",
+                "name" : "Thermostat (battery)",
+                "commands": [],
+                "sensors": ["door_window_sensor", "motion_sensor_binary", "tamper_sensor", "temperature_c", "luminance", "battery_level"],
+                "parameters" : [{
+                    "key" : "networkid",
+					"xpl": false,
+                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
+                    "type" : "string"
+                },{
+                    "key" : "node",
+					"xpl": false,
+                    "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "batterycheck",
+					"xpl": false,
+                    "description" : "Check battery level at zwave device wakeup.",
+                    "type" : "boolean"
+                }]
             }
         },
 	"identity" : {
@@ -1569,7 +1629,7 @@
 		"domogik_min_version" : "0.5.0",
         "name": "ozwave",
 		"type" : "plugin",
-		"version" : "0.5.0b1"
+		"version" : "0.5.0"
 	},
     "json_version" : 2
 	}

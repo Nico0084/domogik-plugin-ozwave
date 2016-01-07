@@ -973,13 +973,9 @@ class ZWaveNode:
 
     def checkAvailableLabel(self, valueLabel, label):
         print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)
-#        if label in DmgSetpointLabels :
-#            if valueLabel in DmgSetpointLabels :
-#                return True
         if label == valueLabel : return True
         else :
             for p, linksLabel in self._ozwmanager.linkedLabels.iteritems()  :
-                print linksLabel
                 if label in linksLabel and valueLabel in linksLabel : return True
         print u"************ Label not available **************"
         return  False
