@@ -94,7 +94,10 @@ class OZwave(Plugin):
     def getsize(self):
         return sys.getsizeof(self) + sum(sys.getsizeof(v) for v in self.__dict__.values())
 
-    def on_mdp_request(self, msg):
+   def get_lib_directory(self):
+	 return "{0}/{1}_{2}/lib/".format(self.packages_directory, self._type, self._name)
+	
+   def on_mdp_request(self, msg):
         # display the req message
         print(msg)
         Plugin.on_mdp_request(self, msg)
