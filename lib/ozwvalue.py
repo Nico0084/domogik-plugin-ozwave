@@ -113,8 +113,6 @@ class ZWaveValueNode:
     def getValue(self, key):
         """Retourne la valeur du dict valueData correspondant à key"""
         return self._valueData[key] if self._valueData.has_key(key) else None
-<<<<<<< HEAD
-=======
 
     def getDataType(self, name):
         return self._node._ozwmanager.getDataType(name)
@@ -126,7 +124,6 @@ class ZWaveValueNode:
         valueData['id'] = str(valueData['id']) # str for javascript compatiblity
         valueData['realvalue'] = self._realValue
         return valueData
->>>>>>> non-xpl
 
     def HandleSleepingSetvalue(self):
         """Gère un akc eventuel pour un device domogik et un node sleeping."""
@@ -141,11 +138,7 @@ class ZWaveValueNode:
         """Effectue une requette pour rafraichir la valeur réelle lut par openzwave"""
         if self._valueData['genre'] != 'Config' :
             if self._node._manager.refreshValue(self._valueData['id']):
-<<<<<<< HEAD
-                self.log.debug(u"++++++++++ Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'],  self._valueData['label']))
-=======
                 self.log.debug(u"Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'],  self._valueData['label']))
->>>>>>> non-xpl
                 return True
         else :
             self.log.debug(u"RefreshOZWValue : call requestConfigParam waiting ValueChanged...")
@@ -176,14 +169,8 @@ class ZWaveValueNode:
         retval = {'value': False,  'error':  '' }
         if self._valueData['genre'] != 'Config' or self._valueData['type'] == 'List' : # TODO: Pas encore de gestion d'une config en type list, force envoie par setvalue
             if self._valueData['type'] == 'Bool':
-<<<<<<< HEAD
-                value = False if val in [False, 'FALSE', 'False',  'false', '',  0,  0.0, (),  [],  {},  None ] else True
-                val = value
-                self.log.debug(u"set value conversion {0} ({1}) to {2} ({3})".format(type(value), value, type(val), val))
-=======
                 value = False if val in [False, 'FALSE', 'False', 'false', '', '0', 0, 0.0, (), [], {}, None ] else True
                 self.log.debug(u"Set value conversion {0} ({1}) to {2} ({3})".format(type(val), val, type(value), value))
->>>>>>> non-xpl
             elif self._valueData['type'] == 'Byte' :
                 try: value = int(val)
                 except ValueError, ex:
@@ -224,21 +211,12 @@ class ZWaveValueNode:
                 if not ret :
                     retval ['error'] = 'Value is not a Value Type_Button.'
             else : value = val
-<<<<<<< HEAD
-            self.log.debug(u"setValue of {0} instance : {1}, value : {2}, type : {3}".format(self._valueData['commandClass'],
-                                        self._valueData['instance'], value, self._valueData['type']))
-            if not button :
-                if not self._node._manager.setValue(self._valueData['id'], value)  :
-                    self.log.error (u"setValue return bad type : {0}, instance :{1}, value : {2}, on valueId : {3}".format(self._valueData['commandClass'],
-                                            self._valueData['instance'],  val, self._valueData['id']))
-=======
             self.log.debug(u"Set value of {0} instance : {1}, value : {2}, type : {3}".format(self._valueData['commandClass'],
                                         self._valueData['instance'], value, self._valueData['type']))
             if not button :
                 if not self._node._manager.setValue(self._valueData['id'], value)  :
                     self.log.error (u"Set value return bad type : {0}, instance :{1}, value : {2}, on valueId : {3}".format(self._valueData['commandClass'],
                                             self._valueData['instance'], val, self._valueData['id']))
->>>>>>> non-xpl
                     retval ['value'] = False
                     retval['error'] = "Return bad type value."
                 else :
@@ -246,15 +224,9 @@ class ZWaveValueNode:
                     self._lastUpdate = time.time()
                     retval ['value'] = val
         else :
-<<<<<<< HEAD
-            if not self._node._manager.setConfigParam(self.homeId,  self.nodeId,  self._valueData['index'], int(val))  :
-                self.log.error (u"setConfigParam no send message : {0}, index :{1}, value : {2}, on valueId : {3}".format(self._valueData['commandClass'],
-                                        self._valueData['index'],  val, self._valueData['id']))
-=======
             if not self._node._manager.setConfigParam(self.homeId, self.nodeId, self._valueData['index'], int(val))  :
                 self.log.error (u"setConfigParam no send message : {0}, index :{1}, value : {2}, on valueId : {3}".format(self._valueData['commandClass'],
                                         self._valueData['index'], val, self._valueData['id']))
->>>>>>> non-xpl
                 retval ['value'] = False
                 retval['error'] = "setConfigParam : no send message."
             else :
@@ -316,14 +288,8 @@ class ZWaveValueNode:
         return self._valueData['units']
 
     def _getLabelDomogik(self):
-<<<<<<< HEAD
-        """ retourne le label OZW formaté pour les listener domogik, en lowcase et espaces remplacés pas '-',
-            pour compatibilité adresse web et appel rest (spec Xpl)."""
-        retval = self._valueData['label'].lower().replace(" ", "-")
-=======
         """ Return OZW label formated in lowcase."""
         retval = self._valueData['label'].lower()
->>>>>>> non-xpl
         return retval
 
     def getDataTypesFromZW(self):
@@ -363,10 +329,6 @@ class ZWaveValueNode:
     def getDomogikDevice(self):
         """Check if value could be a domogik device and return device name format."""
         retval = None
-<<<<<<< HEAD
-        if (self._valueData['commandClass'] in CmdsClassAvailable) and (self.labelDomogik in DomogikLabelAvailable) :
-            retval = self._node._ozwmanager.getxPLRefFromZW(self)
-=======
         labelDomogik = self.labelDomogik
         logLine = u"*** DomogikLabelAvailable : {0}".format(DomogikLabelAvailable)
         logLine += u"\n                 *** CmdsClassAvailable :{0}".format(CmdsClassAvailable)
@@ -385,7 +347,6 @@ class ZWaveValueNode:
         if retval is None :
             logLine += u"\n         *** Dmg device NOT available"
         self.log.debug(logLine)
->>>>>>> non-xpl
         return retval
 
     def getDmgSensor(self):
@@ -433,25 +394,13 @@ class ZWaveValueNode:
         return {}
 
     def getInfos(self):
-<<<<<<< HEAD
-        """ Retourne les informations de la value , format dict{} """
-        retval = {}
-        retval = dict(self._valueData)
-        retval['homeId'] = int(retval['homeId']) # Pour etre compatible avec javascript
-        retval['id'] = str(retval['id']) # Pour etre compatible avec javascript
-=======
         """ Retourn all value informations, format dict{} """
         retval = self.formatValueDataToJS()
->>>>>>> non-xpl
         retval['domogikdevice']  = self.getDomogikDevice()
         retval['help'] = self.getHelp()
         retval['polled'] = self.isPolled
         retval['pollintensity'] = self.getPollIntensity()
         retval['listelems'] = list(self.getListItems()) if (self._valueData['type'] == 'List') else None
-<<<<<<< HEAD
-        retval['realvalue'] = self._realValue
-=======
->>>>>>> non-xpl
         return retval
 
     def getValueItemStr(self):
@@ -540,71 +489,6 @@ class ZWaveValueNode:
         sensorMsg = None
         device =  self.getDomogikDevice()
         if device is not None :
-<<<<<<< HEAD
-            dmgDevice = self.dmgDevice
-            print dmgDevice
-            msgtrig = {'typexpl':'xpl-trig', 'schema': 'sensor.basic', 'device': device}
-            if self._valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
-                if self._valueData['type'] == 'Bool' :
-                    if self._valueData['value']  in ['False', False] : current = 'Off'
-                    elif  self._valueData['value'] in ['True',  True] : current = 'On'
-                    else : raise OZwaveValueException("Error format in valueToxPLTrig : %s" %str(msgtrig))
-                    msgtrig['data'] =  {'type': self.labelDomogik, 'current': current}
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_MULTILEVEL' :
-                if self._valueData['type']  == 'Byte' and self._valueData['label']  == 'Level' :  # cas d'un module type dimmer, gestion de l'état on/off
-                    if self._valueData['value'] == 0:
-                        msgtrig['msgdump'] = {'type': 'switch','current': 'Off'}
-                    else : msgtrig['msgdump']  = {'type': 'switch', 'current': 'On'}
-                    msgtrig['data'] = {'type': self.labelDomogik, 'current': self._valueData['value']}
-                elif self._valueData['type']  == 'Button' :                                                        # Cas par exemple d'un "bright" ou "dim, la commande devient le label et transmet une key "value".
-                    msgtrig['data']  = {'type': self.labelDomogik, 'current':  self._valueData['value']}
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_THERMOSTAT_SETPOINT' :
-                msgtrig['data']  = {'type': 'setpoint', 'current': self._valueData['value']}
-                if self._valueData['units'] != '': msgtrig ['data'] ['units'] = self._valueData['units']  # TODO: A vérifier pas sur que l'unit soit util
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_BINARY' :
-                if self._valueData['type'] == 'Bool' :
-#                    dmgDevice = self.dmgDevice
-#                    if dmgDevice is not None :
-#                        sensors = self.getDmgSensor(dmgDevice)
-#                        if sensors and 'current' in sensors :
-#                            dataType = self._node._ozwmanager.getDataType(sensors['current']['data_type'])
-#                            if dataType :
-#                                current = dataType['labels']['1' if self._valueData['value'] else '0']
-#                            else : current = 'True' if self._valueData['value'] else 'False'
-#                        else : current = 'True' if self._valueData['value'] else 'False'
-#                    else : current = 'True' if self._valueData['value'] else 'False'
-                    msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0}
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_MULTILEVEL' :
-                if self._valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
-                    value = round(self._valueData['value'], 2)
-                else:
-                    value = self._valueData['value']
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current': value}
-                if self._valueData['units'] != '': msgtrig ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_BATTERY' :
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
-                if self._valueData['units'] != '': msgtrig ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_POWERLEVEL' :
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_METER' :
-                if self._valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
-                    value = round(self._valueData['value'], 2)
-                else:
-                    value = self._valueData['value']
-                msgtrig ['data'] = {'type' : self.labelDomogik,  'current' : value}
-                if self._valueData['units'] != '': msgtrig ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
-                msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
-                if self._valueData['units'] != '': msgtrig ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
-            elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
-                msgtrig['schema'] = 'alarm.basic'
-                msgtrig ['data'] = {'type': self.labelDomogik, 'current' : 'high' if self._valueData['value'] else 'low'} # gestion du sensor binary pour widget binary
-
-        if msgtrig is not None : self.log.debug(u"*** valueToxPLTrig : {0}".format(msgtrig))
-        else: self.log.debug(u"Value not implemented to xPL : {0}".format(self._valueData['commandClass']))
-        return msgtrig
-=======
             dmgSensors = self.getDmgSensor()
             if dmgSensors :
                 for sensor in dmgSensors :
@@ -661,7 +545,6 @@ class ZWaveValueNode:
             else : self.log.debug(u"No sensor find for device {0} - {1}".format(device, self.labelDomogik))
         else: self.log.debug(u"Sensor value not implemented to Dmg device : {0} - {1}".format(self._valueData['commandClass'], self.labelDomogik))
         return sensorMsg
->>>>>>> non-xpl
 
     def __str__(self):
         return 'homeId: [{0}]  nodeId: [{1}]  valueData: {2}'.format(self.homeId, self.nodeId, self._valueData)
