@@ -68,35 +68,37 @@
         }
     ],
     "configuration" : [{
-            "key": "autoconfpath",
+			"key": "autoconfpath",
             "name": "Auto openzwave lib path detection",
-            "description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
-            "default" : true,
-            "required": true,
-            "type" : "boolean"
-        },{
-            "key" : "configpath",
+			"description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
+			"default" : true,
+			"required": true,
+			"type" : "boolean"
+		},{
+			"key" : "configpath",
             "name": "Openzwave Configuration Path",
-            "description" : "Path for openzwave files configuration (see your openzwave installation).",
-            "default" : "/usr/local/share/python-openzwave/config",
-            "required": true,
-            "type" : "string"
-        },{
-            "key" : "cpltmsg",
+			"description" : "Path for openzwave files configuration (see your openzwave installation).",
+			"default" : "/usr/local/lib/python2.7/dist-packages/libopenzwave-0.3.0b7-py2.7-linux-x86_64.egg/config",
+			"required": true,
+			"type" : "string"
+		},{
+			"key" : "cpltmsg",
             "name" : "Send complet message",
-            "description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
-            "default" : false,
-            "required": true,
-            "type" : "boolean"
-        },{
-            "key" : "ozwlog",
+			"description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
+			"default" : false,
+			"required": true,
+			"type" : "boolean"
+		},{
+			"key" : "ozwlog",
             "name": "Enable openzwave log",
-            "description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
-            "default" : false,
-            "required": true,
-            "type" : "boolean"
-        }
-    ],
+			"description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
+			"default" : false,
+			"required": true,
+			"type" : "boolean"
+		}
+	],
+    "xpl_commands" : {},
+    "xpl_stats": {},
     "sensors" : {
         "node_id" : {
             "name" : "Node Id",
@@ -113,7 +115,7 @@
             }
         },
         "ctrl_status" : {
-            "name" : "Zwave controler status",
+			"name" : "Zwave controler status",
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
@@ -125,7 +127,7 @@
                     "expire": 0,
                     "round_value": 0
             }
-        },
+		},
         "user_msg" : {
             "name" : "User message",
             "incremental": false,
@@ -155,7 +157,7 @@
             }
         },
         "low_battery" : {
-            "name" : "Low battery",
+            "name" : "low battery",
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "",
@@ -169,7 +171,7 @@
             }
         },
         "power_applied" : {
-            "name" : "Power applied",
+            "name" : "Power Applied",
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "from_Power_applied_to_DT_Binary",
@@ -198,7 +200,7 @@
         },
 
         "temperature_c" : {
-            "name" : "Temperature Celcius",
+            "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_Temp",
             "conversion" : "",
@@ -212,7 +214,7 @@
             }
         },
         "temperature_k" : {
-            "name" : "Temperature Kelvin",
+            "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_TempK",
             "conversion" : "",
@@ -226,7 +228,7 @@
             }
         },
         "temperature_f" : {
-            "name" : "Temperature fahrenheit",
+            "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_TempF",
             "conversion" : "",
@@ -282,7 +284,7 @@
             }
         },
         "level" : {
-            "name" : "sensor level",
+            "name" : "Level",
             "incremental": false,
             "data_type" : "DT_Number",
             "conversion" : "",
@@ -296,7 +298,7 @@
             }
         },
         "opening_sensor" : {
-            "name" : "Opening sensor with inversion",
+            "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
             "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
@@ -310,7 +312,7 @@
             }
         },
         "binary_sensor" : {
-            "name" : "Sensor True-False",
+            "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_Bool",
             "conversion" : "",
@@ -323,11 +325,25 @@
                     "round_value": 0
             }
         },
-        "motion_sensor_level" : {
-            "name" : "Sensor Motion",
+        "motion_sensor_binary" : {
+            "name" : "Motion",
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "motion_sensor_level" : {
+            "name" : "General",
+            "incremental": false,
+            "data_type" : "DT_Number",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -365,6 +381,34 @@
                     "round_value": 0
             }
         },
+        "power_m" : {
+            "name" : "Power",
+            "incremental": false,
+            "data_type" : "DT_mPower",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "power_k" : {
+            "name" : "Power",
+            "incremental": false,
+            "data_type" : "DT_kPower",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "energy" : {
             "name" : "Energy",
             "incremental": true,
@@ -379,8 +423,22 @@
                     "round_value": 0
             }
         },
+        "energy_m" : {
+            "name" : "Energy",
+            "incremental": true,
+            "data_type" : "DT_mActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "energy_k" : {
-            "name" : "Energy kWh",
+            "name" : "Energy",
             "incremental": true,
             "data_type" : "DT_kActiveEnergy",
             "conversion" : "",
@@ -393,9 +451,9 @@
                     "round_value": 0
             }
         },
-        "energy_production" : {
-            "name" : "Energy production",
-            "incremental": false,
+        "energy_previous_reading" : {
+            "name" : "Previous reading",
+            "incremental": true,
             "data_type" : "DT_ActiveEnergy",
             "conversion" : "",
             "timeout": 0,
@@ -407,8 +465,92 @@
                     "round_value": 0
             }
         },
-        "energy_k_production" : {
-            "name" : "Energy production kWh",
+        "energy_previous_reading_m" : {
+            "name" : "Previous reading",
+            "incremental": true,
+            "data_type" : "DT_mActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "energy_previous_reading_k" : {
+            "name" : "Previous reading",
+            "incremental": true,
+            "data_type" : "DT_kActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "energy_production_k" : {
+            "name" : "Energy production",
+            "incremental": false,
+            "data_type" : "DT_kActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "instant_energy_production_k" : {
+            "name" : "Instant energy production",
+            "incremental": false,
+            "data_type" : "DT_kActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "total-energy-production_k" : {
+            "name" : "Total energy production",
+            "incremental": false,
+            "data_type" : "DT_kActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "energy_production_today_k" : {
+            "name" : "Energy production today",
+            "incremental": false,
+            "data_type" : "DT_kActiveEnergy",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "total_production_time_k" : {
+            "name" : "Total production time",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
             "conversion" : "",
@@ -422,7 +564,7 @@
             }
         },
         "counter" : {
-            "name" : "Counter",
+            "name" : "Count",
             "incremental": true,
             "data_type" : "DT_Number",
             "conversion" : "",
@@ -436,7 +578,7 @@
             }
         },
         "indicator_str" : {
-            "name" : "Counter",
+            "name" : "Indicator",
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
@@ -450,7 +592,7 @@
             }
         },
         "locked_state" : {
-            "name" : "Locked state",
+            "name" : "Locked",
             "incremental": false,
             "data_type" : "DT_State",
             "conversion" : "",
@@ -478,7 +620,21 @@
             }
         },
         "sensor_alarm" : {
-            "name" : "Sensor alarm",
+            "name" : "Alarm",
+            "incremental": false,
+            "data_type" : "DT_String",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "smoke_alarm" : {
+            "name" : "smoke",
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "from_Level_to_DT_Binary",
@@ -491,8 +647,64 @@
                     "round_value": 0
             }
         },
-       "switch_state" : {
-            "name" : "Switch state",
+        "carbonmonoxide_alarm" : {
+            "name" : "Carbonmonoxide",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "carbondioxide_alarm" : {
+            "name" : "Carbondioxide",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "heat_alarm" : {
+            "name" : "heat",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "flood_alarm" : {
+            "name" : "flood",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "from_Level_to_DT_Binary",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+       "switch" : {
+            "name" : "Switch",
             "incremental": false,
             "data_type" : "DT_Switch",
             "conversion" : "from_switch_to_DT_Switch",
@@ -520,9 +732,9 @@
             }
         },
        "fan_state" : {
-            "name" : "Fan speed",
+            "name" : "Fan state",
             "incremental": false,
-            "data_type" : "DT_Number",
+            "data_type" : "DT_HVACFan",
             "conversion" : "",
             "timeout": 0,
             "history": {
@@ -534,7 +746,7 @@
             }
         },
        "thermostat_mode" : {
-            "name" : "Thermostat mode",
+            "name" : "mode",
             "incremental": false,
             "data_type" : "DT_HVACMode",
             "conversion" : "",
@@ -548,9 +760,9 @@
             }
         },
        "thermostat_operating_state" : {
-            "name" : "Thermostat operating state",
+            "name" : "Operating state",
             "incremental": false,
-            "data_type" : "DT_HVACHeat",
+            "data_type" : "DT_HVACVent",
             "conversion" : "",
             "timeout": 0,
             "history": {
@@ -561,8 +773,8 @@
                     "round_value": 0
             }
         },
-       "thermostat_setpoint" : {
-            "name" : "Thermostat setpoint",
+       "thermostat_setpoint_c" : {
+            "name" : "Setpoint",
             "incremental": false,
             "data_type" : "DT_Temp",
             "conversion" : "",
@@ -574,902 +786,33 @@
                     "expire": 0,
                     "round_value": 0
             }
-        }
-    },
-    "xpl_stats" : {
-        "ctrl_status" : {
-            "name" : "Controler status",
-            "schema" : "ozwctrl.basic",
-            "parameters" : {
-                "static" : [{
-                    "key" : "type",
-                    "value" : "status"
-                    }
-                ],
-                "device" : [],
-                "dynamic" : [{
-                    "key" : "status",
-                    "ignore_values" : "",
-                    "sensor" : "ctrl_status"
-                    },{
-                    "key" :  "usermsg",
-                    "ignore_values" : "",
-                    "sensor" : "user_msg"
-                    },{
-                    "key" : "node",
-                    "ignore_values" : "",
-                    "sensor" : "node_id"
-                    },{
-                    "key": "data",
-                    "ignore_values" : "",
-                    "sensor" : "ctrl_status"
-                    }
-                ]
+        },
+       "thermostat_setpoint_f" : {
+            "name" : "Setpoint",
+            "incremental": false,
+            "data_type" : "DT_TempF",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
             }
         },
-        "battery_level": {
-            "name" : "Battery level",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "battery-level"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "battery_level"
-                    }
-                ]
-            }
-        },
-        "low_battery": {
-            "name" : "Low battery flag",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "low-battery"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "low_battery"
-                    }
-                ]
-            }
-        },
-        "temperature_c": {
-            "name" : "Temperature celcius",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "temperature"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "temperature_c"
-                    }
-                ]
-            }
-        },
-        "temperature_k": {
-            "name" : "Temperature kelvin",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "temperature"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "temperature_k"
-                    }
-                ]
-            }
-        },
-        "temperature_f": {
-            "name" : "Temperature fahrenheit",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "temperature"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "temperature_f"
-                    }
-                ]
-            }
-        },
-        "relative_humidity": {
-            "name" : "Relative humidity",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "relative-humidity"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "humidity"
-                    }
-                ]
-            }
-        },
-        "humidity": {
-            "name" : "Humidity",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "humidity"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "humidity"
-                    }
-                ]
-            }
-        },
-        "luminance": {
-            "name" : "Luminance",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "luminance"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "luminance"
-                    }
-                ]
-            }
-        },
-        "motion_detection_general": {
-            "name" : "Motion state",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "general"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "motion_sensor_level"
-                    }
-                ]
-            }
-        },
-        "motion_detection": {
-            "name" : "Motion state",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "motion"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "motion_sensor_level"
-                    }
-                ]
-            }
-        },
-        "opening_sensor": {
-            "name" : "opening sensor",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "sensor"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "opening_sensor"
-                    }
-                ]
-            }
-        },
-        "binary_sensor": {
-            "name" : " sensor 2 states",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "sensor"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "binary_sensor"
-                    }
-                ]
-            }
-        },
-        "status": {
-            "name" : "Status",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "status"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "status"
-                    }
-                ]
-            }
-        },
-        "power": {
-            "name" : "Power",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "power"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "power"
-                    }
-                ]
-            }
-        },
-        "energy": {
-            "name" : "Energy Wh",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "energy"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy"
-                    }
-                ]
-            }
-        },
-        "energy_k": {
-            "name" : "Energy kWh",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "energy"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_k"
-                    }
-                ]
-            }
-        },
-        "prev_energy_k": {
-            "name" : "Energy kWh",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "previous-reading"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_k"
-                    }
-                ]
-            }
-        },
-        "counter_pulse": {
-            "name" : "Counter of pulse",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "count"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "counter"
-                    }
-                ]
-            }
-        },
-        "instant_energy_production": {
-            "name" : "Instant energy production",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "instant-energy-production"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_production"
-                    }
-                ]
-            }
-        },
-        "total_energy_production": {
-            "name" : "Total energy production",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "total-energy-production"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_k_production"
-                    }
-                ]
-            }
-        },
-        "energy_production_today": {
-            "name" : "Energy production today",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "energy-production-today"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_k_production"
-                    }
-                ]
-            }
-        },
-        "energy_production_today": {
-            "name" : "Total energy production time",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "total-production-time"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "energy_k_production"
-                    }
-                ]
-            }
-        },
-        "indicator" : {
-            "name" : "Indicator message",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "indicator"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "indicator_str"
-                    }
-                ]
-            }
-        },
-        "locked" : {
-            "name" : "Locked state",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "locked_state"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "locked_state"
-                    }
-                ]
-            }
-        },
-        "level": {
-            "name" : "Sensor level",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "level"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "level"
-                    }
-                ]
-            }
-        },
-        "power_applied": {
-            "name" : "Power applied",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "power-applied"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "power_applied"
-                    }
-                ]
-            }
-        },
-        "power_failure": {
-            "name" : "Power failure",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "power-failure"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "power_failure"
-                    }
-                ]
-            }
-        },
-        "tamper_event": {
-            "name" : "tamper event",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "tamper-event"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "tamper_event"
-                    }
-                ]
-            }
-        },
-        "alarm": {
-            "name" : "Alarm",
-            "schema" : "alarm.basic",
-            "parameters" : {
-                "static" : [],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        },{
-                        "key" : "type",
-                        "description" : "Zwave alarm type (smoke, heat, flood, carbonmonoxide, carbondioxide)",
-                        "type" : "string",
-                        "default": ""
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "sensor_alarm"
-                    }
-                ]
-            }
-        },
-        "switch_state" : {
-            "name" : "Switch state",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "switch"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "switch_state"
-                    }
-                ]
-            }
-        },
-        "fan_mode" : {
-            "name" : "Fan mode",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "fan-mode"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "fan_mode"
-                    }
-                ]
-            }
-        },
-        "fan_state" : {
-            "name" : "Fan state",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "fan-state"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "fan_state"
-                    }
-                ]
-            }
-        },
-        "thermostat_mode" : {
-            "name" : "Thermostat mode",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "mode"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "thermostat_mode"
-                    }
-                ]
-            }
-        },
-        "thermostat_operating_state" : {
-            "name" : "Thermostat mode",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "operating-state"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "thermostat_operating_state"
-                    }
-                ]
-            }
-        },
-        "thermostat_setpoint" : {
-            "name" : "Thermostat setpoint",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "setpoint"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "thermostat_setpoint"
-                    }
-                ]
-            }
-        },
-        "thermostat_heating" : {
-            "name" : "Thermostat heating",
-            "schema" : "sensor.basic",
-            "parameters" : {
-                "static" : [{
-                        "key" : "type",
-                        "value" : "heating"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ],
-                "dynamic" : [{
-                        "key" : "current",
-                        "ignore_values" : "",
-                        "sensor" : "thermostat_mode"
-                    }
-                ]
+       "thermostat_setpoint_k" : {
+            "name" : "Setpoint",
+            "incremental": false,
+            "data_type" : "DT_TempK",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
             }
         }
     },
@@ -1480,212 +823,132 @@
             "parameters" : [{
                     "key" : "switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : "from_DT_Switch_to_switch"
+                    "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_switch"
+            ]
         },
         "toggle_switch_binary" : {
             "name" : "Switch On-Off",
             "return_confirmation" : true,
             "parameters" : [{
-                    "key" : "toggle-switch",
+                    "key" : "Toggle switch",
                     "data_type" : "DT_Switch",
-                    "conversion" : "from_DT_Switch_to_switch"
+                    "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_switch"
+            ]
         },
         "Increase" : {
             "name" : "Increase button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "inc",
+                    "key" : "Inc",
                     "data_type" : "DT_Bool",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_push_button"
+            ]
         },
         "decrease" : {
             "name" : "Decrease button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "dec",
+                    "key" : "Dec",
                     "data_type" : "DT_Bool",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_push_button"
+            ]
         },
         "bright" : {
             "name" : "Bright button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "bright",
+                    "key" : "Bright",
                     "data_type" : "DT_Bool",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_push_button"
+            ]
         },
         "dim" : {
             "name" : "Dim button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "dim",
+                    "key" : "Dim",
                     "data_type" : "DT_Bool",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_push_button"
+            ]
         },
         "fan_mode" : {
             "name" : "Fan mode select",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "fan-mode",
+                    "key" : "Fan mode",
                     "data_type" : "DT_HVACVent",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_select"
+            ]
         },
         "fan_state" : {
             "name" : "Fan state select",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "fan-state",
-                    "data_type" : "DT_Number",
+                    "key" : "Fan state",
+                    "data_type" : "DT_HVACFan",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_select"
+            ]
         },
         "thermostat_mode" : {
             "name" : "Thermostat mode select",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "mode",
+                    "key" : "Mode",
                     "data_type" : "DT_HVACMode",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_select"
+            ]
         },
         "thermostat_operating_state" : {
             "name" : "Thermostat oprerating mode",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "operating-state",
-                    "data_type" : "DT_HVACHeat",
+                    "key" : "Operating state",
+                    "data_type" : "DT_HVACVent",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_select"
+            ]
         },
-        "thermostat_setpoint" : {
+        "thermostat_setpoint_c" : {
             "name" : "Thermostat setpoint",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "setpoint",
+                    "key" : "Setpoint",
                     "data_type" : "DT_Temp",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_temperature"
+            ]
         },
-        "thermostat_heating" : {
-            "name" : "Thermostat heating mode",
+        "thermostat_setpoint_F" : {
+            "name" : "Thermostat setpoint",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "heating",
-                    "data_type" : "DT_HVACMode",
+                    "key" : "Setpoint",
+                    "data_type" : "DT_TempF",
                     "conversion" : ""
                 }
-            ],
-            "xpl_command" : "set_select"
-        }
-    },
-    "xpl_commands" : {
-        "set_switch" : {
-            "name" : "Switch on-off",
-            "schema" : "ozwave.basic",
-            "xplstat_name" : "switch_state",
-            "parameters" : {
-                "static" : [{
-                        "key" : "command",
-                        "value" : "switch"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ]
-            }
+            ]
         },
-        "set_push_button" : {
-            "name" : "push  button",
-            "schema" : "ozwave.basic",
-            "xplstat_name" : "switch_state",
-            "parameters" : {
-                "static" : [{
-                        "key" : "command",
-                        "value" : "pressed"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ]
-            }
-        },
-        "set_select" : {
-            "name" : "Select mode",
-            "schema" : "ozwave.basic",
-            "xplstat_name" : "switch_state",
-            "parameters" : {
-                "static" : [{
-                        "key" : "command",
-                        "value" : "select"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ]
-            }
-        },
-        "set_temperature" : {
+        "thermostat_setpoint_k" : {
             "name" : "Thermostat setpoint",
-            "schema" : "ozwave.basic",
-            "xplstat_name" : "thermostat_setpoint",
-            "parameters" : {
-                "static" : [{
-                        "key" : "command",
-                        "value" : "temperature"
-                    }
-                ],
-                "device" : [{
-                        "key" : "instance",
-                        "description" : "Zwave node instance id",
-                        "type" : "integer",
-                        "default": 1
-                        }
-                ]
-            }
+            "return_confirmation" : false,
+            "parameters" : [{
+                    "key" : "Setpoint",
+                    "data_type" : "DT_TempK",
+                    "conversion" : ""
+                }
+            ]
         }
     },
-    "device_types": {
+	"device_types": {
             "primary.controller" :{
                 "description": "Primary Controller",
                 "id": "primary.controller",
@@ -1699,7 +962,7 @@
                         "type" : "string"
                     },{
                         "key" : "networkid",
-                        "xpl": true,
+                        "xpl": false,
                         "description" : "Zwave network name to replace Home ID for easier of nodes addressing. [e.g. : MyHomeId]",
                         "type" : "string"
                     }
@@ -1713,12 +976,12 @@
                 "sensors": [],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
@@ -1730,16 +993,23 @@
                 "id": "switch",
                 "name" : "Simple Switch",
                 "commands": ["switch"],
-                "sensors": ["switch_state"],
+                "sensors": ["switch"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1750,16 +1020,23 @@
                 "id": "switch.power.energy.meter",
                 "name" : "Switch-Power meter",
                 "commands": ["switch"],
-                "sensors": ["switch_state", "energy", "power"],
+                "sensors": ["switch", "energy_k", "power"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1770,16 +1047,23 @@
                 "id": "switch.power.energy.prev.meter",
                 "name" : "Switch-Power meter +",
                 "commands": ["switch"],
-                "sensors": ["switch_state", "energy", "energy_k", "power"],
+                "sensors": ["switch", "energy_k", "energy_previous_reading_k", "power"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1790,16 +1074,23 @@
                 "id": "switch",
                 "name" : "Switch with power failure",
                 "commands": ["switch"],
-                "sensors": ["switch_state", "power_failure"],
+                "sensors": ["switch", "power_failure"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1813,19 +1104,26 @@
                 "sensors": ["opening_sensor", "power_applied", "battery_level", "low_battery", "tamper_event"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1838,13 +1136,20 @@
                 "sensors": ["temperature_c"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1858,19 +1163,26 @@
                 "sensors": ["temperature_c", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1883,19 +1195,26 @@
                 "sensors": ["temperature_c", "humidity", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1908,13 +1227,20 @@
                 "sensors": ["temperature_c", "humidity"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1928,19 +1254,26 @@
                 "sensors": ["temperature_c", "humidity", "relative_humidity", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1953,13 +1286,20 @@
                 "sensors": ["temperature_c", "humidity", "relative_humidity"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -1973,19 +1313,26 @@
                 "sensors": ["level", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -1998,13 +1345,20 @@
                 "sensors": ["level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -2015,22 +1369,29 @@
                 "id": "power.meter.battery",
                 "name" : "Power meter (battery)",
                 "commands": [],
-                "sensors": ["power", "energy", "energy_k", "battery_level"],
+                "sensors": ["power", "energy_k", "energy_previous_reading_k", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2043,13 +1404,20 @@
                 "sensors": ["power", "energy", "energy_k"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
@@ -2063,19 +1431,26 @@
                 "sensors": ["motion_sensor_level", "luminance", "temperature_c", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2088,19 +1463,26 @@
                 "sensors": ["sensor_alarm", "tamper_event","low_battery", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2113,19 +1495,26 @@
                 "sensors": ["sensor_alarm", "low_battery", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
@@ -2134,46 +1523,53 @@
                 "description" : "Thermostat with only setpoint (battery)",
                 "id": "thermostat.setpoint.battery",
                 "name" : "Thermostat (battery)",
-                "commands": ["thermostat_setpoint"],
-                "sensors": ["thermostat_setpoint", "battery_level"],
+                "commands": ["thermostat_setpoint_c"],
+                "sensors": ["thermostat_setpoint_c", "battery_level"],
                 "parameters" : [{
                     "key" : "networkid",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
                     "type" : "string"
                 },{
                     "key" : "node",
-                    "xpl": true,
+					"xpl": false,
                     "description" : "Zwave node id",
                     "type" : "integer",
                     "max_value": 255,
                     "min_value": 1
                 },{
+                    "key" : "instance",
+					"xpl": false,
+                    "description" : "Zwave node instance id",
+                    "type" : "integer",
+                    "max_value": 255,
+                    "min_value": 1
+                },{
                     "key" : "batterycheck",
-                    "xpl": false,
+					"xpl": false,
                     "description" : "Check battery level at zwave device wakeup.",
                     "type" : "boolean"
                 }]
             }
         },
-    "identity" : {
-        "author" : "Nicolas VIGNAL",
-        "author_email" : "nico84dev at gmail.com",
+	"identity" : {
+		"author" : "Nicolas VIGNAL",
+		"author_email" : "nico84dev at gmail.com",
         "tags": ["z-wave"],
-        "dependencies" : [{
-                "id" : "python-openzwave-lib (>=0.3.0)",
-                "type" : "python"
-            },
+		"dependencies" : [{
+				"id" : "python-openzwave-lib (>=0.3.0)",
+				"type" : "python"
+			},
             {
                 "id": "tailer (>=0.2.1)",
                 "type": "python"
             }
-        ],
-        "description" : "Z-Wave is a wireless communications system designed to allow devices in the home to communicate with one another for the purposes of home automation",
-        "domogik_min_version" : "0.5.0",
+		],
+		"description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
+		"domogik_min_version" : "0.5.0",
         "name": "ozwave",
-        "type" : "plugin",
-        "version" : "0.5.0"
-    },
+		"type" : "plugin",
+		"version" : "0.5.0b1"
+	},
     "json_version" : 2
-    }
+	}
