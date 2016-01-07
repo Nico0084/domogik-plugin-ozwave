@@ -1,0 +1,24 @@
+{
+    "setpoint" : [
+        "unused 0",
+        "heating 1",
+        "cooling 1",
+        "unused 3",
+        "unused 4",
+        "unused 5",
+        "unused 6",
+        "furnace",
+        "dry air",
+        "moist air",
+        "auto changeover",
+        "heating econ",
+        "cooling econ",
+        "away heating"
+    ],
+    "sensor" : [
+        "Motion Sensor",
+        "Door/Window Sensor",
+        "Tamper Sensor"
+    ]
+}
+

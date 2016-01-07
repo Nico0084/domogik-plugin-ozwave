@@ -117,13 +117,21 @@ class ZWaveValueNode:
     def getDataType(self, name):
         return self._node._ozwmanager.getDataType(name)
 
+    def formatValueDataToJS(self):
+        """Format valueData for javascript compatiblity"""
+        valueData = dict(self._valueData)
+        valueData['homeId'] = int(valueData['homeId']) # int for javascript compatiblity
+        valueData['id'] = str(valueData['id']) # str for javascript compatiblity
+        valueData['realvalue'] = self._realValue
+        return valueData
+
     def HandleSleepingSetvalue(self):
         """Gère un akc eventuel pour un device domogik et un node sleeping."""
         if self._node.isSleeping and self.getDomogikDevice() is not None:
             sensor_msg = self.valueToSensorMsg()
             if sensor_msg :
                 self.log.debug(u"Report last sensor message during node sleeping.")
-                self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': self._valueData})
+                self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': self.formatValueDataToJS()})
                 self._node._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
 
     def RefreshOZWValue(self):
@@ -248,9 +256,7 @@ class ZWaveValueNode:
         self._valueData.update(dict(valueData))
         self._realValue = self._valueData['value']
         self._lastUpdate = time.time()
-        valueData['homeId'] = int(valueData['homeId']) # Pour etre compatible avec javascript
-        valueData['id'] = str(valueData['id']) # Pour etre compatible avec javascript
-        self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueData})
+        self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': self.formatValueDataToJS()})
         return new
 
     def convertInType(self,  val):
@@ -323,13 +329,22 @@ class ZWaveValueNode:
     def getDomogikDevice(self):
         """Check if value could be a domogik device and return device name format."""
         retval = None
+        labelDomogik = self.labelDomogik
         logLine = u"*** DomogikLabelAvailable : {0}".format(DomogikLabelAvailable)
         logLine += u"\n                 *** CmdsClassAvailable :{0}".format(CmdsClassAvailable)
-        if (self._valueData['commandClass'] in CmdsClassAvailable) and (self.labelDomogik in DomogikLabelAvailable) :
-            retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
-            retval['label'] = self.labelDomogik
-            logLine = u"*** Dmg device Available : {0}".format(retval)
-        else :
+        if self._valueData['commandClass'] in CmdsClassAvailable :
+            if labelDomogik in DomogikLabelAvailable :
+                retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
+                retval['label'] = labelDomogik
+                logLine = u"*** Dmg device Available : {0}".format(retval)
+            else :
+                for p, linksLabel in self._node._ozwmanager.linkedLabels.iteritems()  :
+                    if labelDomogik in linksLabel :
+                        retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
+                        retval['label'] = p
+                        logLine = u"*** Dmg device Available {0} by link : {1}".format(labelDomogik, retval)
+                        break
+        if retval is None :
             logLine += u"\n         *** Dmg device NOT available"
         self.log.debug(logLine)
         return retval
@@ -379,17 +394,13 @@ class ZWaveValueNode:
         return {}
 
     def getInfos(self):
-        """ Retourne les informations de la value , format dict{} """
-        retval = {}
-        retval = dict(self._valueData)
-        retval['homeId'] = int(retval['homeId']) # Pour etre compatible avec javascript
-        retval['id'] = str(retval['id']) # Pour etre compatible avec javascript
+        """ Retourn all value informations, format dict{} """
+        retval = self.formatValueDataToJS()
         retval['domogikdevice']  = self.getDomogikDevice()
         retval['help'] = self.getHelp()
         retval['polled'] = self.isPolled
         retval['pollintensity'] = self.getPollIntensity()
         retval['listelems'] = list(self.getListItems()) if (self._valueData['type'] == 'List') else None
-        retval['realvalue'] = self._realValue
         return retval
 
     def getValueItemStr(self):

@@ -102,6 +102,7 @@ class OZWavemanager():
         self._openingDriver = None
         self._completMsg = self._plugin.get_config('cpltmsg')
         self._dataTypes = []
+        self.linkedLabels = []
         self._device = self._plugin.get_config('device')
         autoPath = self._plugin.get_config('autoconfpath')
         user = pwd.getpwuid(os.getuid())[0]
@@ -263,10 +264,17 @@ class OZWavemanager():
 
     def InitDomogikLabelAvailable(self):
         # Add additionnal setpoint openzwave labels
-        for label in  ['unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6',
-                          'furnace', 'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ',
-                          'away heating'] :
-            if label not in DomogikLabelAvailable : DomogikLabelAvailable.append(label)
+        json_file = "{0}/linkedlabels.json".format(self._plugin.get_lib_directory())
+        linkedLabels = json.load(open(json_file))
+        self.linkedLabels = {}
+        for label, links in linkedLabels.iteritems() :
+            links.append(label)
+            self.linkedLabels[label.lower()] = [l.lower() for l in links]
+        print self.linkedLabels
+#        for label in  ['unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6',
+#                          'furnace', 'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ',
+#                          'away heating'] :
+#            if label not in DomogikLabelAvailable : DomogikLabelAvailable.append(label)
         for sensor in self._plugin.json_data['sensors']:
             if self._plugin.json_data['sensors'][sensor]['name'].lower() not in DomogikLabelAvailable :
                 DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())

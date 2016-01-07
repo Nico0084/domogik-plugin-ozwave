@@ -594,7 +594,7 @@ class ZWaveNode:
                         sensor_msg = valueNode.valueToSensorMsg()
                         if sensor_msg :
                             self.log.debug(u"Report last sensor message on Complet Msg")
-                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.valueData})
+                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.formatValueDataToJS()})
                             self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
                 if empty : self._lastMsg= None
                 self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId,  self.nodeId, {'msgOrg': lastMsg, 'completMsg' : completMsg})
@@ -614,7 +614,7 @@ class ZWaveNode:
                         if sensor_msg :
                             self.log.debug(u"Report last sensor message on going sleeping node")
                             self._ozwmanager.monitorNodes.nodeCompletMsg_report(self.homeId, self.nodeId, {'msgOrg': self._lastMsg['zwMsg'], 'sleepMsg' : sleepMsg})
-                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.valueData})
+                            self.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': valueNode.formatValueDataToJS()})
                             self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
                     return True
                 else: return False
@@ -973,10 +973,14 @@ class ZWaveNode:
 
     def checkAvailableLabel(self, valueLabel, label):
         print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)
-        if label in DmgSetpointLabels :
-            if valueLabel in DmgSetpointLabels :
-                return True
-        elif label == valueLabel : return True
+#        if label in DmgSetpointLabels :
+#            if valueLabel in DmgSetpointLabels :
+#                return True
+        if label == valueLabel : return True
+        else :
+            for p, linksLabel in self._ozwmanager.linkedLabels.iteritems()  :
+                print linksLabel
+                if label in linksLabel and valueLabel in linksLabel : return True
         print u"************ Label not available **************"
         return  False
 
