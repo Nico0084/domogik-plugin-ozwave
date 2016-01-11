@@ -110,14 +110,15 @@ class OZWavemanager():
         self._plugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         # Spécification du chemain d'accès à la lib open-zwave
         if autoPath :
-            self._configPath = str(libopenzwave.configPath())  # force str type for python openzwave lib
+            self._configPath = libopenzwave.configPath()
             print "----",  self._configPath
             if self._configPath is None :
                 self._log.warning(u"libopenzwave can't autoconfigure path to config, try python path.")
-                self._configPath = str(os.path.abspath(libopenzwave.__file__) + "/config") # force str type for python openzwave lib
+                self._configPath = os.path.abspath(libopenzwave.__file__) + "/config"
                 if not self._configPath or not os.path.exists(self._configPath) :
                     self._log.warning(u"Python can't autoconfigure path to config, try user config : {0}".format(configPath))
                     self._configPath = configPath
+        self._configPath = str(self._configPath)# force str type for python openzwave lib
         print self._configPath, " : ", os.path.exists(self._configPath)
         if not os.path.exists(self._configPath) :
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
