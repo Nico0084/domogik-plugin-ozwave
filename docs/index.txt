@@ -8,10 +8,11 @@ Table of content
 
     /ozwave
     /dependencies
-    /managertools
-    /ctldevtools
-    /networktools
-    /supporttools
+    /manager_tools
+    /ctrl_tools
+    /nodes_tools
+    /network_tools
+    /support_tools
     /dev
     /changelog
     /advanced

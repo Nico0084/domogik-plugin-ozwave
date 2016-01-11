@@ -93,7 +93,7 @@ two actions possible :
 - Send test message for all node awake (not sleeping node) - Enter number of send test message per node.
 
 .. note ::
-    To heal a specific node use button on columm "Action" `of nodes table <ctldevtools.html#get-zwave-devices-nodes-informations>`_ .
+    To heal a specific node use button on columm "Action" `of nodes table <nodes_tools.html#get-zwave-devices-nodes-informations>`_ .
 
 .. |node-stats| image:: ozwave_node-stats.png
     :width: 750px

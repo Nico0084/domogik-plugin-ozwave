@@ -1,0 +1,148 @@
+================
+Controller tools
+================
+
+.. |menu2| image:: ozwave_menu-ctrl.png
+    :width: 700px
+
+|menu2|
+
+Get Zwave controller informations
+=================================
+
+.. |check-ctrl1| image:: ozwave_check-ctrl1.png
+    :width: 600px
+
+.. |bt-refresh-ctrl| image:: ozwave_btrefresh-ctrl.png
+    :width: 60px
+
+- you can check to verify the information on zwave network state and controller in the first part of the page.
+
+|check-ctrl1|
+
+Drivers and controller commands
+===============================
+
+.. |ctrl-cmd-bts| image:: ozwave_ctrl-cmd-bts.png
+
+In this section, orders can be sent directly to the driver
+
+|ctrl-cmd-bts|
+
+Stop and Start driver (controller)
+----------------------------------
+
+TODO : 
+
+.. |ctrl-start-bt| image:: ozwave_ctrl-start-bt.png
+
+.. |ctrl-stop-bt| image:: ozwave_ctrl-stop-bt.png
+
+.. |ctrl-stop-dlg| image:: ozwave_ctrl-stop-dialog.png
+
+Driver automatically starts and start/stop button automatically changes depending on the state of the driver. 
+
+- You can stop it when it's possible : |ctrl-stop-bt|
+
+confimation dialog aks you to continue.
+
+|ctrl-stop-dlg|
+
+- You can Start it when it's possible : |ctrl-start-bt|
+
+Initialization process running, you must be patient ....
+
+Controller commands and actions
+-------------------------------
+
+.. |ctrl-action-bt| image:: ozwave_ctrl-action-bt.png
+
+.. |ctrl-action-dialog| image:: ozwave_ctrl-action-dialog.png
+    :width: 250px
+
+- You access to dialog box by button |ctrl-action-bt| 
+
+|ctrl-action-dialog|
+
+Actions process
+^^^^^^^^^^^^^^^
+
+- This modal dialog contains informations to guide the user.
+- Just actions "CreateButton" and "DeleteButton" are not implemented yet.
+
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| Action / command          | Description                                                                                                |
++===========================+============================================================================================================+
+| AddDevice                 | Add a new device (but not a controller) to the Z-Wave network.                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| CreateNewPrimary          | Add a new controller to the Z-Wave network.  The new controller will be the primary, and the current       |
+|                           | primary will become a secondary controller.                                                                |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| ReceiveConfiguration      | Receive Z-Wave network configuration information from another controller.                                  |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| RemoveDevice              | Remove a new device (but not a controller) from the Z-Wave network.                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| RemoveFailedNode          | Move a node to the controller's failed nodes list. This command will only work if the node cannot respond. |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| HasNodeFailed             | Check whether a node is in the controller's failed nodes list.                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| ReplaceFailedNode         | Replace a non-responding node with another. The node must be in the controller's list of failed nodes for  |
+|                           | this command to succeed.                                                                                   |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| TransferPrimaryRole       | Make a different controller the primary.                                                                   |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| RequestNetworkUpdate      | Request network information from the SUC/SIS.                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| RequestNodeNeighborUpdate | Get a node to rebuild its neighbour list.  This method also does ControllerCommand_RequestNodeNeighbors.   |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| AssignReturnRoute         | Assign a network return routes to a device.                                                                |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| DeleteAllReturnRoutes     | Delete all return routes from a device.                                                                    |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| SendNodeInformation       | Send a node information frame.                                                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| ReplicationSend           | Send information from primary to secondary.                                                                |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| CreateButton              | Create an id that tracks handheld button presses.                                                          |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| DeleteButton              | Delete id that tracks handheld button presses.                                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+
+Schematic processing
+^^^^^^^^^^^^^^^^^^^^
+
+- Each action have differents step, some will attempt user action on device, some will take a long time, some must be stop manually.
+- You can stop action, but stop result have some time a fail report.
+
+.. |ctrl-action-process| image:: ozwave_ctrl-action-process.png
+    :width: 650px
+
+|ctrl-action-process|
+
+Reset controller
+----------------
+
+.. |ctrl-reset-bt| image:: ozwave_ctrl-reset-bt.png
+
+- Two mode possible with acces by buttons : |ctrl-reset-bt|
+
+Soft reset
+^^^^^^^^^^
+
+.. |ctrl-reset-dialog1| image:: ozwave_ctrl-reset-dialog1.png
+
+- Soft Reset a PC Z-Wave Controller who resets a controller without erasing its network configuration settings
+
+|ctrl-reset-dialog1|
+
+
+Hard reset
+^^^^^^^^^^
+
+.. |ctrl-reset-dialog2| image:: ozwave_ctrl-reset-dialog2.png
+
+.. warning ::
+   Be careful this action is irreverssible
+
+|ctrl-reset-dialog2|
+

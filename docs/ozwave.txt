@@ -237,15 +237,7 @@ Description          What you want       A short descriptionn for this device.
 Reference            FGWPE Wall Plug     A reference for this device, eg.: manufacturer reference.                    
 ==================== =================== ===============================================================
 
-Global parameters  (Extra parameters for some particular zwave device)
-
-==================== =================== ===============================================================
- Key                    Example          Description                                                                  
-==================== =================== ===============================================================
- batterycheck           True             HCheck battery level at zwave device wakeup.                                 
-==================== =================== ===============================================================
-
-xPL parameters :
+Global parameters :
 
 |example_device2|
 
@@ -254,27 +246,18 @@ Key                  Example             Description
 ==================== =================== ===============================================================
 networkid            MyHomeNetwork       Home ID name for association with domogik devices                            
 node                 14                  Z-wave node id that you can find in the                                      
-                                         `nodes table <ctldevtools.html#Manage devices Commands Class>`_              
+                                         `nodes table <nodes_tools.html#Manage devices Commands Class>`_              
+instance             1                   Zwave node instance id that you can find in the                              
+                                         `Commands Class table <nodes_tools.html#Manage devices Commands Class>`_     
 ==================== =================== ===============================================================
 
-xPL command parameters (if it's a zwave device with command(s)) :
+Extra parameters for some particular zwave device :
 
-======================== =================== ===============================================================
-Key                      Example             Description                                                                  
-======================== =================== ===============================================================
-<xpl_cmds> - instance  1                     Zwave node instance id that you can find in the                              
-                                             `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     
-======================== =================== ===============================================================
-
-xPL stat parameters (if it's a zwave device with sensor(s)) :
-
-======================== =================== ===============================================================
-Key                      Example             Description                                                                  
-======================== =================== ===============================================================
-<xpl_stat> - instance  1                     Zwave node instance id that you can find in the                              
-                                             `Commands Class table <ctldevtools.html#Manage devices Commands Class>`_     
-======================== =================== ===============================================================
-
+==================== =================== ===============================================================
+ Key                    Example          Description                                                                  
+==================== =================== ===============================================================
+ batterycheck           True             HCheck battery level at zwave device wakeup.                                 
+==================== =================== ===============================================================
 
 Start the plugin
 ================
