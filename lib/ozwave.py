@@ -110,11 +110,11 @@ class OZWavemanager():
         self._plugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         # Spécification du chemain d'accès à la lib open-zwave
         if autoPath :
-            self._configPath = libopenzwave.configPath()
+            self._configPath = str(libopenzwave.configPath())  # force str type for python openzwave lib
             print "----",  self._configPath
             if self._configPath is None :
                 self._log.warning(u"libopenzwave can't autoconfigure path to config, try python path.")
-                self._configPath = os.path.abspath(libopenzwave.__file__) + "/config"
+                self._configPath = str(os.path.abspath(libopenzwave.__file__) + "/config") # force str type for python openzwave lib
                 if not self._configPath or not os.path.exists(self._configPath) :
                     self._log.warning(u"Python can't autoconfigure path to config, try user config : {0}".format(configPath))
                     self._configPath = configPath
@@ -123,7 +123,7 @@ class OZWavemanager():
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
             self._plugin.force_leave()
             raise OZwaveManagerException (u"Directory openzwave config not exist : %s"  % self._configPath)
-        elif not os.access(self._configPath,  os.R_OK) :
+        elif not os.access(self._configPath, os.R_OK) :
             self._log.error(u"User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
             raise OZwaveManagerException ("User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
         if not os.path.exists(self._userPath) :
@@ -134,7 +134,7 @@ class OZWavemanager():
             except Exception as e:
                 self._log.error(e.message)
                 raise OZwaveManagerException ("User directory openzwave not exist : %s"  % self._userPath)
-        if not os.access(self._userPath,  os.W_OK) :
+        if not os.access(self._userPath, os.W_OK) :
             self._log.error("User %s haven't write access on user openzwave directory : %s"  %(user,  self._userPath))
             raise OZwaveManagerException ("User %s haven't write access on user openzwave directory : %s"  %(user,  self._userPath))
         self._log.debug(u"Setting openzwave path for user : {0}".format(user))
@@ -146,7 +146,7 @@ class OZWavemanager():
         opts = "--logging true" if self._ozwLog else "--logging false"
         self._log.info(u"Try to run openzwave manager")
         self.options = libopenzwave.PyOptions(config_path =str(self._configPath), user_path=str(self._userPath))
-        self.options.create(self._configPath, self._userPath,  opts)
+        self.options.create(self._configPath, self._userPath, opts)
         if self._completMsg: self.options.addOptionBool('NotifyTransactions',  self._completMsg)
         self.options.lock() # nécessaire pour bloquer les options et autoriser le PyManager à démarrer
         self._plugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
@@ -316,7 +316,7 @@ class OZWavemanager():
 
     def addDeviceCtrl(self, dmgDevice):
         if dmgDevice['device_type_id'] == 'primary.controller' :
-            driver = self._plugin.get_parameter(dmgDevice, 'driver')
+            driver = str(self._plugin.get_parameter(dmgDevice, 'driver')) # force str type for python openzwave lib
             if not self.getDeviceCtrl('driver',  driver) :
                 networkID = self._plugin.get_parameter(dmgDevice, 'networkid')
                 self._devicesCtrl.append(PrimaryController(self, driver, networkID, None))

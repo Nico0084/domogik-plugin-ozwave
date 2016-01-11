@@ -67,8 +67,8 @@ class OZwave(Plugin):
         self._ctrlHBeat = None
         # Get some config value
         ozwlogConf = self.get_config('ozwlog')
-        pathUser = self.get_data_files_directory()
-        pathConfig = self.get_config('configpath') + '/'
+        pathUser = str(self.get_data_files_directory())  # force str type for python openzwave lib
+        pathConfig = str(self.get_config('configpath') + '/') # force str type for python openzwave lib
         # Initialize plugin Manager
         try:
             self.myzwave = OZWavemanager(self, self.send_sensor, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
