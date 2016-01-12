@@ -1,9 +1,6 @@
-.. _index:
-
 ========================
 Development informations
 ========================
-
 
 Detailed architecture
 =====================
