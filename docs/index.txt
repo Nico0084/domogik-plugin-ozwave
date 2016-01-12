@@ -7,7 +7,6 @@ Table of content
 .. toctree::
 
     /ozwave
-    /dependencies
     /manager_tools
     /ctrl_tools
     /nodes_tools
@@ -15,7 +14,6 @@ Table of content
     /support_tools
     /dev
     /changelog
-    /advanced
     /advanced/dependencies
     /advanced/udev_rules
 

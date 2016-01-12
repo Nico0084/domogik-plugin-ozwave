@@ -27,10 +27,12 @@ The two flag **Openzwave** and **Manager** give the state of respective library
 
 * Red : Stopped
 |managerstopped|
+
 * Green : Alive
 * Orange : Starting
 |managerstarting1|
 |managerstarting2|
+
 * Grey : Unknown
 * Black : Failed
 |managerfail|

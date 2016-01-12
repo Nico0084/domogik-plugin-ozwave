@@ -6,7 +6,7 @@ Advanced usage of udev rules
 
 This page is dedicated to the users who want to create their own **udev rules** file!
 
-Please keep in mind that you should use, if possible, one of the **udev rules* files delivered with this plugin!
+Please keep in mind that you should use, if possible, one of the **udev rules** files delivered with this plugin!
 
 Create the udev rule for controller
 ===================================
