@@ -38,6 +38,7 @@ Implements
 from ozwdefs import *
 import time
 import sys
+import traceback
 
 class OZwaveValueException(OZwaveException):
     """"Zwave ValueNode exception class"""
@@ -427,8 +428,12 @@ class ZWaveValueNode:
         return retval
 
     def getHelp(self):
-        """Retourne l'aide utilisateur concernant la fonctionnalité du device"""
-        return self._node._manager.getValueHelp(self._valueData['id'])
+        """Return help for value device capacity."""
+        try :
+            return self._node._manager.getValueHelp(self._valueData['id'])
+        except :
+            self.log.error(u"Get help value error : {0}".format(traceback.format_exc()))
+            return "Get help value error : {0}".format(traceback.format_exc())
 
     def enablePoll(self, intensity = 1):
         """Enable the polling of a device's state.
