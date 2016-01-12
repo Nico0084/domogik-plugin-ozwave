@@ -138,7 +138,7 @@ class ZWaveValueNode:
         """Effectue une requette pour rafraichir la valeur réelle lut par openzwave"""
         if self._valueData['genre'] != 'Config' :
             if self._node._manager.refreshValue(self._valueData['id']):
-                self.log.debug(u"Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'],  self._valueData['label']))
+                self.log.debug(u"Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'], self._valueData['label']))
                 return True
         else :
             self.log.debug(u"RefreshOZWValue : call requestConfigParam waiting ValueChanged...")
@@ -246,7 +246,8 @@ class ZWaveValueNode:
 
     def updateData(self, valueData):
         """valueData update from callback argument. return true/false if value is different from old."""
-        if self._tempConv and valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
+        if self._tempConv and valueData['label'] is not None and \
+                valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
             valueData['units'] = '°C'
             self.log.debug(u"************** Conversion : {0}".format(float(valueData['value'])))
             self.log.debug(u"{0}".format(float(valueData['value'])*(5.0/9)))
@@ -289,8 +290,9 @@ class ZWaveValueNode:
 
     def _getLabelDomogik(self):
         """ Return OZW label formated in lowcase."""
-        retval = self._valueData['label'].lower()
-        return retval
+        if self._valueData['label'] is not None :
+            return self._valueData['label'].lower()
+        return ''
 
     def getDataTypesFromZW(self):
         """ Return all datatype name(s) possibilities depending of zwave value parameters.
@@ -501,7 +503,7 @@ class ZWaveValueNode:
                             else : raise OZwaveValueException("Error format in valueToSensorMsg : %s" %str(sensorMsg))
                             sensorMsg['data'] =  {'type': self.labelDomogik, 'current': current}
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_MULTILEVEL' :
-                        if self._valueData['type']  == 'Byte' and self._valueData['label']  == 'Level' :  # cas d'un module type dimmer, gestion de l'état on/off
+                        if self._valueData['type']  == 'Byte' and self._getLabelDomogik() == 'level' :  # cas d'un module type dimmer, gestion de l'état on/off
                             if self._valueData['value'] == 0:
                                 sensorMsg['msgdump'] = {'type': 'switch','current': 0}
                             else : sensorMsg['msgdump']  = {'type': 'switch', 'current': 1}
