@@ -13,7 +13,7 @@ master_doc = 'index'
 ### part to update ###################################
 project = u'domogik-plugin-ozwave'
 copyright = u'2015, Nico0084'
-version = '0.4.0'
+version = '0.5.0'
 release = version
 ######################################################
 
