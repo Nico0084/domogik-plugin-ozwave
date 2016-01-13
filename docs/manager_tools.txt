@@ -15,7 +15,7 @@ State and version of libraries
     :width: 700px
     
 .. |managerstarting1| image:: ozwave_manager_starting1.png
-    :width: 200px
+    :width: 250px
     
 .. |managerstarting2| image:: ozwave_manager_starting2.png
     :width: 700px
@@ -23,18 +23,21 @@ State and version of libraries
 .. |managerstopped| image:: ozwave_manager_stopped.png
     :width: 300px
     
-The two flag **Openzwave** and **Manager** give the state of respective library
+The two flag **Openzwave** and **Manager** give the state of respective library :
 
 * Red : Stopped
+
 |managerstopped|
 
 * Orange : Starting
 * Green : Alive
+
 |managerstarting1|
 |managerstarting2|
 
 * Grey : Unknown
 * Black : Failed
+
 |managerfail|
 
 Openzwave: is the openzwave librarie installed.

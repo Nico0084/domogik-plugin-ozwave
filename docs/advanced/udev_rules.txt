@@ -1,8 +1,8 @@
-.. _index:
+.. _advindex:
 
-============================
-Advanced usage of udev rules
-============================
+==============================
+Advanced - Usage of udev rules
+==============================
 
 This page is dedicated to the users who want to create their own **udev rules** file!
 
