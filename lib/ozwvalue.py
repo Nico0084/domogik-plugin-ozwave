@@ -355,7 +355,7 @@ class ZWaveValueNode:
     def getDmgSensor(self):
         """Return Sensor of domogik device corresponding to value"""
         dmgDevice = self.dmgDevice
-        sensors = {}
+        retval = {}
         labelDomogik = self.labelDomogik
         if dmgDevice is not None :
             logLine = u"+++ Search dmg sensor {0} in dmgDevice {1}".format(labelDomogik, dmgDevice)
@@ -365,18 +365,18 @@ class ZWaveValueNode:
                     # handle praticular labels
                     if labelDomogik == 'temperature' : # °C, F, K
                         if dmgDevice['sensors'][sensor]['data_type'] in self.getDataTypesFromZW():
-                            sensors[sensor] = dmgDevice['sensors'][sensor]
-                        sensors[sensor] = dmgDevice['sensors'][sensor]
+                            retval[sensor] = dmgDevice['sensors'][sensor]
+                        retval[sensor] = dmgDevice['sensors'][sensor]
+                        break
                     else : # generic labels
-                        sensors[sensor] = dmgDevice['sensors'][sensor]
-            if sensors :
-                self.log.debug(u"+++ Sensor {0}\n     identified for label {1}".format(sensors, labelDomogik))
-                if len(sensors) > 1 :
-                    self.log.warning(u"+++ More than one compatibility of domogik sensor. Device_type : {0}, sensors : {1}".format(dmgDevice['device_type_id'], sensors))
-                return sensors
+                        retval[sensor] = dmgDevice['sensors'][sensor]
+                        break
+            if retval :
+                self.log.debug(u"+++ Sensor {0}\n     identified for label {1}".format(retval, labelDomogik))
+                return retval
             logLine += u"\n+++     No sensor identified for label {0}".format(labelDomogik)
             self.log.debug(logLine)
-        return sensors
+        return retval
 
     def getDmgCommand(self):
         """Return Command of domogik device corresponding to value"""
@@ -496,11 +496,11 @@ class ZWaveValueNode:
         sensorMsg = None
         device =  self.getDomogikDevice()
         if device is not None :
-            dmgSensors = self.getDmgSensor()
-            if dmgSensors :
-                for sensor in dmgSensors :
-                    sensorMsg = {'id': dmgSensors[sensor]['id'], 'data_type':  dmgSensors[sensor]['data_type'], 'device': device}
-                    dataType = self.getDataType(dmgSensors[sensor]['data_type'])
+            dmgSensor = self.getDmgSensor()
+            if dmgSensor :
+                for sensor in dmgSensor :
+                    sensorMsg = {'id': dmgSensor[sensor]['id'], 'data_type':  dmgSensor[sensor]['data_type'], 'device': device}
+                    dataType = self.getDataType(dmgSensor[sensor]['data_type'])
                     if self._valueData['commandClass'] == 'COMMAND_CLASS_SWITCH_BINARY' :
                         if self._valueData['type'] == 'Bool' :
                             if self._valueData['value']  in ['False', False] : current = 0
