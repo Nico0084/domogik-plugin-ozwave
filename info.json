@@ -4,132 +4,129 @@
             "name" : "Z-Stick S2",
             "id" : "ctrl_aeon_stick2",
             "documentation" : "http://aeotec.com/z-wave-usb-stick",
-            "type": "primary.controller"
+            "type": "ozwave.primary_controller"
         }, {
             "name" : "FGS211 Relay 3kW",
             "id" : "FGS211_Relay",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type": "switch"
+            "type": "ozwave.switch__switch"
         }, {
             "name" : "FGS221 Double Relay Switch 2x1,5kW",
             "id" : "FGS221_Double_Relay",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type": "switch"
+            "type": "ozwave.switch__switch"
         }, {
             "name" : "HSM02 Mini Door-Window Detector",
             "documentation" : "http://www.everspring.com/Products/SecuritySystem/HSM02.aspx",
             "id" : "HSM02",
-            "type": "opening.sensor.security.battery"
+            "type": "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event"
         }, {
             "name" : "ZME_KFOB 4 Button Key Fob",
             "id" : "ZME_KFOB",
             "documentation" : "http://www.z-wave.me/index.php?id=31",
-            "type": "dim.button.battery"
+            "type": "ozwave.battery-level_level__bright_dim"
         }, {
             "name" : "Home Energy Meter 3 phases",
             "id" : "HEM_3p",
             "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
-            "type": "power.meter"
+            "type": "ozwave.energy_energy-k_power"
         }, {
             "name" : "Home Energy Meter 2 phases",
             "id" : "HEM_2p",
             "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
-            "type": "power.meter"
+            "type": "ozwave.energy_energy-k_power"
         }, {
             "name" : "HSM100 Wireless Multi-Sensor",
             "id" : "HSM100",
             "documentation" : "http://www.homeseer.com/company/releases/07-07-HSM100.htm",
-            "type": "temp.humidity.battery"
+            "type": "ozwave.battery-level_humidity_temperature-c"
         }, {
             "name" : "AN158 Plug-in Meter Appliance Module",
             "id" : "AN158",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/AN158.aspx",
-            "type": "switch.power.energy.prev.meter"
+            "type": "ozwave.energy-k_energy-previous-reading-k_power_switch__switch"
         }, {
             "name" : "FGWPE Wall Plug",
             "id" : "FGWPE_Wall_Plug",
             "documentation" : "http://www.fibaro.com/en/support",
-            "type": "switch.power.energy.meter"
+            "type": "ozwave.energy-k_power_switch__switch"
         }, {
             "name" : "ST814 Temperature and Humidity Sensor",
             "id" : "ST814",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/ST814.aspx",
-            "type": "temp.humidity.relative.battery"
+            "type": "ozwave.battery-level_humidity_relative-humidity_temperature-c"
         }, {
             "name" : "SF812 Smoke Alarm",
             "id" : "SF812",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/SF812.aspx",
-            "type": "alarm.sensor.security.battery"
+            "type": "ozwave.battery-level_low-battery_sensor-alarm_tamper-event"
         }, {
             "name" : "Danfoss living connect",
             "id" : "014G0013",
             "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
-            "type": "thermostat.setpoint.battery"
+            "type": "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c"
+        }, {
+            "name" : "Fibaro motion sensor",
+            "id" : "FGMS001",
+            "documentation" : "http://www.fibaro.com/en/the-fibaro-system/motion-sensor",
+            "type": "ozwave.battery-level_binary-sensor_luminance_temperature-c"
+        }, {
+            "name" : "Fibaro door opening sensor",
+            "id" : "FGK101",
+            "documentation" : "http://www.fibaro.com/en/the-fibaro-system/door-window-sensor",
+            "type": "ozwave.battery-level_opening-sensor"
+        }, {
+            "name" : "PSM02-1 Slim Multi-Sensor",
+            "id" : "PSM02",
+            "documentation" : "http://wiki.zipato.com/wiki/Multisensor_Trio",
+            "type": "ozwave.battery-level_door-window-sensor_luminance_motion-sensor-binary_tamper-sensor_temperature-c"
+        }, {
+            "name" : "FGFS-101 Fibaro Flood Sensor",
+            "id" : "FGFS101",
+            "documentation" : "http://www.fibaro.com/en/the-fibaro-system/flood-sensor",
+            "type": "ozwave.battery-level_binary-sensor_flood-alarm_motion-sensor-level_temperature-c"
+        }, {
+            "name" : "FGSD002 Fibaro Smoke Sensor",
+            "id" : "FGSD002",
+            "documentation" : "http://www.fibaro.com/en/system-fibaro/smoke-sensor-en",
+            "type": "ozwave.battery-level_sensor-alarm_temperature-c"
         }
     ],
     "configuration" : [{
-			"key": "autoconfpath",
+            "key": "autoconfpath",
             "name": "Auto openzwave lib path detection",
-			"description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
-			"default" : true,
-			"required": true,
-			"type" : "boolean"
-		},{
-			"key" : "configpath",
+            "description" : "Set to True for openzwave configuration path auto detection, else use configpath. [default : True]",
+            "default" : true,
+            "required": true,
+            "type" : "boolean"
+        },{
+            "key" : "configpath",
             "name": "Openzwave Configuration Path",
-			"description" : "Path for openzwave files configuration (see your openzwave installation).",
-			"default" : "/usr/local/lib/python2.7/dist-packages/libopenzwave-0.3.0b7-py2.7-linux-x86_64.egg/config",
-			"required": true,
-			"type" : "string"
-		},{
-			"key" : "cpltmsg",
+            "description" : "Path for openzwave files configuration (see your openzwave installation).",
+            "default" : "/usr/local/lib/python2.7/dist-packages/libopenzwave-0.3.0b7-py2.7-linux-x86_64.egg/config",
+            "required": true,
+            "type" : "string"
+        },{
+            "key" : "cpltmsg",
             "name" : "Send complet message",
-			"description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
-			"default" : false,
-			"required": true,
-			"type" : "boolean"
-		},{
-			"key" : "ozwlog",
+            "description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
+            "default" : false,
+            "required": true,
+            "type" : "boolean"
+        },{
+            "key" : "ozwlog",
             "name": "Enable openzwave log",
-			"description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
-			"default" : false,
-			"required": true,
-			"type" : "boolean"
-		}
-	],
+            "description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
+            "default" : false,
+            "required": true,
+            "type" : "boolean"
+        }
+    ],
     "xpl_commands" : {},
     "xpl_stats": {},
     "sensors" : {
-        "node_id" : {
-            "name" : "Node Id",
-            "incremental": false,
-            "data_type" : "DT_Number",
-            "conversion" : "",
-            "timeout": 0,
-            "history": {
-                    "store": false,
-                    "duplicate": false,
-                    "max": 0,
-                    "expire": 0,
-                    "round_value": 0
-            }
-        },
-        "ctrl_status" : {
-			"name" : "Zwave controler status",
-            "incremental": false,
-            "data_type" : "DT_String",
-            "conversion" : "",
-            "timeout": 0,
-            "history": {
-                    "store": false,
-                    "duplicate": false,
-                    "max": 0,
-                    "expire": 0,
-                    "round_value": 0
-            }
-		},
-        "user_msg" : {
-            "name" : "User message",
+        "ctrl-status" : {
+            "name" : "Controler status",
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
@@ -142,7 +139,21 @@
                     "round_value": 0
             }
         },
-        "battery_level" : {
+        "node-status" : {
+            "name" : "Node status",
+            "incremental": false,
+            "data_type" : "DT_String",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": false,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "battery-level" : {
             "name" : "Battery level",
             "incremental": false,
             "data_type" : "DT_Scaling",
@@ -156,7 +167,7 @@
                     "round_value": 0
             }
         },
-        "low_battery" : {
+        "low-battery" : {
             "name" : "low battery",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -170,7 +181,7 @@
                     "round_value": 0
             }
         },
-        "power_applied" : {
+        "power-applied" : {
             "name" : "Power Applied",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -184,7 +195,7 @@
                     "round_value": 0
             }
         },
-        "power_failure" : {
+        "power-failure" : {
             "name" : "Power failure",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -198,8 +209,7 @@
                     "round_value": 0
             }
         },
-
-        "temperature_c" : {
+        "temperature-c" : {
             "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_Temp",
@@ -213,7 +223,7 @@
                     "round_value": 0
             }
         },
-        "temperature_k" : {
+        "temperature-k" : {
             "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_TempK",
@@ -227,7 +237,7 @@
                     "round_value": 0
             }
         },
-        "temperature_f" : {
+        "temperature-f" : {
             "name" : "Temperature",
             "incremental": false,
             "data_type" : "DT_TempF",
@@ -255,7 +265,7 @@
                     "round_value": 0
             }
         },
-        "relative_humidity" : {
+        "relative-humidity" : {
             "name" : "Relative humidity",
             "incremental": false,
             "data_type" : "DT_Humidity",
@@ -297,11 +307,11 @@
                     "round_value": 0
             }
         },
-        "opening_sensor" : {
+        "opening-sensor" : {
             "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -311,11 +321,11 @@
                     "round_value": 0
             }
         },
-        "door_window_sensor" : {
+        "door-window-sensor" : {
             "name" : "Door/Window Sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -325,7 +335,7 @@
                     "round_value": 0
             }
         },
-        "binary_sensor" : {
+        "binary-sensor" : {
             "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_Bool",
@@ -339,7 +349,7 @@
                     "round_value": 0
             }
         },
-        "motion_sensor_binary" : {
+        "motion-sensor-binary" : {
             "name" : "Motion Sensor",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -353,7 +363,7 @@
                     "round_value": 0
             }
         },
-        "motion_sensor_level" : {
+        "motion-sensor-level" : {
             "name" : "General",
             "incremental": false,
             "data_type" : "DT_Number",
@@ -367,7 +377,7 @@
                     "round_value": 0
             }
         },
-        "tamper_sensor" : {
+        "tamper-sensor" : {
             "name" : "Tamper sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
@@ -409,7 +419,7 @@
                     "round_value": 0
             }
         },
-        "power_m" : {
+        "power-m" : {
             "name" : "Power",
             "incremental": false,
             "data_type" : "DT_mPower",
@@ -423,7 +433,7 @@
                     "round_value": 0
             }
         },
-        "power_k" : {
+        "power-k" : {
             "name" : "Power",
             "incremental": false,
             "data_type" : "DT_kPower",
@@ -451,7 +461,7 @@
                     "round_value": 0
             }
         },
-        "energy_m" : {
+        "energy-m" : {
             "name" : "Energy",
             "incremental": true,
             "data_type" : "DT_mActiveEnergy",
@@ -465,7 +475,7 @@
                     "round_value": 0
             }
         },
-        "energy_k" : {
+        "energy-k" : {
             "name" : "Energy",
             "incremental": true,
             "data_type" : "DT_kActiveEnergy",
@@ -479,7 +489,7 @@
                     "round_value": 0
             }
         },
-        "energy_previous_reading" : {
+        "energy-previous-reading" : {
             "name" : "Previous reading",
             "incremental": true,
             "data_type" : "DT_ActiveEnergy",
@@ -493,7 +503,7 @@
                     "round_value": 0
             }
         },
-        "energy_previous_reading_m" : {
+        "energy-previous-reading-m" : {
             "name" : "Previous reading",
             "incremental": true,
             "data_type" : "DT_mActiveEnergy",
@@ -507,7 +517,7 @@
                     "round_value": 0
             }
         },
-        "energy_previous_reading_k" : {
+        "energy-previous-reading-k" : {
             "name" : "Previous reading",
             "incremental": true,
             "data_type" : "DT_kActiveEnergy",
@@ -521,7 +531,7 @@
                     "round_value": 0
             }
         },
-        "energy_production_k" : {
+        "energy-production-k" : {
             "name" : "Energy production",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
@@ -535,7 +545,7 @@
                     "round_value": 0
             }
         },
-        "instant_energy_production_k" : {
+        "instant-energy-production-k" : {
             "name" : "Instant energy production",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
@@ -549,7 +559,7 @@
                     "round_value": 0
             }
         },
-        "total-energy-production_k" : {
+        "total-energy-production-k" : {
             "name" : "Total energy production",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
@@ -563,7 +573,7 @@
                     "round_value": 0
             }
         },
-        "energy_production_today_k" : {
+        "energy-production-today-k" : {
             "name" : "Energy production today",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
@@ -577,7 +587,7 @@
                     "round_value": 0
             }
         },
-        "total_production_time_k" : {
+        "total-production-time-k" : {
             "name" : "Total production time",
             "incremental": false,
             "data_type" : "DT_kActiveEnergy",
@@ -605,7 +615,7 @@
                     "round_value": 0
             }
         },
-        "indicator_str" : {
+        "indicator-str" : {
             "name" : "Indicator",
             "incremental": false,
             "data_type" : "DT_String",
@@ -619,7 +629,7 @@
                     "round_value": 0
             }
         },
-        "locked_state" : {
+        "locked-state" : {
             "name" : "Locked",
             "incremental": false,
             "data_type" : "DT_State",
@@ -633,7 +643,7 @@
                     "round_value": 0
             }
         },
-        "tamper_event" : {
+        "tamper-event" : {
             "name" : "Tamper event",
             "incremental": false,
             "data_type" : "DT_OpenClose",
@@ -647,7 +657,7 @@
                     "round_value": 0
             }
         },
-        "sensor_alarm" : {
+        "sensor-alarm" : {
             "name" : "Alarm",
             "incremental": false,
             "data_type" : "DT_String",
@@ -661,7 +671,7 @@
                     "round_value": 0
             }
         },
-        "smoke_alarm" : {
+        "smoke-alarm" : {
             "name" : "smoke",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -675,7 +685,7 @@
                     "round_value": 0
             }
         },
-        "carbonmonoxide_alarm" : {
+        "carbonmonoxide-alarm" : {
             "name" : "Carbonmonoxide",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -689,7 +699,7 @@
                     "round_value": 0
             }
         },
-        "carbondioxide_alarm" : {
+        "carbondioxide-alarm" : {
             "name" : "Carbondioxide",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -703,7 +713,7 @@
                     "round_value": 0
             }
         },
-        "heat_alarm" : {
+        "heat-alarm" : {
             "name" : "heat",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -717,7 +727,7 @@
                     "round_value": 0
             }
         },
-        "flood_alarm" : {
+        "flood-alarm" : {
             "name" : "flood",
             "incremental": false,
             "data_type" : "DT_Binary",
@@ -731,7 +741,7 @@
                     "round_value": 0
             }
         },
-       "switch" : {
+        "switch" : {
             "name" : "Switch",
             "incremental": false,
             "data_type" : "DT_Switch",
@@ -745,7 +755,7 @@
                     "round_value": 0
             }
         },
-       "fan_mode" : {
+        "fan-mode" : {
             "name" : "Fan mode",
             "incremental": false,
             "data_type" : "DT_HVACVent",
@@ -759,7 +769,7 @@
                     "round_value": 0
             }
         },
-       "fan_state" : {
+        "fan-state" : {
             "name" : "Fan state",
             "incremental": false,
             "data_type" : "DT_HVACFan",
@@ -773,7 +783,7 @@
                     "round_value": 0
             }
         },
-       "thermostat_mode" : {
+        "thermostat-mode" : {
             "name" : "mode",
             "incremental": false,
             "data_type" : "DT_HVACMode",
@@ -787,7 +797,7 @@
                     "round_value": 0
             }
         },
-       "thermostat_operating_state" : {
+        "thermostat-operating-state" : {
             "name" : "Operating state",
             "incremental": false,
             "data_type" : "DT_HVACVent",
@@ -801,7 +811,7 @@
                     "round_value": 0
             }
         },
-       "thermostat_setpoint_c" : {
+        "thermostat-setpoint-c" : {
             "name" : "Setpoint",
             "incremental": false,
             "data_type" : "DT_Temp",
@@ -815,7 +825,7 @@
                     "round_value": 0
             }
         },
-       "thermostat_setpoint_f" : {
+        "thermostat-setpoint-f" : {
             "name" : "Setpoint",
             "incremental": false,
             "data_type" : "DT_TempF",
@@ -829,7 +839,7 @@
                     "round_value": 0
             }
         },
-       "thermostat_setpoint_k" : {
+        "thermostat-setpoint-k" : {
             "name" : "Setpoint",
             "incremental": false,
             "data_type" : "DT_TempK",
@@ -855,7 +865,7 @@
                 }
             ]
         },
-        "toggle_switch_binary" : {
+        "toggle-switch-binary" : {
             "name" : "Switch On-Off",
             "return_confirmation" : true,
             "parameters" : [{
@@ -865,7 +875,7 @@
                 }
             ]
         },
-        "Increase" : {
+        "increase" : {
             "name" : "Increase button",
             "return_confirmation" : false,
             "parameters" : [{
@@ -905,7 +915,7 @@
                 }
             ]
         },
-        "fan_mode" : {
+        "fan-mode" : {
             "name" : "Fan mode select",
             "return_confirmation" : false,
             "parameters" : [{
@@ -915,7 +925,7 @@
                 }
             ]
         },
-        "fan_state" : {
+        "fan-state" : {
             "name" : "Fan state select",
             "return_confirmation" : false,
             "parameters" : [{
@@ -925,7 +935,7 @@
                 }
             ]
         },
-        "thermostat_mode" : {
+        "thermostat-mode" : {
             "name" : "Thermostat mode select",
             "return_confirmation" : false,
             "parameters" : [{
@@ -935,7 +945,7 @@
                 }
             ]
         },
-        "thermostat_operating_state" : {
+        "thermostat-operating-state" : {
             "name" : "Thermostat oprerating mode",
             "return_confirmation" : false,
             "parameters" : [{
@@ -945,7 +955,7 @@
                 }
             ]
         },
-        "thermostat_setpoint_c" : {
+        "thermostat-setpoint-c" : {
             "name" : "Thermostat setpoint",
             "return_confirmation" : false,
             "parameters" : [{
@@ -955,7 +965,7 @@
                 }
             ]
         },
-        "thermostat_setpoint_F" : {
+        "thermostat-setpoint-f" : {
             "name" : "Thermostat setpoint",
             "return_confirmation" : false,
             "parameters" : [{
@@ -965,7 +975,7 @@
                 }
             ]
         },
-        "thermostat_setpoint_k" : {
+        "thermostat-setpoint-k" : {
             "name" : "Thermostat setpoint",
             "return_confirmation" : false,
             "parameters" : [{
@@ -976,660 +986,787 @@
             ]
         }
     },
-	"device_types": {
-            "primary.controller" :{
-                "description": "Primary Controller",
-                "id": "primary.controller",
-                "name": "Zwave Controller",
-                "commands": [],
-                "sensors": ["ctrl_status"],
-                "parameters" : [{
-                        "key" : "driver",
-                        "xpl": false,
-                        "description" : "Z-wave device from os. [eg. : /dev/zwave]",
-                        "type" : "string"
-                    },{
-                        "key" : "networkid",
-                        "xpl": false,
-                        "description" : "Zwave network name to replace Home ID for easier of nodes addressing. [e.g. : MyHomeId]",
-                        "type" : "string"
-                    }
-                ]
-            },
-            "node" :{
-                "description" : "node",
-                "id": "node",
-                "name" : "Node",
-                "commands": [],
-                "sensors": [],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "switch" :{
-                "description" : "A simple switch",
-                "id": "switch",
-                "name" : "Simple Switch",
-                "commands": ["switch"],
-                "sensors": ["switch"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "switch.power.energy.meter" :{
-                "description" : "Switch with power, energy meter",
-                "id": "switch.power.energy.meter",
-                "name" : "Switch-Power meter",
-                "commands": ["switch"],
-                "sensors": ["switch", "energy_k", "power"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "switch.power.energy.prev.meter" :{
-                "description" : "Switch with power, energy meter (and previous value)",
-                "id": "switch.power.energy.prev.meter",
-                "name" : "Switch-Power meter +",
-                "commands": ["switch"],
-                "sensors": ["switch", "energy_k", "energy_previous_reading_k", "power"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "switch.powerfailure" :{
-                "description" : "A simple switch with power failure detection",
-                "id": "switch",
-                "name" : "Switch with power failure",
-                "commands": ["switch"],
-                "sensors": ["switch", "power_failure"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "opening.sensor.security.battery" :{
-                "description" : "Opening sensor with tamper security (battery)",
-                "id": "opening.sensor.security.battery",
-                "name" : "Opening sensor (battery)",
-                "commands": [],
-                "sensors": ["opening_sensor", "power_applied", "battery_level", "low_battery", "tamper_event"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "temperature" :{
-                "description" : "Temperature sensor",
-                "id": "temperature",
-                "name" : "Temperature sensor",
-                "commands": [],
-                "sensors": ["temperature_c"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "temperature.battery" :{
-                "description" : "Temperature sensor with battery",
-                "id": "temperature.battery",
-                "name" : "Temperature sensor (battery)",
-                "commands": [],
-                "sensors": ["temperature_c", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "temp.humidity.battery" :{
-                "description" : "Temperature sensor with humidity (battery)",
-                "id": "temp.humidity.battery",
-                "name" : "Temperature sensor (battery)",
-                "commands": [],
-                "sensors": ["temperature_c", "humidity", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "temp.humidity" :{
-                "description" : "Temperature sensor with humidity",
-                "id": "temp.humidity",
-                "name" : "Temperature/humidity sensor",
-                "commands": [],
-                "sensors": ["temperature_c", "humidity"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "temp.humidity.relative.battery" :{
-                "description" : "Temperature sensor with humidity and relative humidity (battery)",
-                "id": "temp.humidity.relative.battery",
-                "name" : "Temperature/humidity/relative sensor (battery)",
-                "commands": [],
-                "sensors": ["temperature_c", "humidity", "relative_humidity", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "temp.humidity.relative" :{
-                "description" : "Temperature sensor with humidity and relative humidity",
-                "id": "temp.humidity.relative",
-                "name" : "Temperature/humidity/relative sensor",
-                "commands": [],
-                "sensors": ["temperature_c", "humidity", "relative_humidity"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "dim.button.battery" :{
-                "description" : "Dimmer button (battery)",
-                "id": "dim.button.battery",
-                "name" : "Dimmer buttons (battery)",
-                "commands": ["bright", "dim"],
-                "sensors": ["level", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "dim.button" :{
-                "description" : "Dimmer button",
-                "id": "dim.button",
-                "name" : "Dimmer button",
-                "commands": ["bright", "dim"],
-                "sensors": ["level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "power.meter.battery" :{
-                "description" : "Energie meter (battery)",
-                "id": "power.meter.battery",
-                "name" : "Power meter (battery)",
-                "commands": [],
-                "sensors": ["power", "energy_k", "energy_previous_reading_k", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "power.meter" :{
-                "description" : "Energie meter",
-                "id": "power.meter",
-                "name" : "Power meter",
-                "commands": [],
-                "sensors": ["power", "energy", "energy_k"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                }]
-            },
-            "motion.4in1.level.battery" :{
-                "description" : "Sensor motion 4in1 (battery)",
-                "id": "motion.4in1.level.battery",
-                "name" : "Sensor motion 4in1 (battery)",
-                "commands": [],
-                "sensors": ["motion_sensor_level", "luminance", "temperature_c", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "alarm.sensor.security.battery" :{
-                "description" : "Sensor security alarm (battery)",
-                "id": "alarm.sensor.security.battery",
-                "name" : "Sensor security alarm (battery)",
-                "commands": [],
-                "sensors": ["sensor_alarm", "tamper_event","low_battery", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "alarm.sensor.battery" :{
-                "description" : "Sensor security alarm (battery)",
-                "id": "alarm.sensor.battery",
-                "name" : "Sensor security alarm (battery)",
-                "commands": [],
-                "sensors": ["sensor_alarm", "low_battery", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "thermostat.setpoint.battery" :{
-                "description" : "Thermostat with only setpoint (battery)",
-                "id": "thermostat.setpoint.battery",
-                "name" : "Thermostat (battery)",
-                "commands": ["thermostat_setpoint_c"],
-                "sensors": ["thermostat_setpoint_c", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            },
-            "motion.multi.sensor.battery" :{
-                "description" : "Motion, (battery)",
-                "id": "motion.multi.sensor",
-                "name" : "Thermostat (battery)",
-                "commands": [],
-                "sensors": ["door_window_sensor", "motion_sensor_binary", "tamper_sensor", "temperature_c", "luminance", "battery_level"],
-                "parameters" : [{
-                    "key" : "networkid",
-					"xpl": false,
-                    "description" : "Zwave network name if refered in controller node or Openzwave Home ID)",
-                    "type" : "string"
-                },{
-                    "key" : "node",
-					"xpl": false,
-                    "description" : "Zwave node id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "instance",
-					"xpl": false,
-                    "description" : "Zwave node instance id",
-                    "type" : "integer",
-                    "max_value": 255,
-                    "min_value": 1
-                },{
-                    "key" : "batterycheck",
-					"xpl": false,
-                    "description" : "Check battery level at zwave device wakeup.",
-                    "type" : "boolean"
-                }]
-            }
+    "device_types": {
+        "ozwave.primary_controller" :{
+            "description": "Primary Controller of your zwave network",
+            "id": "ozwave.primary_controller",
+            "name": "Zwave Controller",
+            "commands": [],
+            "sensors": ["ctrl-status"],
+            "parameters" : [{
+                "key" : "driver",
+                "xpl": false,
+                "description" : "Z-wave device from os. [eg. : /dev/zwave]",
+                "type" : "string"
+            },{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name to replace Home ID for easier of nodes addressing. [e.g. : MyHomeId]",
+                "type" : "string"
+            }]
         },
-	"identity" : {
-		"author" : "Nicolas VIGNAL",
-		"author_email" : "nico84dev at gmail.com",
+        "ozwave.node" :{
+            "description" : "Zwave Node himself (retreive it status not feature(s))",
+            "id": "ozwave.node",
+            "name" : "Node",
+            "commands": [],
+            "sensors": ["node-status"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.switch__switch" :{
+            "description" : "A simple switch",
+            "id": "ozwave.switch__switch",
+            "name" : "Simple Switch",
+            "commands": ["switch"],
+            "sensors": ["switch"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.energy-k_power_switch__switch" :{
+            "description" : "Switch with power, energy meter",
+            "id": "ozwave.energy-k_power_switch__switch",
+            "name" : "Switch Power meter/Energy",
+            "commands": ["switch"],
+            "sensors": ["switch", "energy-k", "power"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.energy-k_energy-previous-reading-k_power_switch__switch" :{
+            "description" : "Switch with power, energy meter (and previous value)",
+            "id": "ozwave.energy-k_energy-previous-reading-k_power_switch__switch",
+            "name" : "Switch Power meter/Energy/Previous",
+            "commands": ["switch"],
+            "sensors": ["switch", "energy-k", "energy-previous-reading-k", "power"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.power-failure_switch__switch" :{
+            "description" : "A simple switch with power failure detection",
+            "id": "ozwave.power-failure_switch__switch",
+            "name" : "Switch with power failure",
+            "commands": ["switch"],
+            "sensors": ["switch", "power-failure"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_opening-sensor" :{
+            "description" : "Opening sensor (battery)",
+            "id": "ozwave.battery-level_opening-sensor",
+            "name" : "Sensor Opening (battery)",
+            "commands": [],
+            "sensors": ["opening-sensor", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event" :{
+            "description" : "Opening sensor with tamper security (battery)",
+            "id": "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event",
+            "name" : "Sensor Opening/Power applied/Tamper (battery)",
+            "commands": [],
+            "sensors": ["opening-sensor", "power-applied", "battery-level", "low-battery", "tamper-event"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.temperature-c" :{
+            "description" : "Temperature sensor",
+            "id": "ozwave.temperature-c",
+            "name" : "Sensor Temperature",
+            "commands": [],
+            "sensors": ["temperature-c"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_temperature-c" :{
+            "description" : "Temperature sensor with battery",
+            "id": "ozwave.battery-level_temperature-c",
+            "name" : "Sensor Temperature (battery)",
+            "commands": [],
+            "sensors": ["temperature-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_humidity_temperature-c" :{
+            "description" : "Temperature sensor with humidity (battery)",
+            "id": "ozwave.battery-level_humidity_temperature-c",
+            "name" : "Sensor Temperature/Humidity (battery)",
+            "commands": [],
+            "sensors": ["temperature-c", "humidity", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.humidity_temperature-c" :{
+            "description" : "Temperature sensor with humidity",
+            "id": "ozwave.humidity_temperature-c",
+            "name" : "Sensor Temperature/Humidity",
+            "commands": [],
+            "sensors": ["temperature-c", "humidity"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_humidity_relative-humidity_temperature-c" :{
+            "description" : "Temperature sensor with humidity and relative humidity (battery)",
+            "id": "ozwave.battery-level_humidity_relative-humidity_temperature-c",
+            "name" : "Sensor Temperature/humidity/relative (battery)",
+            "commands": [],
+            "sensors": ["temperature-c", "humidity", "relative-humidity", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.humidity_relative-humidity_temperature-c" :{
+            "description" : "Temperature sensor with humidity and relative humidity",
+            "id": "ozwave.humidity_relative-humidity_temperature-c",
+            "name" : "Sensor Temperature/humidity/relative",
+            "commands": [],
+            "sensors": ["temperature-c", "humidity", "relative-humidity"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_level__bright_dim" :{
+            "description" : "Dimmer button (battery)",
+            "id": "ozwave.battery-level_level__bright_dim",
+            "name" : "Dimmer buttons (battery)",
+            "commands": ["bright", "dim"],
+            "sensors": ["level", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.level__bright_dim" :{
+            "description" : "Dimmer button",
+            "id": "ozwave.level__bright_dim",
+            "name" : "Dimmer button",
+            "commands": ["bright", "dim"],
+            "sensors": ["level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_energy-k_energy-previous-reading-k_power" :{
+            "description" : "Energie meter (battery)",
+            "id": "ozwave.battery-level_energy-k_energy-previous-reading-k_power",
+            "name" : "Power meter (battery)",
+            "commands": [],
+            "sensors": ["power", "energy-k", "energy-previous-reading-k", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.energy_energy-k_power" :{
+            "description" : "Energie meter",
+            "id": "ozwave.energy_energy-k_power",
+            "name" : "Power meter",
+            "commands": [],
+            "sensors": ["power", "energy", "energy-k"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.battery-level_luminance_motion-sensor-level_temperature-c" :{
+            "description" : "Sensor motion 4in1 (battery)",
+            "id": "ozwave.battery-level_luminance_motion-sensor-level_temperature-c",
+            "name" : "Sensor Motion Level/Temperature/Luminance (battery)",
+            "commands": [],
+            "sensors": ["motion-sensor-level", "luminance", "temperature-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_door-window-sensor_luminance_motion-sensor-binary_tamper-sensor_temperature-c" :{
+            "description" : "Motion, (battery)",
+            "id": "ozwave.battery-level_door-window-sensor_luminance_motion-sensor-binary_tamper-sensor_temperature-c",
+            "name" : "Sensor Motion/Door Window/Temperature/Luminance/Tamper (battery)",
+            "commands": [],
+            "sensors": ["door-window-sensor", "motion-sensor-binary", "tamper-sensor", "temperature-c", "luminance", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_binary-sensor_flood-alarm_motion-sensor-level_temperature-c" :{
+            "description" : "Flood sensor temperature (battery)",
+            "id": "ozwave.battery-level_binary-sensor_flood-alarm_motion-sensor-level_temperature-c",
+            "name" : "Flood sensor temperature (battery)",
+            "commands": [],
+            "sensors": ["binary-sensor", "flood-alarm", "temperature-c", "motion-sensor-level", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                                    "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                                    "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                                    "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                                    "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_binary-sensor_luminance_temperature-c" :{
+            "description" : "Sensor sensor 4in1 (battery)",
+            "id": "ozwave.battery-level_binary-sensor_luminance_temperature-c",
+            "name" : "Sensor sensor 4in1 (battery)",
+            "commands": [],
+            "sensors": ["binary-sensor", "luminance", "temperature-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_low-battery_sensor-alarm_tamper-event" :{
+            "description" : "Sensor security alarm (battery)",
+            "id": "ozwave.battery-level_low-battery_sensor-alarm_tamper-event",
+            "name" : "Sensor security alarm (battery)",
+            "commands": [],
+            "sensors": ["sensor-alarm", "tamper-event","low-battery", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_low-battery_sensor-alarm" :{
+            "description" : "Sensor security alarm (battery)",
+            "id": "ozwave.battery-level_low-battery_sensor-alarm",
+            "name" : "Sensor security alarm (battery)",
+            "commands": [],
+            "sensors": ["sensor-alarm", "low-battery", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_sensor-alarm_temperature-c" :{
+            "description" : "Sensor temperature alarm (battery)",
+            "id": "ozwave.battery-level_sensor-alarm_temperature-c",
+            "name" : "Sensor temperature alarm (battery)",
+            "commands": [],
+            "sensors": ["sensor-alarm","temperature-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c" :{
+            "description" : "Thermostat with only setpoint (battery)",
+            "id": "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c",
+            "name" : "Thermostat (battery)",
+            "commands": ["thermostat-setpoint-c"],
+            "sensors": ["thermostat-setpoint-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        }
+    },
+    "identity" : {
+        "author" : "Nicolas V.",
+        "author_email" : "nico84dev at gmail.com",
         "tags": ["z-wave"],
-		"dependencies" : [{
-				"id" : "python-openzwave-lib (>=0.3.0)",
-				"type" : "python"
-			},
+        "dependencies" : [{
+                "id" : "python-openzwave-lib (>=0.3.0)",
+                "type" : "python"
+            },
             {
                 "id": "tailer (>=0.2.1)",
                 "type": "python"
             }
-		],
-		"description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
-		"domogik_min_version" : "0.5.0",
+        ],
+        "description" : "Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control",
+        "domogik_min_version" : "0.5.0",
         "name": "ozwave",
-		"type" : "plugin",
-		"version" : "0.5.0"
-	},
+        "type" : "plugin",
+        "version" : "0.5.0"
+    },
     "json_version" : 2
-	}
+    }

@@ -85,7 +85,7 @@ class OZwave(Plugin):
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))
                 self.force_leave()
                 return
-
+        self.add_mq_sub('device.update')
         # Start thread for starting ozwave sercices
         self.myzwave.starter.start()
         self.log.info('****** Init OZWave xPL manager completed ******')
@@ -96,6 +96,11 @@ class OZwave(Plugin):
 
     def get_lib_directory(self):
         return "{0}/{1}_{2}/lib/".format(self.packages_directory, self._type, self._name)
+
+    def on_message(self, msgid, content):
+        #Transmit mq message to mananer
+        if self.myzwave is not None :
+            self.myzwave.on_MQ_Message(msgid, content)
 
     def on_mdp_request(self, msg):
         # display the req message

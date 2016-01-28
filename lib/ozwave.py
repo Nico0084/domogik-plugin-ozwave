@@ -50,6 +50,7 @@ from ozwmonitornodes import ManageMonitorNodes
 from ozwdefs import *
 from datetime import timedelta
 import pwd
+from copy import deepcopy
 import sys
 import resource
 import traceback
@@ -65,7 +66,6 @@ class OZwaveManagerException(OZwaveException):
     def __init__(self, value):
         OZwaveException.__init__(self, value)
         self.msg = "OZwave Manager exception:"
-
 
 class OZWavemanager():
     """
@@ -183,7 +183,6 @@ class OZWavemanager():
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl :
             self._log.warning(u"No device primary.controller created in domogik, can't start openzwave driver.")
-        print "*****************************************************"
         self.starter = threading.Thread(None, self.startServices, "th_Start_Ozwave_Services", (), {})
 
      # On accède aux attributs uniquement depuis les property
@@ -194,6 +193,13 @@ class OZWavemanager():
     totalNodeCountDescription = property(lambda self: self._getTotalNodeCountDescription())
     isReady = property(lambda self: self._getIfOperationsReady())
     pyOZWLibVersion = property(lambda self: self._getPyOZWLibVersion())
+
+    def on_MQ_Message(self, msgid, content):
+        """Handle pub message from MQ"""
+        print u"New pub message {0}, {1}".format(msgid, content)
+        if msgid == "device.update":
+            self._log.debug(u"New pub message {0}, {1}".format(msgid, content))
+            self.threadingRefreshDevices()
 
     def udpate_device_param(self, paramId, key=None, value=None):
         """Call DBHelper to update static device parameter"""
@@ -214,6 +220,8 @@ class OZWavemanager():
         if devices :
             self._plugin.devices = devices
             self._plugin.publishMsg('ozwave.manager.refreshdeviceslist', {'error': ""})
+            for node in self._nodes.itervalues():
+                node.refreshAllDmgDevice()
         else :
             self._log.error(u"Can't retrieve the device list, MQ no response, try again or restart plugin.")
             self._plugin.publishMsg('ozwave.manager.refreshdeviceslist', {'error': "Can't retrieve the device list after {0} attempt".format(max_attempt)})
@@ -272,10 +280,6 @@ class OZWavemanager():
             links.append(label)
             self.linkedLabels[label.lower()] = [l.lower() for l in links]
         print self.linkedLabels
-#        for label in  ['unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6',
-#                          'furnace', 'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ',
-#                          'away heating'] :
-#            if label not in DomogikLabelAvailable : DomogikLabelAvailable.append(label)
         for sensor in self._plugin.json_data['sensors']:
             if self._plugin.json_data['sensors'][sensor]['name'].lower() not in DomogikLabelAvailable :
                 DomogikLabelAvailable.append(self._plugin.json_data['sensors'][sensor]['name'].lower())
@@ -290,18 +294,171 @@ class OZWavemanager():
         """Return the sensor(s) set in json corresponding to name """
         sensors = {}
         name = name.lower()
+        print "Retrieve sensor name : {0}".format(name)
         for sensor in self._plugin.json_data['sensors']:
-            if self._plugin.json_data['sensors'][sensor]['name'].lower() == name : sensors[sensor] = self._plugin.json_data['sensors'][sensor]
+            if self._plugin.json_data['sensors'][sensor]['name'].lower() == name :
+                print "    Find sensor : {0}".format(self._plugin.json_data['sensors'][sensor])
+                sensors[sensor] = self._plugin.json_data['sensors'][sensor]
         return sensors
 
     def getCommandByName(self, name):
         """Return the command(s) set in json corresponding to name """
         cmds = {}
         name = name.lower()
+        print "Retrieve command name : {0}".format(name)
         for cmd in self._plugin.json_data['commands']:
             for param in self._plugin.json_data['commands'][cmd]['parameters']:
-                if param['key'].lower() == name : cmds[cmd] = self._plugin.json_data['commands'][cmd]
-        return {}
+                if param['key'].lower() == name :
+                    print "    Find command : {0}".format(self._plugin.json_data['commands'][cmd])
+                    cmds[cmd] = self._plugin.json_data['commands'][cmd]
+        return cmds
+
+    def findDeviceTypes(self, likelyDevices):
+        """Search if device_type correspond to likely devices and return them."""
+        retval = {}
+        if likelyDevices :
+            for id, dev_type in self._plugin.json_data['device_types'].items():
+                for refDev in likelyDevices :
+#                    print "   Validate likely device_type of {0} for {1}".format(id, refDev)
+                    sensorsOK = False
+                    cmdsOK = False
+                    if likelyDevices[refDev]['listSensors'] :
+                        for n in likelyDevices[refDev]['listSensors'] :
+#                            print "       for n <{0}> compare sensor {1} / {2}".format(n, likelyDevices[refDev]['listSensors'][n], dev_type['sensors'])
+                            if len(likelyDevices[refDev]['listSensors'][n]) == len(dev_type['sensors']) and \
+                                    all(i in dev_type['sensors'] for i in likelyDevices[refDev]['listSensors'][n]):
+                                sensorsOK = True
+#                                print "    Sensor(s) OK"
+                    else :
+                        if not dev_type['sensors'] :
+                            sensorsOK = True
+#                            print "    Sensor(s) OK (No sensor)"
+                    if likelyDevices[refDev]['listCmds'] :
+                        for nc in likelyDevices[refDev]['listCmds'] :
+#                            print "       for n <{0}> compare command {1} / {2}".format(nc, likelyDevices[refDev]['listCmds'][nc], dev_type['commands'])
+                            if len(likelyDevices[refDev]['listCmds'][nc]) == len(dev_type['commands']) and \
+                                    all(i in dev_type['commands'] for i in likelyDevices[refDev]['listCmds'][nc]):
+                                cmdsOK = True
+#                                print "    Command(s) OK"
+                    else :
+                        if not dev_type['commands'] :
+                            cmdsOK = True
+#                            print "    Command(s) OK (no command)"
+                    if sensorsOK and cmdsOK :
+                        try :
+                           len(retval[refDev])
+                        except :
+                            retval[refDev] = []
+                        retval[refDev].append(id)
+        return retval
+
+    def registerDetectedDevice(self, likelyDevices):
+        """Call device_detected"""
+        for refDev in likelyDevices :
+            for devType in likelyDevices[refDev] :
+                print "Try to register device {0}.{1}.{2}, {3}".format(refDev[0], refDev[1], refDev[2], devType)
+                globalP = [{
+                            "key" : "networkid",
+                            "value": u"{0}".format(refDev[0])
+                        }, {
+                            "key" : "node",
+                            "value": u"{0}".format(refDev[1])
+                        }, {
+                            "key" : "instance",
+                            "value": u"{0}".format(refDev[2])
+                        }]
+    #            for id, dev_type in self._plugin.json_data['device_types'].items():
+    #                if id == likelyDevices[refDev] :
+    #                    if "battery_level" in dev_type['sensors'] :
+    #                        globalP.append({"key": "batterycheck", "value": False})
+    #                    break
+                self._plugin.device_detected({
+                    "device_type" : devType,
+                    "reference" : "",
+                    "global" : globalP,
+                    "xpl" : [],
+                    "xpl_commands" : {},
+                    "xpl_stats" : {}
+                })
+
+    def _setNew_Device_Type(self, devType, id, sensors, cmds):
+        """Set values for a new device_type."""
+        batteryParam = {
+            u"key" : u"batterycheck",
+            u"xpl": False,
+            u"description" : u"Check battery level at zwave device wakeup.",
+            u"type" : u"boolean"
+        }
+        devType["sensors"] = sensors
+        devType["commands"] = cmds
+        devType["id"] = id
+        if "battery-level" in sensors : devType["parameters"].append(batteryParam)
+        return devType
+
+    def create_Device_Type_Feature(self, likelyDevices):
+        """Return list of device_type id formated by rule "ozwave.<'-'.join(sensor list)'__''-'.join(command list)"""
+        devTypes = {}
+        device_type_Model = {
+            u"description" : u"Zwave device information, Must be edited",
+            u"id": "",
+            u"name" : u"Device type name, Must be edited",
+            u"commands": [],
+            u"sensors": [""],
+            u"parameters" : [{
+                u"key" : u"networkid",
+                u"xpl": False,
+                u"description" : u"Zwave network name if refered in controller node or Openzwave Home ID",
+                u"type" : u"string"
+            },{
+                u"key" : u"node",
+                u"xpl": False,
+                u"description" : u"Zwave node id",
+                u"type" : u"integer",
+                u"max_value": 255,
+                u"min_value": 1
+            },{
+                u"key" : u"instance",
+                u"xpl": False,
+                u"description" : u"Zwave node instance id",
+                u"type" : u"integer",
+                u"max_value": 255,
+                u"min_value": 1
+            }]
+        }
+        for refDev in likelyDevices :
+            if likelyDevices[refDev]["listSensors"] != {} :
+                for s in likelyDevices[refDev]["listSensors"] :
+                    sensors = list(likelyDevices[refDev]["listSensors"][s])
+                    if sensors :
+                        sensors.sort()
+                        sName = "_".join(sensors)
+                    else : sName = ""
+                    if likelyDevices[refDev]["listCmds"] != {} :
+                        for c in likelyDevices[refDev]["listCmds"] :
+                            cmds = list(likelyDevices[refDev]["listCmds"][c])
+                            if cmds :
+                                cmds.sort()
+                                cName = u"__{0}".format("_".join(cmds))
+                                id = u"ozwave.{0}{1}".format(sName, cName)
+                                if id not in self._plugin.json_data['device_types'].keys():
+                                    devTypes[id] = self._setNew_Device_Type(deepcopy(device_type_Model), id, sensors, cmds)
+                                    print "ADD 1 : {0}".format(devTypes[id])
+                    else :
+                        id = u"ozwave.{0}".format(sName)
+                        if id not in self._plugin.json_data['device_types'].keys():
+                            devTypes[id] = self._setNew_Device_Type(deepcopy(device_type_Model), id, sensors, [])
+                            print "ADD 2 : {0}".format(devTypes[id])
+            else :
+                for c in likelyDevices[refDev]["listCmds"] :
+                    cmds = list(likelyDevices[refDev]["listCmds"][c])
+                    if cmds :
+                        cmds.sort()
+                        cName = u"__{0}".format("_".join(cmds))
+                        id = u"ozwave.{0}".format(cName)
+                        if id not in self._plugin.json_data['device_types'].keys():
+                            devTypes[id] = self._setNew_Device_Type(deepcopy(device_type_Model), id, [], cmds)
+                            print "ADD 3 : {0}".format(devTypes[id])
+        return devTypes
 
     def getDeviceCtrl(self, key, value ):
         """Retourne le device ctrl de type primary.controler.
@@ -1143,12 +1300,12 @@ class OZWavemanager():
             @param : id, id of sensor or command in DB
             @param : type, type of storage in DB, cmd (default) or sensor"""
         retval = {}
-        logLine = u"--- Search ZWRef From DB, device_id : {0}, type :{1}, sensor/cmd id : {2}".format(deviceID, type, id)
+#        logLine = u"--- Search ZWRef From DB, device_id : {0}, type :{1}, sensor/cmd id : {2}".format(deviceID, type, id)
         for dmgDevice in self._plugin.devices :
-            logLine += u"        - in dmg device : {0}".format(dmgDevice)
+#            logLine += u"        - in dmg device : {0}".format(dmgDevice)
             if dmgDevice['id'] == deviceID :
                 if type == 'cmd' :
-                    logLine += ""
+#                    logLine += ""
                     for cmd in dmgDevice['commands'] :
                         if dmgDevice['commands'][cmd]['id'] == id :
                             retval = {'networkid': dmgDevice['parameters']['networkid']['value'],
@@ -1168,8 +1325,8 @@ class OZWavemanager():
 #        if not retval or retval['homeId'] is None :
 #            self._log.warning(u"xPL message doesn't refer a node : {0}".format(xplParams))
 #            retval = None
-        logLine += u"\n    --- ZWRef NOT find"
-        self._log.debug(logLine)
+#        logLine += u"\n    --- ZWRef NOT find"
+#        self._log.debug(logLine)
         return retval
 
     def getDmgDevRefFromZW(self, device):
@@ -1190,9 +1347,9 @@ class OZWavemanager():
 
     def _getDmgDevice(self, device):
         """Return the domogik device if exist else None."""
-        logLine = u"--- Search dmg device for : {0}".format(device)
+#        logLine = u"--- Search dmg device for : {0}".format(device)
         for dmgDevice in self._plugin.devices :
-            logLine += u"\n        - in dmg device : {0}".format(dmgDevice)
+#            logLine += u"\n        - in dmg device : {0}".format(dmgDevice)
             if 'instance' in dmgDevice['parameters']: # Value sensor or command level
                 if isinstance(device, ZWaveValueNode):
                     try :
@@ -1215,10 +1372,10 @@ class OZWavemanager():
                     if dmgDevice['parameters']['networkid']['value'] == device.networkID :
                         self._log.debug(u"--- Dmg device find : {0}".format(dmgDevice))
                         return dmgDevice
-            else :
-                logLine += u"\n    --- no key find"
-        logLine += u"\n    --- Dmg device NOT find"
-        self._log.debug(logLine)
+#            else :
+#                logLine += u"\n    --- no key find"
+#        logLine += u"\n    --- Dmg device NOT find"
+#        self._log.debug(logLine)
         return None
 
     def sendCmdToZW(self, device, command, cmdValue):

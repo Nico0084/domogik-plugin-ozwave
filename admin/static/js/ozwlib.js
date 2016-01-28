@@ -434,8 +434,8 @@ function renderNodeStatusCol(data, type, full, meta) {
         var st = 'fa-battery-empty icon-unknown'
             if (nodeData.BatteryLevel >= 85) {st = 'fa-battery-full icon-success';
             } else if (nodeData.BatteryLevel >= 70) {st = 'fa-battery-three-quarters icon-success';
-            } else if (nodeData.BatteryLevel >= 50) {st = 'fa-battery-half icon-success';
-            } else if (nodeData.BatteryLevel >= 25) {st = 'fa-battery-quarter icon-warning';
+            } else if (nodeData.BatteryLevel >= 40) {st = 'fa-battery-half icon-success';
+            } else if (nodeData.BatteryLevel >= 25) {st = 'fa-battery-quarter icon-success';
             } else if (nodeData.BatteryLevel >= 15) {st = 'fa-battery-quarter icon-warning';
             } else if (nodeData.BatteryLevel >= 5) {st = 'fa-battery-empty icon-danger';};
         bat = "<span id='battery" + nodeData.NodeID + "' class='fa btnspacing fa-rotate-270 " + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
@@ -447,8 +447,32 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
     };
+    var devState = "fa-star icon-danger";
+    var devTitle = "Neither domogik device type find !";
+    if (initState !='completed') {devTitle += "\n Wait for complet initialisation...";};
+    if (nodeData.DmgDevices.length != 0) {
+        devState = "fa-check-circle icon-success";
+        devTitle = "Domogik device associated : \n";
+        for (nD in nodeData.DmgDevices) {
+            devTitle += nD + " : " + JSON.stringify(nodeData.DmgDevices[nD], null, '\t') + "\n";
+        };
+    } else if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
+        devState = "fa-asterisk icon-warning";
+        devTitle = "No domogik device associate. Create it with : \n";
+        for (nD in nodeData.KnownDeviceTypes) {
+            devTitle += nD + " : " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, '\t') + "\n";
+        };
+    } else if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
+        devState = "fa-plus-square icon-warning";
+        devTitle = "No domogik device type associate. Send a developper request to create it with : \n";
+        for (nD in nodeData.NewDeviceTypes) {
+            devTitle += nD + " : " + JSON.stringify(nodeData.NewDeviceTypes[nD], null, '\t') + "\n";
+        };
+    };
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
-               "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat;
+               "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat +
+               "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa extbtn " + devState +
+               "' title='" + devTitle + "'></span>";
 };
 
 function renderNodeNameCol(data, type, full, meta) {

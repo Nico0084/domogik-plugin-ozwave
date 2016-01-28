@@ -40,6 +40,7 @@ from __future__ import unicode_literals
 from libopenzwave import PyManager
 from ozwvalue import ZWaveValueNode
 from ozwdefs import *
+from copy import deepcopy
 import time
 import threading
 import sys
@@ -74,6 +75,7 @@ class ZWaveNode:
                 raise OZwaveNodeException("Node {0} creation error with HomeID : {1}. ".format(nodeId, homeId) + e.message)
         self._homeId = homeId
         self._nodeId = nodeId
+        self._initialized = time.time()
         self._linked = False
         self._receiver = False
         self._ready = False
@@ -96,6 +98,9 @@ class ZWaveNode:
         self._batteryCheck = False # For device with battery get battery level when node awake
         self._thTest = None
         self._lastMsg = None
+        self._knownDeviceTypes = {}
+        self._newDeviceTypes = {}
+        self._dmgDevices = []
 
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
@@ -137,6 +142,13 @@ class ZWaveNode:
     version = property(lambda self: self._nodeInfos.version if self._nodeInfos else None)
     isPolled = property(lambda self: self._hasValuesPolled())
 
+    def isInitialized(self):
+        """Check if all process on initialization are ok.
+            Create Value reset a timer and is timer is more than 5sec inactivity
+            Initialising set as True."""
+        if self._initialized + 5 < time.time() : return True
+        else : return False
+
     def _getNodeRefName(self):
         """Retourne le la ref du node pour les message<networkId.nodeId>"""
         return "{0}.{1}".format(self.networkID,  self.nodeId)
@@ -149,11 +161,17 @@ class ZWaveNode:
         """Le node a reçu la notification EssentialNodeQueriesComplete , il est relié au controleur et peut recevoir des messages basic."""
         self._receiver = True
         self.reportToUI({'type': 'init-process', 'usermsg' : 'Waiting for node initializing ', 'data': NodeStatusNW[5]})
+        self.refreshAllDmgDevice()
 
     def setReady(self):
         """Le node a reçu la notification NodeQueriesComplete, la procédure d'intialisation est complète."""
         if not self._ready: self.reportToUI({'type': 'init-process', 'usermsg' : 'Node is now ready', 'data': NodeStatusNW[2]})
         self._ready = True
+        try :
+            self.liklyDmgDevices()
+            if self._dmgDevices == [] : self.refreshAllDmgDevice()
+        except :
+            print(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
 
     def setNamed(self):
         """Le node a reçu la notification NodeNaming, le device à été identifié dans la librairie openzwave (config/xml)"."""
@@ -161,6 +179,7 @@ class ZWaveNode:
         self._named = True
         self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Node recognized',
                               'data': {'state': 'Named', 'model': self.manufacturer + " -- " + self.product, 'name': self.name, 'location': self.location}})
+        if self._dmgDevices == [] : self.refreshAllDmgDevice()
 
     def setSleeping(self, state= False):
         """Une notification d'état du node à été recue, awake ou sleep."""
@@ -722,6 +741,12 @@ class ZWaveNode:
         retval["BatteryLevel"] = self._getBatteryLevel()
         retval["BatteryChecked"] = self.isbatteryChecked
         retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.homeId,  self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.homeId,  self.nodeId) else ''
+        retval["DmgDevices"] = self.getDmgDevices()
+        devices = {}
+        for id, d in self._knownDeviceTypes.items() :
+            devices[u".".join([str(i) for i in id])] = d
+        retval["KnownDeviceTypes"] = devices
+        retval["NewDeviceTypes"] = self._newDeviceTypes
         return retval
 
     def getValuesInfos(self):
@@ -902,6 +927,7 @@ class ZWaveNode:
             retval = ZWaveValueNode(self, valueId)
             self.log.debug('Created new value node with homeId %0.8x, nodeId %d, valueId %s', self.homeId, self.nodeId, valueId)
             self._values[vid] = retval
+            self._initialized = time.time()
         return retval
 
     def removeValue(self,  valueId):
@@ -972,13 +998,134 @@ class ZWaveNode:
         return newGroups
 
     def checkAvailableLabel(self, valueLabel, label):
-        print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)
+#        print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)
         if label == valueLabel : return True
         else :
             for p, linksLabel in self._ozwmanager.linkedLabels.iteritems()  :
                 if label in linksLabel and valueLabel in linksLabel : return True
-        print u"************ Label not available **************"
+#        print u"************ Label not available **************"
         return  False
+
+    def liklyDmgDevices(self):
+        """Return list of all likely domogik device from all valueNodes"""
+        devices = {}
+        for k, value in self._values.items():
+            newD = value.getDmgDeviceParam()
+            if newD is not None :
+                refDev = (newD['networkid'], newD['node'], newD['instance'])
+                try :
+                    len(devices[refDev])
+                except :
+                    devices[refDev] = {'listSensors': {}, 'listCmds': {}}
+                dataTypes = value.getDataTypesFromZW(newD['label'])
+#                print devices[refDev]
+#                print "        Possible datatypes for label {0} / {1}".format(newD['label'], dataTypes)
+                # value set as sensor
+                sensors = self._ozwmanager.getSensorByName(newD['label'])
+                added = []
+                for s in sensors :
+#                    print "        Check sensor {0} : {1}".format(s, sensors[s])
+                    if sensors[s]['data_type'] in dataTypes : added.append(s)
+#                print "    Added sensors : {0}".format(added)
+                if added :
+                    if not devices[refDev]['listSensors'] :
+                        n = 1
+                        for s in added :
+                            devices[refDev]['listSensors'][n] = [s]
+                            n += 1
+                    else :
+                        numN2 = 1
+                        if len(added) > 1 :
+                            if len(devices[refDev]['listSensors']) == 1 :
+                                for n in range(2, len(added) + 1) :
+                                    devices[refDev]['listSensors'][n] = list(devices[refDev]['listSensors'][1])
+                            else : # must be multiplacte by len(added)
+                                numN2 = len(devices[refDev]['listSensors'])
+                                for n in range(1, len(added)) :
+                                    for n2 in range (1, numN2 + 1) :
+                                        devices[refDev]['listSensors'][(n*numN2) + n2] = list(devices[refDev]['listSensors'][n2])
+                            n = 0
+                            for s in added :
+#                                print "-------------------------------"
+                                for n2 in range(1, numN2 + 1) :
+                                    devices[refDev]['listSensors'][(n*numN2)+n2].append(s)
+#                                    print (n*numN2)+n2, devices[refDev]['listSensors']
+                                n += 1
+                        else :
+                            for s in added :
+                                for n in devices[refDev]['listSensors'] :
+                                    devices[refDev]['listSensors'][n].append(s)
+#                                    print n, devices[refDev]['listSensors']
+
+                if not value._valueData['readOnly'] : # value set as command
+                    cmds = self._ozwmanager.getCommandByName(newD['label'])
+                    added = []
+                    for c in cmds :
+#                        print "        Check cmd {0} : {1}".format(c, cmds[c])
+                        for param in cmds[c]['parameters'] :
+#                            print "            Check label {0} for param {1}".format(newD['label'], param)
+                            if newD['label'] == param['key'].lower() and param['data_type'] in dataTypes :
+                                added.append(c)
+#                    print "    Added commands : {0}".format(added)
+                    if added :
+                        if not devices[refDev]['listCmds'] :
+                            n = 1
+                            for c in added :
+                                devices[refDev]['listCmds'][n] = [c]
+                                n += 1
+                        else :
+                            if len(added) > len(devices[refDev]['listCmds']) :
+                                for n in range(len(devices[refDev]['listCmds']) + 1, len(added) + 1) :
+                                    devices[refDev]['listCmds'][n] = list(devices[refDev]['listCmds'][1])
+                            for c in added :
+                                for n in devices[refDev]['listCmds'] :
+                                    devices[refDev]['listCmds'][n].append(c)
+#                                    print n, devices[refDev]['listCmds']
+
+        print "***************** likly domogik devices for node ****************"
+        print devices
+        self._knownDeviceTypes = self._ozwmanager.findDeviceTypes(devices)
+        print "***************** existing domogik device_types for node ****************"
+        print self._knownDeviceTypes
+        if self._knownDeviceTypes : self._ozwmanager.registerDetectedDevice(self._knownDeviceTypes)
+
+        self._newDeviceTypes = self._ozwmanager.create_Device_Type_Feature(devices)
+        print "***************** New domogik device_types for node ****************"
+        print self._newDeviceTypes
+        devices = {}
+        for id, d in self._knownDeviceTypes.items() :
+            devices[u".".join([str(i) for i in id])] = d
+        self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Domogik device linked.',
+                        'data': {'state': 'DmgDevices', 'KnownDeviceTypes': devices, 'NewDeviceTypes': self._newDeviceTypes}})
+
+    def getDmgDevices(self):
+        """Return all domogik device for all node values"""
+        return self._dmgDevices
+
+    def refreshAllDmgDevice(self):
+        """Search all domogik devices corresponding to all node values"""
+        if self.isInitialized() :
+            print(u"refreshAllDmgDevice node {0}".format(self.nodeId))
+            dmgDevice = self.dmgDevice
+            if dmgDevice is not None : devices = [dmgDevice]
+            else : devices = []
+            try : # Exception can arrive due to dict modify could be during init node (value Added)
+                for id in self._values :
+                    if self._values[id].getDmgDeviceParam is not None :
+                        dmgDevice = self._values[id].dmgDevice
+                        if dmgDevice is not None and dmgDevice not in devices :
+                            devices.append(dmgDevice)
+            except :
+                print (u"exception on refreshAllDmgDevice node {0}".format(self.nodeId))
+            if self._dmgDevices != devices :
+                self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Domogik device linked.',
+                      'data': {'state': 'DmgDevices', 'DmgDevices': devices}})
+            self._dmgDevices = devices
+            print (u"Domogik devices : {0}".format(self._dmgDevices))
+            return devices
+        else :
+            print(u"Not inititalized in refreshAllDmgDevice node {0}".format(self.nodeId))
+        return []
 
     def sendCmdBasic(self, device, command, newValue):
         """Send command to node"""

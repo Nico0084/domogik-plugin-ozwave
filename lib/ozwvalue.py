@@ -262,7 +262,7 @@ class ZWaveValueNode:
         return new
 
     def convertInType(self,  val):
-        """Convertion de val dans le type de la value."""
+        """Convertion val in type of value."""
         retval = val
         valT = type(val)
         selfT = type(self._valueData['value'])
@@ -284,10 +284,10 @@ class ZWaveValueNode:
 
     def _getDmgUnitFromZW(self):
         """Return unit string convert to domogik DT_Type used"""
-        if self._valueData['units'].lower() == "seconds" : return "s"
-        elif self._valueData['units'].lower() == "c" : return "°C"
-        elif self._valueData['units'].lower() == "f" : return "°F"
-        return self._valueData['units']
+        if self._valueData['units'].lower() == "seconds" : return u"s"
+        elif self._valueData['units'].lower() == "c" : return u"°C"
+        elif self._valueData['units'].lower() == "f" : return u"°F"
+        return u"{0}".format(self._valueData['units'])
 
     def _getLabelDomogik(self):
         """ Return OZW label formated in lowcase."""
@@ -306,35 +306,49 @@ class ZWaveValueNode:
                 return ['DT_Switch']
             return ['DT_Bool', 'DT_Enable', 'DT_Binary', 'DT_Step', 'DT_UpDown', 'DT_OpenClose', 'DT_Start', 'DT_State']
         elif self._valueData['type'] in ['Byte', 'Decimal', 'Int', 'Short', 'List', 'Schedule', 'String', 'Button'] :
-            if self._valueData['readOnly'] : # value set as sensor
-                sensors = self._node._ozwmanager.getSensorByName(labelDomogik)
-                types =[]
-                unit = self._getDmgUnitFromZW()
-                if sensors :
-                    for sensor in sensors :
-                        if unit != "" :
-                            if 'unit' in sensors[sensor] :
-                                if sensors[sensor]['unit'] == unit :
-                                    types.append(sensors[sensor]['data_type'])
-                        else :
-                            if not 'unit' in sensors[sensor] or not sensors[sensor]['unit'] :
-                                types.append(sensors[sensor]['data_type'])
-                    return types
-            else : # value set as command
+            types =[]
+            unit = self._getDmgUnitFromZW()
+            if not self._valueData['readOnly'] : # value set as command
                 cmds = self._node._ozwmanager.getCommandByName(labelDomogik)
-                types =[]
                 if cmds :
                     for cmd in cmds :
-                        for param in cmds[cmd]['parameters'] : types.append(param['data_type'])
-                return types
+                        for param in cmds[cmd]['parameters'] :
+                            dType = self._node._ozwmanager.getDataType(param['data_type'])
+                            if unit != "" :
+                                if 'unit' in dType :
+                                    print u"    Compare unit cmd {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit']))
+                                    if dType['unit'] == unit :
+                                        types.append(param['data_type'])
+                            else :
+                                if not 'unit' in dType or dType['unit'] == "" :
+                                    types.append(param['data_type'])
+                                else : types.append(param['data_type']) # force adding data_type if unit is not defined in zwave value
+            # value set as sensor
+            sensors = self._node._ozwmanager.getSensorByName(labelDomogik)
+            print "   Sensor for label {0} : {1}".format(labelDomogik, sensors)
+            if sensors :
+                print ""
+                for sensor in sensors :
+                    dType = self._node._ozwmanager.getDataType(sensors[sensor]['data_type'])
+                    print dType, unit
+                    if unit != "" :
+                        if 'unit' in dType :
+                            print u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit']))
+                            if dType['unit'] == unit :
+                                types.append(sensors[sensor]['data_type'])
+                    else :
+                        if not 'unit' in dType or dType['unit'] == "" :
+                            types.append(sensors[sensor]['data_type'])
+                        else : types.append(sensors[sensor]['data_type']) # force adding data_type if unit is not defined in zwave value
+            return types
         return []
 
     def getDmgDeviceParam(self):
         """Check if value could be a domogik device and return device name format."""
         retval = None
         labelDomogik = self.labelDomogik
-        logLine = u"*** DomogikLabelAvailable : {0}".format(DomogikLabelAvailable)
-        logLine += u"\n                 *** CmdsClassAvailable :{0}".format(CmdsClassAvailable)
+#        logLine = u"*** DomogikLabelAvailable : {0}".format(DomogikLabelAvailable)
+#        logLine += u"\n                 *** CmdsClassAvailable :{0}".format(CmdsClassAvailable)
         if self._valueData['commandClass'] in CmdsClassAvailable :
             if labelDomogik in DomogikLabelAvailable :
                 retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
@@ -348,7 +362,8 @@ class ZWaveValueNode:
                         logLine = u"*** Dmg device Available {0} by link : {1}".format(labelDomogik, retval)
                         break
         if retval is None :
-            logLine += u"\n         *** Dmg device NOT available"
+#            logLine += u"\n         *** Dmg device NOT available"
+            logLine = u"*** Dmg device NOT available : {0} - {1}".format(self._valueData['commandClass'], labelDomogik)
         self.log.debug(logLine)
         return retval
 

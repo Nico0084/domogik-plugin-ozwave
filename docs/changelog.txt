@@ -2,11 +2,28 @@
 Change log
 ==========
 
-0.5.0 : (08-01-2016)
+0.5.0 : (25-01-2016)
 --------------------
 
-* Compatibility with Domogik 0.5+ with non xpl devices
-* Domogik devices must be recreate.
+* Compatibility with Domogik 0.5+ and non xpl devices
+* Domogik devices must be recreate.( All device type are renamed)
+- Change log :
+    - Auto refresh device list (From MQ publish).
+    - info.json file, renamed device_type, sensors and commands.
+        - sensors and commands rule "type-detail" space replaced by "-".
+        - device_type rule : "ozwave.<"-".join(sensor list)"__""-".join(command list).
+    - Domogik device addressing witn networkID, node ID, instance in global parameters.
+    - Sensors adressing with key "name".
+    - Commands adressing with key "key" of command parameters.
+    - Add linked label, definition in lib/linkedlabels.json
+    - Auto load domogik openzwave labels availaible from info.json.
+    - Add Detected domogik devices.
+    - Handled non ASCII exception from python_openzwave 0.3.0b8.
+    - Add install dependencies script.
+    - Add refresh admin domogik device button.
+    - Fix ManagerMonitorNodes stop issue.
+    - Improve log.
+    - Doc update.
 
 0.4.0b1 : (12-10-2015) Compatibily library : OpenZwave >= 1.3.401, python_openzwave >= 0.3.0 (b4)
 -------------------------------------------------------------------------------------------------

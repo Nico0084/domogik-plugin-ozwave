@@ -7,7 +7,7 @@
 
 <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/libraries/css/jquery.dataTables.min.css">
-    
+
 <!-- DataTables -->
     <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/jquery.dataTables.min.js"></script>
 
@@ -45,7 +45,7 @@
                         switch (data.content.type) {
                             case 'node-state-changed' :
                                 switch (data.content.data.state) {
-                                    case "sleep" : 
+                                    case "sleep" :
                                         var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
                                         var cell = GetNodeCell(table, data.content.NodeID, 4);
                                         if (cell) {
@@ -75,7 +75,7 @@
                                             RefreshDataNode(nodeData);
                                             var d = new Date();
                                             var date = d.toLocaleString();
-                                            if (nameUpD) { 
+                                            if (nameUpD) {
                                                 cell.data(data.content.data.name).draw('page');
                                                 HighlightCell(cell.node(), date);
                                             };
@@ -89,6 +89,23 @@
                                                 cell3.data(data.content.data.model).draw('page');
                                                 HighlightCell(cell3.node(), date);
                                             };
+                                        } else {
+                                            if (table) {  // Adding node in dataTable.
+                                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                            };
+                                        };
+                                        break;
+                                    case "DmgDevices" :
+                                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                        var cell = GetNodeCell(table, data.content.NodeID, 0);
+                                        if (cell) {
+                                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                            if (data.content.data.DmgDevices != undefined) {nodeData['DmgDevices'] = data.content.data.DmgDevices;};
+                                            if (data.content.data.KnownDeviceTypes != undefined) {nodeData['KnownDeviceTypes'] = data.content.data.KnownDeviceTypes;};
+                                            if (data.content.data.NewDeviceTypes != undefined) {nodeData['NewDeviceTypes'] = data.content.data.NewDeviceTypes;};
+                                            RefreshDataNode(nodeData);
+                                            cell.data(data.content.NetworkID+"."+data.content.NodeID).draw('page');  // set data required to force draw
+                                            HighlightCell(cell.node());
                                         } else {
                                             if (table) {  // Adding node in dataTable.
                                                 requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);

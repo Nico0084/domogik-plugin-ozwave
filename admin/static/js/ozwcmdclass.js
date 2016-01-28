@@ -297,7 +297,8 @@ function renderCmdClssStatus(data, type, full, meta) {
             textstatus = "Domogik device parameters: \n" +
                          "  networkid: " + valueData.domogikdevice.networkid + "\n" +
                          "  node: " + valueData.domogikdevice.node + "\n" +
-                         "  instance: " + valueData.domogikdevice.instance;
+                         "  instance: " + valueData.domogikdevice.instance + "\n" +
+                         "  dmg label: " + valueData.domogikdevice.label;
             st = 'fa-star icon-success';
         };
         var poll ="";
