@@ -182,7 +182,7 @@ class OZWavemanager():
         for a_device in self._plugin.devices:
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl :
-            self._log.warning(u"No device primary.controller created in domogik, can't start openzwave driver.")
+            self._log.warning(u"No device ozwave.primary_controller created in domogik, can't start openzwave driver.")
         self.starter = threading.Thread(None, self.startServices, "th_Start_Ozwave_Services", (), {})
 
      # On accède aux attributs uniquement depuis les property
@@ -473,7 +473,7 @@ class OZWavemanager():
         return None
 
     def addDeviceCtrl(self, dmgDevice):
-        if dmgDevice['device_type_id'] == 'primary.controller' :
+        if dmgDevice['device_type_id'] == 'ozwave.primary_controller' :
             driver = str(self._plugin.get_parameter(dmgDevice, 'driver')) # force str type for python openzwave lib
             if not self.getDeviceCtrl('driver',  driver) :
                 networkID = self._plugin.get_parameter(dmgDevice, 'networkid')
@@ -1346,8 +1346,12 @@ class OZWavemanager():
         return retval
 
     def _getDmgDevice(self, device):
-        """Return the domogik device if exist else None."""
+        """Return the domogik device if exist else None.
+            return the device for network
+            return list of devices for node
+            return the device for value (instance)"""
 #        logLine = u"--- Search dmg device for : {0}".format(device)
+        dmgDevices = []
         for dmgDevice in self._plugin.devices :
 #            logLine += u"\n        - in dmg device : {0}".format(dmgDevice)
             if 'instance' in dmgDevice['parameters']: # Value sensor or command level
@@ -1364,7 +1368,7 @@ class OZWavemanager():
                     try :
                         if int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
                            dmgDevice['parameters']['networkid']['value'] == device.networkID :
-                            return dmgDevice
+                            dmgDevices.append(dmgDevice)
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'networkid' in dmgDevice['parameters']: # primary controller level
@@ -1376,6 +1380,7 @@ class OZWavemanager():
 #                logLine += u"\n    --- no key find"
 #        logLine += u"\n    --- Dmg device NOT find"
 #        self._log.debug(logLine)
+        if dmgDevices : return dmgDevices
         return None
 
     def sendCmdToZW(self, device, command, cmdValue):

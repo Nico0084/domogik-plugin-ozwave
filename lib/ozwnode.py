@@ -1107,7 +1107,7 @@ class ZWaveNode:
         if self.isInitialized() :
             print(u"refreshAllDmgDevice node {0}".format(self.nodeId))
             dmgDevice = self.dmgDevice
-            if dmgDevice is not None : devices = [dmgDevice]
+            if dmgDevice is not None : devices = dmgDevice
             else : devices = []
             try : # Exception can arrive due to dict modify could be during init node (value Added)
                 for id in self._values :
