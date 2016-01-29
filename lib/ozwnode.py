@@ -1113,8 +1113,8 @@ class ZWaveNode:
                 for id in self._values :
                     if self._values[id].getDmgDeviceParam is not None :
                         dmgDevice = self._values[id].dmgDevice
-                        if dmgDevice is not None and dmgDevice not in devices :
-                            devices.append(dmgDevice)
+                        if dmgDevice is not None and dmgDevice[0] not in devices :
+                            devices.append(dmgDevice[0])
             except :
                 print (u"exception on refreshAllDmgDevice node {0}".format(self.nodeId))
             if self._dmgDevices != devices :

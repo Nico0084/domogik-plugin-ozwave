@@ -437,7 +437,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             } else if (nodeData.BatteryLevel >= 40) {st = 'fa-battery-half icon-success';
             } else if (nodeData.BatteryLevel >= 25) {st = 'fa-battery-quarter icon-success';
             } else if (nodeData.BatteryLevel >= 15) {st = 'fa-battery-quarter icon-warning';
-            } else if (nodeData.BatteryLevel >= 5) {st = 'fa-battery-empty icon-danger';};
+            } else if (nodeData.BatteryLevel >= 5)  {st = 'fa-battery-empty icon-danger';};
         bat = "<span id='battery" + nodeData.NodeID + "' class='fa btnspacing fa-rotate-270 " + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
         var bCheck = "";
         var tCheck =  "Check to request battery level at each awake.";
@@ -447,32 +447,73 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
     };
-    var devState = "fa-star icon-danger";
-    var devTitle = "Neither domogik device type find !";
-    if (initState !='completed') {devTitle += "\n Wait for complet initialisation...";};
+    var devState = "";
+    var devTitle = "";
+    var dmgDev = "";
+    var knDev = "";
+    var newDev = "";
     if (nodeData.DmgDevices.length != 0) {
         devState = "fa-check-circle icon-success";
         devTitle = "Domogik device associated : \n";
         for (nD in nodeData.DmgDevices) {
-            devTitle += nD + " : " + JSON.stringify(nodeData.DmgDevices[nD], null, '\t') + "\n";
+            var header = nodeData.DmgDevices[nD].name
+            if (nodeData.DmgDevices[nD].parameters.instance != undefined) {
+                header += ", instance " + nodeData.DmgDevices[nD].parameters.instance.value;
+            };
+            devTitle += header + " : " + JSON.stringify(nodeData.DmgDevices[nD], null, '\t') + "\n";
         };
-    } else if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
-        devState = "fa-asterisk icon-warning";
+        dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-check-circle icon-success extbtn'" +
+               " title='" + devTitle + "'></span>";
+    };
+    if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
         devTitle = "No domogik device associate. Create it with : \n";
+        var find = false;
         for (nD in nodeData.KnownDeviceTypes) {
-            devTitle += nD + " : " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, '\t') + "\n";
+            var insert = true;
+            if (dmgDev != ""){
+                dRef = nD.split(".");
+                var compRS = dRef[1]; // Node ID compare
+                var compRD = "node";
+                if (dRef.length == 3) {
+                    compRS = dRef[2]; // Instance compare
+                    compRD = "instance";
+                };
+                for (nDT in nodeData.DmgDevices) {
+                    if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined &&
+                         nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD] &&
+                         compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
+                    insert = false;
+                    break;
+                    };
+                };
+            };
+            if (insert) {
+                devTitle += nD + " : " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, '\t') + "\n";
+                find = true;
+            };
         };
-    } else if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
-        devState = "fa-plus-square icon-warning";
+        if (find) {
+            knDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
+                    " title='" + devTitle + "'></span>";
+        };
+    };
+    if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
         devTitle = "No domogik device type associate. Send a developper request to create it with : \n";
         for (nD in nodeData.NewDeviceTypes) {
             devTitle += nD + " : " + JSON.stringify(nodeData.NewDeviceTypes[nD], null, '\t') + "\n";
         };
+        newDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
+               " title='" + devTitle + "'></span>";
     };
+    if (devTitle == "") {
+        devTitle = "Neither domogik device type find !";
+        if (initState !='completed') {devTitle += "\n Wait for complet initialisation...";};
+        dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
+               " title='" + devTitle + "'></span>";
+    }
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
                "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat +
-               "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa extbtn " + devState +
-               "' title='" + devTitle + "'></span>";
+               dmgDev + knDev + newDev;
 };
 
 function renderNodeNameCol(data, type, full, meta) {

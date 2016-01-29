@@ -1347,9 +1347,9 @@ class OZWavemanager():
 
     def _getDmgDevice(self, device):
         """Return the domogik device if exist else None.
-            return the device for network
+            return the device for network (list)
             return list of devices for node
-            return the device for value (instance)"""
+            return the device for value (instance) (list)"""
 #        logLine = u"--- Search dmg device for : {0}".format(device)
         dmgDevices = []
         for dmgDevice in self._plugin.devices :
@@ -1360,7 +1360,7 @@ class OZWavemanager():
                         if int(dmgDevice['parameters']['instance']['value']) == device.instance and \
                            int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
                            dmgDevice['parameters']['networkid']['value'] == device.networkID :
-                            return dmgDevice
+                            return [dmgDevice]
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'node' in dmgDevice['parameters']: # Node level
@@ -1375,7 +1375,7 @@ class OZWavemanager():
                 if isinstance(device, ZWaveController):
                     if dmgDevice['parameters']['networkid']['value'] == device.networkID :
                         self._log.debug(u"--- Dmg device find : {0}".format(dmgDevice))
-                        return dmgDevice
+                        return [dmgDevice]
 #            else :
 #                logLine += u"\n    --- no key find"
 #        logLine += u"\n    --- Dmg device NOT find"
