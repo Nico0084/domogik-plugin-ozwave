@@ -101,7 +101,7 @@ class ZWaveValueNode:
     homeId = property(lambda self: self._node._homeId)
     nodeId = property(lambda self: self._node._nodeId)
     instance = property(lambda self: self._valueData['instance'])
-    dmgDevice = property(lambda self: self._node._ozwmanager._getDmgDevice(self))
+    dmgDevice = property(lambda self: self._getDmgDevice())
     lastUpdate = property(lambda self: self._lastUpdate)
     valueData = property(lambda self: self._valueData)
     labelDomogik = property(lambda self: self._getLabelDomogik())
@@ -281,6 +281,12 @@ class ZWaveValueNode:
             elif selfT == float : retval = float(val)
             elif selfT == complex : retval = complex(val)
         return retval
+
+    def _getDmgDevice(self):
+        """Filter self._node._ozwmanager._getDmgDevice for return only dmg device of value"""
+        dmgDevices = self._node._ozwmanager._getDmgDevice(self)
+        if dmgDevices is not None : return dmgDevices[0]
+        return None
 
     def _getDmgUnitFromZW(self):
         """Return unit string convert to domogik DT_Type used"""
