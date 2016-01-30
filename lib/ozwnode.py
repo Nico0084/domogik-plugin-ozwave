@@ -167,11 +167,15 @@ class ZWaveNode:
         """Le node a reçu la notification NodeQueriesComplete, la procédure d'intialisation est complète."""
         if not self._ready: self.reportToUI({'type': 'init-process', 'usermsg' : 'Node is now ready', 'data': NodeStatusNW[2]})
         self._ready = True
-        try :
-            self.liklyDmgDevices()
-            if self._dmgDevices == [] : self.refreshAllDmgDevice()
-        except :
-            print(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
+        self._checkDmgDeviceLink()
+
+    def _checkDmgDeviceLink(self):
+        if not self._knownDeviceTypes and not  self._newDeviceTypes and self.isInitialized() :
+            try :
+                self.liklyDmgDevices()
+                if self._dmgDevices == [] : self.refreshAllDmgDevice()
+            except :
+                print(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
 
     def setNamed(self):
         """Le node a reçu la notification NodeNaming, le device à été identifié dans la librairie openzwave (config/xml)"."""
@@ -193,6 +197,7 @@ class ZWaveNode:
                 for value in values : value.RefreshOZWValue()
             if self._configAsk and self.GetNodeStateNW() in [1, 3, 4, 5] : # :'Initialized - not known', 3:'In progress - Devices initializing', 4:'In progress - Linked to controller', 5:'In progress - Can receive messages'
                 self._updateConfig()
+        self._checkDmgDeviceLink()
 
     def setBatteryCheck(self, check):
         """Set flag for checking battery level when awake."""
