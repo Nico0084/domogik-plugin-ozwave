@@ -322,7 +322,7 @@ class ZWaveValueNode:
                             dType = self._node._ozwmanager.getDataType(param['data_type'])
                             if unit != "" :
                                 if 'unit' in dType :
-                                    print u"    Compare unit cmd {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit']))
+                                    print (u"    Compare unit cmd {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
                                     if dType['unit'] == unit :
                                         types.append(param['data_type'])
                             else :
@@ -331,15 +331,15 @@ class ZWaveValueNode:
                                 else : types.append(param['data_type']) # force adding data_type if unit is not defined in zwave value
             # value set as sensor
             sensors = self._node._ozwmanager.getSensorByName(labelDomogik)
-            print "   Sensor for label {0} : {1}".format(labelDomogik, sensors)
+            print (u"   Sensor for label {0} : {1}".format(labelDomogik, sensors))
             if sensors :
-                print ""
+                print (u"")
                 for sensor in sensors :
                     dType = self._node._ozwmanager.getDataType(sensors[sensor]['data_type'])
-                    print dType, unit
+                    print (u"{0}, {1}".format(dType, unit))
                     if unit != "" :
                         if 'unit' in dType :
-                            print u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit']))
+                            print (u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
                             if dType['unit'] == unit :
                                 types.append(sensors[sensor]['data_type'])
                     else :

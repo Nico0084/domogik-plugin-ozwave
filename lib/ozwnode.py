@@ -207,13 +207,13 @@ class ZWaveNode:
             for value in values:
                 dmgDevice = value.dmgDevice
                 if dmgDevice :
-                    print dmgDevice
+                    print (dmgDevice)
                     if 'batterycheck' in dmgDevice['parameters']:
                         oldCheck = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
                         self._ozwmanager.udpate_device_param(dmgDevice['parameters']['batterycheck']['id'], 'batterycheck', 'y' if check else 'n')
-                        print "Set the db for batteryCheck parameter : ", oldCheck, check
-                    else : print "Domogik device exist but without batterycheck parameters, using memory value : ", check
-                else : print "No domogik device created with batterycheck parameters, using memory value : ", check
+                        print (u"Set the db for batteryCheck parameter : {0} , {1}".format(oldCheck, check))
+                    else : print (u"Domogik device exist but without batterycheck parameters, using memory value : {0}".format(check))
+                else : print (u"No domogik device created with batterycheck parameters, using memory value : {0}".format(check))
         return self._batteryCheck
 
     def getBatteryCheck(self):
@@ -248,9 +248,9 @@ class ZWaveNode:
                 ctrlNode = self._ozwmanager.getCtrlOfNode(self)
                 if ctrlNode is not None and ctrlNode.node is not None :
                     msg['NodeID'] = self.nodeId
-                    print '******** Node Object report vers UI ******** '
+                    print (u'******** Node Object report vers UI ******** ')
                     ctrlNode.node.reportChangeToUI(msg)
-                    print '******** Node Object report vers monitorNodes ******** '
+                    print (u'******** Node Object report vers monitorNodes ******** ')
                     self._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, msg)
                 else :
                     self.log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
@@ -264,7 +264,7 @@ class ZWaveNode:
     def _getGroupsDict(self):
         """Retourne les définitions de groups sous forme de dict"""
         grps = []
-        print('Get groups dict')
+        print(u'Get groups dict')
         for grp in self.groups :
             group = {}
             group['index'] = grp.index
@@ -277,7 +277,7 @@ class ZWaveNode:
                 mbr['status'] = grp.members[m]
                 group['members'].append(mbr)
             grps.append(group)
-        print grps
+        print (grps)
         return grps
 
     def _getProductName(self):
@@ -337,7 +337,7 @@ class ZWaveNode:
         if self.isReady and self.isNamed : retval = NodeStatusNW[3]
         if self.isReady and self.isNamed and self.isConfigured: retval = NodeStatusNW[2]
         if self.isFailed : retval = NodeStatusNW[6]
-        print ('node state linked:',  self.isLinked, ' isReceiver:', self.isReceiver, ' isReady:', self.isReady, 'isNamed:', self.isNamed, ' isFailed:', self._failed )
+        print (u"node state linked: {0}, isReceiver: {1}, isReady: {2}, isNamed: {3}, isFailed: {4}".format(self.isLinked, self.isReceiver, self.isReady, self.isNamed, self._failed))
         return retval
 
     def getMemoryUsage(self):
@@ -547,19 +547,18 @@ class ZWaveNode:
                 dmembers = {};
                 for m in mbrs :
                     dmembers[m] = MemberGrpStatus[1]
-                print("Update groupe avant :"),  grp
+                print(u"Update groupe avant : {0}".format(grp))
                 grp = (GroupInfo(
                     index = groupIdx,
                     label = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx),
                     maxAssociations = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx),
                     members = dmembers
                     ))
-                print("Update groupe après :"),  grp
+                print(u"Update groupe après : {0}".format(grp))
             groups.append(grp)
         del(self._groups[:])
         self._groups = groups
-        print ('Node [%d] groups are: ' %self._nodeId) , self._groups
-        self.log.debug('Node [%d] groups are: %s', self._nodeId, self._groups)
+        self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
 
     def _updateGroups(self):
         """Mise à jour des informations de group/associationdu node """
@@ -648,12 +647,12 @@ class ZWaveNode:
     def requestOZWValue(self, refValue):
         """Envois un requestNodeDynamic sur une commande qui ne provoque pas de rafraichissement de la value, ex dim, bright pour level."""
         if refValue:
-            print 'requestValue for : {0}'.format(refValue)
+            print (u'requestValue for : {0}'.format(refValue))
             for value in self._values.itervalues():
                 if (value.valueData['instance'] == refValue['instance'] and
                         value.valueData['commandClass'] == refValue['commandClass']  and
                             value.labelDomogik == refValue['label']) :
-                    print('======= A value request an other value refresh by timer : {0}'.format(refValue))
+                    print(u'======= A value request an other value refresh by timer : {0}'.format(refValue))
                     self.timerRequestOZW(self.requestNodeDynamic, 5)
                     # TODO: Le getvalue ne semble pas provoquer de notification, utilisation requestNodeDynamic pour l'instant
                  #   value.getOZWValue(), self.requestNodeDynamic
@@ -671,7 +670,7 @@ class ZWaveNode:
         callback = kwargs['callback']
         if args : callback(args)
         else : callback()
-        print ('**** callback after wait : {0}, args {1}'.format(kwargs,  args))
+        print (u'**** callback after wait : {0}, args {1}'.format(kwargs,  args))
 
 # Traitement spécifique
     def _getbasic(self):
@@ -961,13 +960,13 @@ class ZWaveNode:
         """Envoie les changement des associations de nodes dans les groups d'association."""
        # groups = self._getGroupsDict()
         groups = self.groups
-        print ('set members association :'), newGroups
-        print ('Groups actuel : '), groups
+        print (u'set members association : {0}'.format(newGroups))
+        print (u'Groups actuel : {0}'.format(groups))
         for gn in newGroups :
-            print
-            print gn
+            print(u"")
+            print(gn)
             for grp in groups :
-                print grp.index
+                print (grp.index)
                 if gn['idx'] == grp.index :
                     for mn in gn['mbs']:
                         toAdd = True
@@ -981,7 +980,7 @@ class ZWaveNode:
                             mn['status'] = MemberGrpStatus[2]
                             grp.members[mn['id']] = MemberGrpStatus[2]
                     break
-        print ('set members association add members result :'), newGroups
+        print (u'set members association add members result : {0}'.format(newGroups))
         for grp in groups :
             for gn in newGroups :
                 if grp.index == gn['idx'] :
@@ -994,12 +993,12 @@ class ZWaveNode:
                                 toRemove = False
                                 break
                         if toRemove : #TODO: vérifier que le status est bien to update
-                            print ('members remove : '),  m
+                            print (u'members remove : {0}'.format(m))
                             self.removeAssociation(grp.index, m)
                             mn['status'] = MemberGrpStatus[2]
                             grp.members[m] = MemberGrpStatus[2]
                     break
-        print ('set members association remove members result :'), newGroups
+        print (u'set members association remove members result : {0}'.format(newGroups))
         return newGroups
 
     def checkAvailableLabel(self, valueLabel, label):
@@ -1087,16 +1086,16 @@ class ZWaveNode:
                                     devices[refDev]['listCmds'][n].append(c)
 #                                    print n, devices[refDev]['listCmds']
 
-        print "***************** likly domogik devices for node ****************"
-        print devices
+        print (u"***************** likly domogik devices for node ****************")
+        print (devices)
         self._knownDeviceTypes = self._ozwmanager.findDeviceTypes(devices)
-        print "***************** existing domogik device_types for node ****************"
-        print self._knownDeviceTypes
+        print (u"***************** existing domogik device_types for node ****************")
+        print (self._knownDeviceTypes)
         if self._knownDeviceTypes : self._ozwmanager.registerDetectedDevice(self._knownDeviceTypes)
 
         self._newDeviceTypes = self._ozwmanager.create_Device_Type_Feature(devices)
-        print "***************** New domogik device_types for node ****************"
-        print self._newDeviceTypes
+        print (u"***************** New domogik device_types for node ****************")
+        print (self._newDeviceTypes)
         devices = {}
         for id, d in self._knownDeviceTypes.items() :
             devices[u".".join([str(i) for i in id])] = d
