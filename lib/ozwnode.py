@@ -315,6 +315,7 @@ class ZWaveNode:
             "ProtocolInfo", "Probe", "WakeUp", "ManufacturerSpecific1", "NodeInfo", "ManufacturerSpecific2", "Versions", "Instances",
             "Static", "Probe1", "Associations", "Neighbors", "Session", "Dynamic", "Configuration", "Complete", "None", "Unknow"
         """
+        self._checkDmgDeviceLink()
         return self._manager.getNodeQueryStage(self._homeId,  self._nodeId)
 
     def GetNodeStateNW(self):

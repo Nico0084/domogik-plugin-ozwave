@@ -422,10 +422,15 @@ function renderNodeStatusCol(data, type, full, meta) {
         // console.log(err);
         var initState ='uninitialized';
         };
+    var initStateExt = '';
     if (initState =='uninitialized') {status = 'fa-question-circle icon-unknown';};
     if (initState =='initialized - not known') {status = 'fa-circle icon-info';};
     if (initState =='completed') {status ='fa-circle icon-success';};
     if (initState.indexOf('in progress') !=-1) {status ='fa-spinner fa-spin icon-info';};
+    if (initState =='in progress - devices initializing') {
+        status ='fa-spinner fa-spin icon-success';
+        initStateExt = ' (Wait to retrieve config parameters)';
+    };
     if (initState =='out of operation') {status ='fa-warning icon-warning';};
     var str = '' + nodeData.NodeID;
     while (str.length < 3) {str = '0' + str;};
@@ -493,7 +498,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             };
         };
         if (find) {
-            knDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
+            knDev = "<span id='knowndevicetypes"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
                     " title='" + devTitle + "'></span>";
         };
     };
@@ -502,7 +507,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         for (nD in nodeData.NewDeviceTypes) {
             devTitle += nD + " : " + JSON.stringify(nodeData.NewDeviceTypes[nD], null, '\t') + "\n";
         };
-        newDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
+        newDev = "<span id='newdevicetypes"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
                " title='" + devTitle + "'></span>";
     };
     if (devTitle == "") {
@@ -512,7 +517,7 @@ function renderNodeStatusCol(data, type, full, meta) {
                " title='" + devTitle + "'></span>";
     }
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
-               "' title='" + nodeData.InitState + "\n Current stage : " + nodeData.Stage + "'></span>" + bat +
+               "' title='" + nodeData.InitState + initStateExt + "\n Current stage : " + nodeData.Stage + "'></span>" + bat +
                dmgDev + knDev + newDev;
 };
 
