@@ -311,7 +311,7 @@
             "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "",
+            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
             "timeout": 0,
             "history": {
                     "store": true,
