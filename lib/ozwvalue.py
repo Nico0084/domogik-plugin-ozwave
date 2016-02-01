@@ -336,7 +336,7 @@ class ZWaveValueNode:
                 print (u"")
                 for sensor in sensors :
                     dType = self._node._ozwmanager.getDataType(sensors[sensor]['data_type'])
-                    print (u"{0}, {1}".format(dType, unit))
+#                    print (u"{0}, {1}".format(dType, unit))
                     if unit != "" :
                         if 'unit' in dType :
 #                            print (u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
