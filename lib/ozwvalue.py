@@ -339,7 +339,7 @@ class ZWaveValueNode:
                     print (u"{0}, {1}".format(dType, unit))
                     if unit != "" :
                         if 'unit' in dType :
-                            print (u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
+#                            print (u"    Compare unit sensor {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
                             if dType['unit'] == unit :
                                 types.append(sensors[sensor]['data_type'])
                     else :
