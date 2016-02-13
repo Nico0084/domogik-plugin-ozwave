@@ -156,7 +156,7 @@
         "battery-level" : {
             "name" : "Battery level",
             "incremental": false,
-            "data_type" : "DT_Scaling",
+            "data_type" : "DT_Battery",
             "conversion" : "",
             "timeout": 0,
             "history": {
