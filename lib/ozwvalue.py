@@ -106,6 +106,7 @@ class ZWaveValueNode:
     valueData = property(lambda self: self._valueData)
     labelDomogik = property(lambda self: self._getLabelDomogik())
     isPolled = property(lambda self:self._node._manager.isPolled(self._valueData['id']))
+    isUpToDate = property(lambda self:self._checkUptoDate())
 
     def getMemoryUsage(self):
         """Renvoi l'utilisation memoire de la value en octets"""
@@ -281,6 +282,11 @@ class ZWaveValueNode:
             elif selfT == float : retval = float(val)
             elif selfT == complex : retval = complex(val)
         return retval
+
+    def _checkUptoDate(self):
+        """Check if value is up to date with real openzwave and readed directly from ozw node."""
+        if self._realValue is not None and self._realValue == self._valueData['value'] : return True
+        else : return False
 
     def _getDmgDevice(self):
         """Filter self._node._ozwmanager._getDmgDevice for return only dmg device of value"""
@@ -567,11 +573,28 @@ class ZWaveValueNode:
                         sensorMsg ['data'] = {'type' : self.labelDomogik,  'current' : value}
                         if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
-                        sensorMsg['schema'] = 'alarm.basic'
+                        self._node.handleAlarmStep(self)
+                    elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
+                        self._node.handleAlarmStep(self)
+                    else : sensorMsg = None
+                if sensorMsg is not None : self.log.debug(u"Sensor value to Dmg device : {0}".format(sensorMsg))
+            else : self.log.debug(u"No sensor find for device {0} - {1}".format(deviceParam, self.labelDomogik))
+        else: self.log.debug(u"Sensor value not implemented to Dmg device : {0} - {1}".format(self._valueData['commandClass'], self.labelDomogik))
+        return sensorMsg
+
+    def getAlarmSensorMsg(self):
+        """Must be call at end of alarm sequence, return value to sensor msg"""
+        sensorMsg = None
+        deviceParam =  self.getDmgDeviceParam()
+        if deviceParam is not None :
+            dmgSensor = self.getDmgSensor(deviceParam['label'])
+            if dmgSensor :
+                for sensor in dmgSensor :
+                    sensorMsg = {'id': dmgSensor[sensor]['id'], 'data_type':  dmgSensor[sensor]['data_type'], 'device': deviceParam}
+                    if self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
                         sensorMsg ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
                         if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
-                        sensorMsg['schema'] = 'alarm.basic'
                         sensorMsg ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0} # gestion du sensor binary pour widget binary
                     else : sensorMsg = None
                 if sensorMsg is not None : self.log.debug(u"Sensor value to Dmg device : {0}".format(sensorMsg))

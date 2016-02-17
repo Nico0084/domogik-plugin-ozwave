@@ -280,13 +280,13 @@ function renderCmdClssStatus(data, type, full, meta) {
     var valueData = GetValueZWNode(refId[0],refId[1],refId[2]);
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
-        var textRW = "Read and Write";
-        var st ='danger';
-        if (valueData.readOnly==true) {
-            textRW = "Read only";
-            st ='success';
+        var st = "<i class='fa fa-upload icon-success'></i>";
+        var textRW = "Read only";
+        if (valueData.readOnly == false) {
+            textRW = "Read and Write";
+            st += "<i class='fa fa-download'></i>";
         };
-        var rw=  " <span id='st"+valueRef +"' class='fa fa-circle extbtn icon-" + st +"' title='" + textRW + "'></span>";
+        var rw = " <span id='st"+valueRef +"' class='extbtn' title='" + textRW + "'>" + st +"</span>";
         var extra ="";
         if (valueData.help!="") {
             extra = "  <span id='hn"+valueRef +"' class='fa fa-info-circle fa-lg extbtn icon-info' title='" + valueData.help + "'></span>";
@@ -324,10 +324,12 @@ function renderCmdClssValue(data, type, full, meta) {
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
         var id = "valCC" + valueRef;
-        if (valueData.realvalue == undefined) {valueData.realvalue = valueData.value; };
         var modify = "";
-        if (valueData.realvalue != valueData.value) {
-            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Requested value change, but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
+        if (valueData.realvalue == undefined) {
+                valueData.realvalue = valueData.value;
+                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value not confirmed by node."> Not recovered</i></span>';
+        } else if (valueData.realvalue != valueData.value) {
+            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
         };
         var ret = valueData.value;
         if (valueData.readOnly==true) {

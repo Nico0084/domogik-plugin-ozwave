@@ -428,10 +428,10 @@ function renderNodeStatusCol(data, type, full, meta) {
     if (initState =='completed') {status ='fa-circle icon-success';};
     if (initState.indexOf('in progress') !=-1) {status ='fa-spinner fa-spin icon-info';};
     if (initState =='in progress - devices initializing') {
-        status ='fa-spinner fa-spin icon-success';
+        status ='fa-gear fa-spin icon-success';
         initStateExt = ' (Wait to retrieve config parameters)';
     };
-    if (initState =='out of operation') {status ='fa-warning icon-warning';};
+    if (initState =='out of operation') {status ='fa-warning icon-danger';};
     var str = '' + nodeData.NodeID;
     while (str.length < 3) {str = '0' + str;};
     var bat = '';

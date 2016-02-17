@@ -40,7 +40,6 @@ from __future__ import unicode_literals
 from libopenzwave import PyManager
 from ozwvalue import ZWaveValueNode
 from ozwdefs import *
-from copy import deepcopy
 import time
 import threading
 import sys
@@ -81,8 +80,8 @@ class ZWaveNode:
         self._ready = False
         self._named = False
         self._failed = False
-        self._configAsk = False
-        self._isConfigured = False # A améliorer en gérant le retour réel de value de config
+        self._requestConfig = False # Flag to Unlock/Lock updating all config values at once."
+        self._isConfigured = False # Flag to True is after a request of all config values there are really retreive from node
         self._capabilities = set()
         self._commandClasses = set()
         self._neighbors = set()
@@ -101,10 +100,13 @@ class ZWaveNode:
         self._knownDeviceTypes = {}
         self._newDeviceTypes = {}
         self._dmgDevices = []
+        self._alarmSteps = []
+        self._timerAlarm = 0
 
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
     log = property(lambda self: self._ozwmanager._log)
+    stop = property(lambda self: self._ozwmanager._stop)
     networkID = property(lambda self: self._ozwmanager.getNetworkID(self._homeId))
     homeID = property(lambda self: self._ozwmanager.matchHomeID(self._homeId))
     dmgDevice = property(lambda self: self._ozwmanager._getDmgDevice(self))
@@ -123,12 +125,11 @@ class ZWaveNode:
     manufacturer = property(lambda self: self.GetManufacturerName ())
     groups = property(lambda self:self._groups)
     isSleeping = property(lambda self: self._isSleeping())
-    isLocked = property(lambda self: self._getIsLocked())
     isLinked = property(lambda self: self._linked)
     isReceiver = property(lambda self: self._receiver)
     isReady = property(lambda self: self._ready)
     isNamed = property(lambda self: self._named)
-    isConfigured = property(lambda self: self._isConfigured)
+    isConfigured = property(lambda self: self._checkConfigured())
     isFailed = property(lambda self: self._isFailed())
     isbatteryChecked = property(lambda self: self.getBatteryCheck())
     level = property(lambda self: self._getLevel())
@@ -160,13 +161,13 @@ class ZWaveNode:
     def setReceiver(self):
         """Le node a reçu la notification EssentialNodeQueriesComplete , il est relié au controleur et peut recevoir des messages basic."""
         self._receiver = True
-        self.reportToUI({'type': 'init-process', 'usermsg' : 'Waiting for node initializing ', 'data': NodeStatusNW[5]})
+        self.reportToUI({'type': 'init-process', 'usermsg' : 'Waiting for node initializing ', 'data': self.GetNodeStateNW()})
         self.refreshAllDmgDevice()
 
     def setReady(self):
-        """Le node a reçu la notification NodeQueriesComplete, la procédure d'intialisation est complète."""
-        if not self._ready: self.reportToUI({'type': 'init-process', 'usermsg' : 'Node is now ready', 'data': NodeStatusNW[2]})
+        """Node retrieve NodeQueriesComplete notification, intialisation process completed."""
         self._ready = True
+        self.reportToUI({'type': 'init-process', 'usermsg' : 'Node is now ready', 'data': self.GetNodeStateNW()})
         self._checkDmgDeviceLink()
 
     def _checkDmgDeviceLink(self):
@@ -195,8 +196,8 @@ class ZWaveNode:
             values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
             if values and self._batteryCheck :
                 for value in values : value.RefreshOZWValue()
-            if self._configAsk and self.GetNodeStateNW() in [1, 3, 4, 5] : # :'Initialized - not known', 3:'In progress - Devices initializing', 4:'In progress - Linked to controller', 5:'In progress - Can receive messages'
-                self._updateConfig()
+        elif self._requestConfig :
+            self._updateConfig()
         self._checkDmgDeviceLink()
 
     def setBatteryCheck(self, check):
@@ -234,12 +235,12 @@ class ZWaveNode:
         self._ready = False
         self._sleeping = True
         self._failed = True
-        self.reportToUI({'type': 'init-process', 'usermsg' : 'Node marked as fail ', 'data': NodeStatusNW[6]})
+        self.reportToUI({'type': 'init-process', 'usermsg' : 'Node marked as fail ', 'data': self.GetNodeStateNW()})
 
     def markAsOK(self):
         """Le node est marqué comme Bon, réinit nécéssaire ."""
         self._failed = False
-        self.reportToUI({'type': 'init-process', 'usermsg' : 'Node marked good, should be reinit ', 'data': NodeStatusNW[0]})
+        self.reportToUI({'type': 'init-process', 'usermsg' : 'Node marked good, should be reinit ', 'data': self.GetNodeStateNW()})
 
     def reportToUI(self, msg):
         """ transfert à l'objet controlleur le message à remonter à l'UI"""
@@ -256,10 +257,6 @@ class ZWaveNode:
                     self.log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
             except :
                 print(u"Error while reporting to UI : {0}".format(traceback.format_exc()))
-
-
-    def _getIsLocked(self):
-        return False
 
     def _getGroupsDict(self):
         """Retourne les définitions de groups sous forme de dict"""
@@ -486,7 +483,7 @@ class ZWaveNode:
         if self._manager.isNodeSecurityDevice(self._homeId, self._nodeId): nodecaps.add('Security')
         if self._manager.isNodeFrequentListeningDevice(self._homeId, self._nodeId): nodecaps.add('FLiRS')
         self._capabilities = nodecaps
-        self.log.debug('Node [%d] capabilities are: %s', self._nodeId, self._capabilities)
+        self.log.debug(u'Node [%d] capabilities are: %s', self._nodeId, self._capabilities)
 
     def _updateCommandClasses(self):
         """Mise à jour des command classes du node"""
@@ -495,7 +492,7 @@ class ZWaveNode:
             if self._manager.getNodeClassInformation(self._homeId, self._nodeId, cls):
                 classSet.add(cls)
         self._commandClasses = classSet
-        self.log.debug('Node [%d] command classes are: %s', self._nodeId, self._commandClasses)
+        self.log.debug(u'Node [%d] command classes are: %s', self._nodeId, self._commandClasses)
 
     def _updateInfos(self):
         """Mise à jour des informations générales du node"""
@@ -526,6 +523,21 @@ class ZWaveNode:
             else : self.markAsOK()
         return self._failed
 
+    def _checkConfigured(self):
+        """Check if all command_class_configuration are retreive from node"""
+        if self._isConfigured :
+            return True
+        elif not self.isReady :
+            return False
+        for value in self.getValuesForCommandClass('COMMAND_CLASS_CONFIGURATION'):
+            if not value.isUpToDate :
+                self._isConfigured = False
+                self.log.debug(u"{0} value not up to date ({1}): {2}".format(self.refName, value._realValue, value))
+                return False
+        self._isConfigured = True
+        self._requestConfig = False # Flag set to False to lock update all config value at once."
+        return True
+
     def _updateNeighbors(self):
         """Mise à jour de la liste des nodes voisins"""
         # TODO: I believe this is an OZW bug, but sleeping nodes report very odd (and long) neighbor lists
@@ -539,8 +551,8 @@ class ZWaveNode:
             self._neighbors = None
         self.log.debug('Node [%d] neighbors are: %s', self._nodeId, self._neighbors)
 
-    def updateGroup(self,  groupIdx):
-        """Mise à jour des informations du group/association du node """
+    def updateGroup(self, groupIdx):
+        """Update a group/association informations of node."""
         groups = list()
         for grp in self._groups :
             if grp.index == groupIdx :
@@ -548,21 +560,21 @@ class ZWaveNode:
                 dmembers = {};
                 for m in mbrs :
                     dmembers[m] = MemberGrpStatus[1]
-                print(u"Update groupe avant : {0}".format(grp))
+                print(u"Update group before : {0}".format(grp))
                 grp = (GroupInfo(
                     index = groupIdx,
                     label = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx),
                     maxAssociations = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx),
                     members = dmembers
                     ))
-                print(u"Update groupe après : {0}".format(grp))
+                print(u"Update group after : {0}".format(grp))
             groups.append(grp)
         del(self._groups[:])
         self._groups = groups
         self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
 
     def _updateGroups(self):
-        """Mise à jour des informations de group/associationdu node """
+        """Update all group/association informations of node."""
         groups = list()
         for i in range(1, self._manager.getNumGroups(self._homeId, self._nodeId) + 1):
             mbrs = self._manager.getAssociations(self._homeId, self._nodeId, i)
@@ -577,16 +589,15 @@ class ZWaveNode:
                 ))
         del(self._groups[:])
         self._groups = groups
-        self.log.debug(u'Node [%d] groups are: %s', self._nodeId, self._groups)
+        self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
 
     def _updateConfig(self):
         if not self._sleeping :
             self.log.debug(u"Requesting config params for node {0}".format(self._nodeId))
             self._manager.requestAllConfigParams(self._homeId, self._nodeId)
-            self._isConfigured = True
         else :
             self.log.debug(u"Node {0} is sleeping can't request config params.".format(self._nodeId))
-        self._configAsk = True
+        self._requestConfig = True # Flag set to False to unlock update all config value at once."
 
     def updateNode(self):
         """Mise à jour de toutes les caractéristiques du node"""
@@ -667,7 +678,7 @@ class ZWaveNode:
 
     def runTimer(self, *args,  **kwargs):
         """Attends wait secondes avant de lancer la requette (callback) sur le reseaux zwave."""
-        self._ozwmanager._stop.wait(kwargs['wait'])
+        self.stop.wait(kwargs['wait'])
         callback = kwargs['callback']
         if args : callback(args)
         else : callback()
@@ -712,6 +723,37 @@ class ZWaveNode:
                 if vdic and vdic.has_key('type') and vdic['type'] == 'Bool' and vdic.has_key('value'):
                     return vdic['value'] == 'True'
         return False
+
+    def _getAlarms(self):
+        """Return value for all command class alarm family"""
+        values = self._getValuesForCommandClass(0x71)           # COMMAND_CLASS_ALARM
+        values.extend(self._getValuesForCommandClass(0x9C))  # COMMAND_CLASS_SENSOR_ALARM
+        return values
+
+    def handleAlarmStep(self, valueStep):
+        """Handle step by step alarm value ozw notification"""
+        self._timerAlarm = time.time()
+        if self._alarmSteps or self._timerAlarm + 2 > time.time() :
+            # 2 sec should be enough to receive all ozw alarm notifications
+            self._alarmSteps.append(valueStep)
+        else :
+            self._alarmSteps = [valueStep]
+            threading.Thread(None,
+                                   self._threadingAlarm,
+                                   "{0}-AlarmStep".format(self.refName),
+                                   (),
+                                   {}).start()
+
+    def _threadingAlarm(self):
+        self._timerAlarm = time.time()
+        while self._timerAlarm + 2 < time.time() and  not self.stop.isSet():
+            time.sleep(.1)
+        if self._alarmSteps :
+            sensor_msg = self._alarmSteps[-1].getAlarmSensorMsg()
+            self._alarmSteps = []
+            if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
+
+
 
     def getValuesForCommandClass(self, commandClass) :
         """Retourne les Values correspondant à la commandeClass"""
@@ -838,7 +880,7 @@ class ZWaveNode:
             retourne un message d'erreur si test en cours."""
         if not self._thTest :
             tparams = {'countMsg': count,  'timeOut': timeOut, 'allReport' : allReport, 'single' : single}
-            self._thTest = TestNetworkNode(self, tparams,  self._ozwmanager._stop,  self.log)
+            self._thTest = TestNetworkNode(self, tparams,  self.stop,  self.log)
             self._thTest.start()
             return {'error': ''}
         else :
@@ -946,7 +988,6 @@ class ZWaveNode:
             retval = False
             self.log.debug('Not remove value unknown node with homeId %0.8x, nodeId %d, valueId %s', self.homeId, self.nodeId, valueId)
         return retval
-
 
     def getValue(self, valueId):
         """Renvoi la valueNode valueId du node."""
