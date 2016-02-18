@@ -126,7 +126,6 @@ FlagDebug = False # pour debug eviter recurtion +2, passé a True pour debug
 # Juste à rajouter ici la déclaration pour future extension.
 NamedPair = namedtuple('NamedPair', ['id', 'name'])
 NodeInfo = namedtuple('NodeInfo', ['generic', 'basic', 'specific', 'security', 'version'])
-GroupInfo = namedtuple('GroupInfo', ['index', 'label', 'maxAssociations', 'members'])
 
 # Status des membres d'un group d'association pour gestion des mises à jour des nodes sleeping
 MemberGrpStatus = {  0: 'unknown',

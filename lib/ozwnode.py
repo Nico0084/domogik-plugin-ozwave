@@ -258,25 +258,6 @@ class ZWaveNode:
             except :
                 print(u"Error while reporting to UI : {0}".format(traceback.format_exc()))
 
-    def _getGroupsDict(self):
-        """Retourne les définitions de groups sous forme de dict"""
-        grps = []
-        print(u'Get groups dict')
-        for grp in self.groups :
-            group = {}
-            group['index'] = grp.index
-            group['label'] = grp.label
-            group['maxAssociations'] = grp.maxAssociations
-            group['members'] = []
-            for m in grp.members:
-                mbr = {}
-                mbr['id'] = m
-                mbr['status'] = grp.members[m]
-                group['members'].append(mbr)
-            grps.append(group)
-        print (grps)
-        return grps
-
     def _getProductName(self):
         """Retourne le nom du produit ou son id ou Undefined"""
         if self._product :
@@ -553,25 +534,27 @@ class ZWaveNode:
 
     def updateGroup(self, groupIdx):
         """Update a group/association informations of node."""
-        groups = list()
+        group = None
         for grp in self._groups :
-            if grp.index == groupIdx :
-                mbrs = self._manager.getAssociations(self._homeId, self._nodeId, groupIdx)
-                dmembers = {};
-                for m in mbrs :
-                    dmembers[m] = MemberGrpStatus[1]
-                print(u"Update group before : {0}".format(grp))
-                grp = (GroupInfo(
-                    index = groupIdx,
-                    label = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx),
-                    maxAssociations = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx),
-                    members = dmembers
-                    ))
-                print(u"Update group after : {0}".format(grp))
-            groups.append(grp)
-        del(self._groups[:])
-        self._groups = groups
+            if grp['index'] == groupIdx :
+                group = grp
+                break;
+        if group is None :
+            group = {'index': groupIdx, 'label': "", 'maxAssociations' : 1, 'members': []}
+            self._groups.append(group)
+            self.log.debug(u'Node {0} Create new group index {0}'.format(groupIdx))
+        mbrs = self._manager.getAssociations(self._homeId, self._nodeId, groupIdx)
+        dmembers = {};
+        for m in mbrs :
+            dmembers[m] = MemberGrpStatus[1]
+        print(u"Update group before : {0}".format(group))
+        group['label'] = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx)
+        group['maxAssociations'] = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx)
+        group['members'] = dmembers
+        print(u"Update group after : {0}".format(group))
         self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
+        self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Groups association updated.',
+                               'data': {'state':  'GrpsAssociation', 'Groups': self._groups}})
 
     def _updateGroups(self):
         """Update all group/association informations of node."""
@@ -581,12 +564,12 @@ class ZWaveNode:
             dmembers = {};
             for m in mbrs :
                 dmembers[m] = MemberGrpStatus[1]
-            groups.append(GroupInfo(
-                index = i,
-                label = self._manager.getGroupLabel(self._homeId, self._nodeId, i),
-                maxAssociations = self._manager.getMaxAssociations(self._homeId, self._nodeId, i),
-                members = dmembers
-                ))
+            groups.append({
+                'index': i,
+                'label': self._manager.getGroupLabel(self._homeId, self._nodeId, i),
+                'maxAssociations': self._manager.getMaxAssociations(self._homeId, self._nodeId, i),
+                'members': dmembers
+                })
         del(self._groups[:])
         self._groups = groups
         self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
@@ -753,8 +736,6 @@ class ZWaveNode:
             self._alarmSteps = []
             if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
 
-
-
     def getValuesForCommandClass(self, commandClass) :
         """Retourne les Values correspondant à la commandeClass"""
         classId = PyManager.COMMAND_CLASS_DESC.keys()[PyManager.COMMAND_CLASS_DESC.values().index(commandClass)]
@@ -779,7 +760,7 @@ class ZWaveNode:
         retval["Type"] = self.productType
         retval["Last update"] = time.ctime(self.lastUpdate)
         retval["Neighbors"] =  list(self.neighbors) if  self.neighbors else 'No one'
-        retval["Groups"] = self._getGroupsDict()
+        retval["Groups"] = self._groups
         retval["Capabilities"] = list(self._capabilities) if  self._capabilities else list(['No one'])
         retval["InitState"] = self.GetNodeStateNW()
         retval["Stage"] = self.GetCurrentQueryStage()
@@ -998,47 +979,45 @@ class ZWaveNode:
             raise OZwaveNodeException('Value get received before creation (homeId %.8x, nodeId %d, valueid %d)' % (self.homeId, self.nodeId,  valueId))
         return retval
 
-    def setMembersGrps(self,  newGroups):
+    def setMembersGrps(self, newGroups):
         """Envoie les changement des associations de nodes dans les groups d'association."""
-       # groups = self._getGroupsDict()
-        groups = self.groups
         print (u'set members association : {0}'.format(newGroups))
-        print (u'Groups actuel : {0}'.format(groups))
+        print (u'Groups actuel : {0}'.format(self._groups))
         for gn in newGroups :
             print(u"")
             print(gn)
-            for grp in groups :
-                print (grp.index)
-                if gn['idx'] == grp.index :
+            for grp in self._groups :
+                print (grp['index'])
+                if gn['idx'] == grp['index'] :
                     for mn in gn['mbs']:
                         toAdd = True
-                        for m in grp.members:
+                        for m in grp['members']:
                             if mn['id'] == m :
-                                mn['status'] = grp.members[m]
+                                mn['status'] = grp['members'][m]
                                 toAdd = False
                                 break
                         if toAdd : #TODO: vérifier que le status est bien to update
-                            self.addAssociation(grp.index, mn['id'])
+                            self.addAssociation(grp['index'], mn['id'])
                             mn['status'] = MemberGrpStatus[2]
-                            grp.members[mn['id']] = MemberGrpStatus[2]
+                            grp['members'][mn['id']] = MemberGrpStatus[2]
                     break
         print (u'set members association add members result : {0}'.format(newGroups))
-        for grp in groups :
+        for grp in self._groups :
             for gn in newGroups :
                 if grp.index == gn['idx'] :
-                    for m in grp.members:
+                    for m in grp['members']:
                         toRemove = True
                         for mn in gn['mbs']:
                             if m == mn['id']:
                                 print ('members not remove: '),  m
-                                mn['status'] =  grp.members[m]
+                                mn['status'] =  grp['members'][m]
                                 toRemove = False
                                 break
                         if toRemove : #TODO: vérifier que le status est bien to update
                             print (u'members remove : {0}'.format(m))
-                            self.removeAssociation(grp.index, m)
+                            self.removeAssociation(grp['index'], m)
                             mn['status'] = MemberGrpStatus[2]
-                            grp.members[m] = MemberGrpStatus[2]
+                            grp['members'][m] = MemberGrpStatus[2]
                     break
         print (u'set members association remove members result : {0}'.format(newGroups))
         return newGroups

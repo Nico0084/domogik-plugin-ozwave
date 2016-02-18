@@ -112,6 +112,21 @@
                                             };
                                         };
                                         break;
+                                    case "GrpsAssociation" :
+                                        var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                        var cell = GetNodeCell(table, data.content.NodeID, 7);
+                                        if (cell) {
+                                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                            nodeData['Groups'] = data.content.data.Groups;
+                                            RefreshDataNode(nodeData);
+                                            cell.data(data.content.NetworkID+"."+data.content.NodeID).draw('page');  // set data required to force draw
+                                            HighlightCell(cell.node());
+                                        } else {
+                                            if (table) {  // Adding node in dataTable.
+                                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                            };
+                                        };
+                                        break;
                                 };
                                 break;
                             case 'init-process' :
