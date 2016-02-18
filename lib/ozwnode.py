@@ -1004,7 +1004,7 @@ class ZWaveNode:
         print (u'set members association add members result : {0}'.format(newGroups))
         for grp in self._groups :
             for gn in newGroups :
-                if grp.index == gn['idx'] :
+                if grp['index'] == gn['idx'] :
                     for m in grp['members']:
                         toRemove = True
                         for mn in gn['mbs']:
