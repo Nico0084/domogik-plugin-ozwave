@@ -1079,8 +1079,9 @@ class OZWavemanager():
         if node :
             ctrl = self.isNodeDeviceCtrl(node)
             if ctrl : self.removeDeviceCtrl(ctrl)
+            self._plugin.publishMsg('ozwave.ctrl.report',{'NetworkID': node.networkID, 'NodeID': node.nodeId, 'type': 'node-removed',
+                                                                          'usermsg' : 'Node {0} is exclude from zwave network'.format(node.refName)})
             self._nodes.pop(self.refNode(node.homeId, node.nodeId))
-      #      node.__del__()
             self._log.info (u"Node {0} is removed (homeId {1})".format(args['nodeId'], self.matchHomeID(args['homeId'])))
         else :
             self._log.debug ("Node {0} unknown, isn't removed (homeId {1)".format(args['nodeId'], self.matchHomeID(args['homeId'])))

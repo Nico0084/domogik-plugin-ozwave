@@ -54,6 +54,22 @@ function RefreshDataNode(dataNode, Kbuild) {
     return nodesData[idx];
 };
 
+function RemoveDataNode(dataNode) {
+    var idx = -1;
+    for (var i = 0; i < nodesData.length; i++) {
+        if (nodesData[i].NodeID == dataNode.NodeID) {
+            idx = i;
+            break;
+        };
+    };
+    if (idx != -1) {
+       // if (nodesData[idx].ktcNode) {
+       //     nodesData[idx].ktcNode.remove();
+       //     };
+        nodesData.splice(idx, 1);
+    };
+};
+
 function RefreshValuesNodeData(NetworkID, NodeID, Values) {
     for (var i=0; i < nodesData.length; i++) {
         if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {

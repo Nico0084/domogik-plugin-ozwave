@@ -143,6 +143,22 @@
                                 };
                                 requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
                                 break;
+                            case 'node-removed' :
+                                var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                                var cell = GetNodeCell(table, data.content.NodeID, 0);
+                                var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                                RemoveDataNode(nodeData);
+                                if (cell) {
+                                    var row = table.row(cell.index().row);
+                                    row.remove().draw;
+                                };
+                                new PNotify({
+                                            type: 'success',
+                                            title: 'Exclusion.',
+                                            text: data.content.usermsg,
+                                            delay: 4000
+                                    });
+                                break;
                             case 'value-changed' :
                                 var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
                                 if (nodeData.Values != undefined) {
