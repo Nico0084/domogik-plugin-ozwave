@@ -992,33 +992,33 @@ class ZWaveNode:
                     for mn in gn['mbs']:
                         toAdd = True
                         for m in grp['members']:
-                            if mn['id'] == m :
-                                mn['status'] = grp['members'][m]
+                            if mn['id'] == m['id'] :
+                                mn['status'] = m['status']
                                 toAdd = False
                                 break
                         if toAdd : #TODO: vérifier que le status est bien to update
                             self.addAssociation(grp['index'], mn['id'])
                             mn['status'] = MemberGrpStatus[2]
-                            grp['members'][mn['id']] = MemberGrpStatus[2]
-                    break
+                            grp['members'].append(mn)
         print (u'set members association add members result : {0}'.format(newGroups))
         for grp in self._groups :
             for gn in newGroups :
                 if grp['index'] == gn['idx'] :
+                    removeM = []
                     for m in grp['members']:
                         toRemove = True
                         for mn in gn['mbs']:
-                            if m == mn['id']:
-                                print ('members not remove: '),  m
-                                mn['status'] =  grp['members'][m]
+                            if m['id'] == mn['id']:
+                                print ('members not remove: '), m
+                                mn['status'] =  m['id']
                                 toRemove = False
                                 break
                         if toRemove : #TODO: vérifier que le status est bien to update
                             print (u'members remove : {0}'.format(m))
-                            self.removeAssociation(grp['index'], m)
+                            self.removeAssociation(grp['index'], m['id]'])
                             mn['status'] = MemberGrpStatus[2]
-                            grp['members'][m] = MemberGrpStatus[2]
-                    break
+                            removeM.append(m)
+                    for m in removeM : grp['members'].remove(m)
         print (u'set members association remove members result : {0}'.format(newGroups))
         return newGroups
 
