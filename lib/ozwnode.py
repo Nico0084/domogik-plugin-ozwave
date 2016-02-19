@@ -544,9 +544,9 @@ class ZWaveNode:
             self._groups.append(group)
             self.log.debug(u'Node {0} Create new group index {0}'.format(groupIdx))
         mbrs = self._manager.getAssociations(self._homeId, self._nodeId, groupIdx)
-        dmembers = {};
+        dmembers = [];
         for m in mbrs :
-            dmembers[m] = MemberGrpStatus[1]
+            dmembers.append({'id': m, 'status': MemberGrpStatus[1]})
         print(u"Update group before : {0}".format(group))
         group['label'] = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx)
         group['maxAssociations'] = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx)
@@ -561,9 +561,9 @@ class ZWaveNode:
         groups = list()
         for i in range(1, self._manager.getNumGroups(self._homeId, self._nodeId) + 1):
             mbrs = self._manager.getAssociations(self._homeId, self._nodeId, i)
-            dmembers = {};
+            dmembers = [];
             for m in mbrs :
-                dmembers[m] = MemberGrpStatus[1]
+                dmembers.append({'id': m, 'status': MemberGrpStatus[1]})
             groups.append({
                 'index': i,
                 'label': self._manager.getGroupLabel(self._homeId, self._nodeId, i),
