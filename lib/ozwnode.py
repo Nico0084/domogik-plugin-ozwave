@@ -1011,13 +1011,11 @@ class ZWaveNode:
                         toRemove = True
                         for mn in gn['mbs']:
                             if m['id'] == mn['id']:
-                                mn['status'] =  m['id']
                                 toRemove = False
                                 print (u"members not remove: ".format(m))
                                 break
                         if toRemove : #TODO: vérifier que le status est bien to update
                             self.removeAssociation(grp['index'], m['id'])
-                            mn['status'] = MemberGrpStatus[2]
                             removeM.append(m)
                             print (u'members remove : {0}'.format(m))
                     for m in removeM : grp['members'].remove(m)
