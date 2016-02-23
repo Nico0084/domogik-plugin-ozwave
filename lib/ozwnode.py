@@ -731,25 +731,25 @@ class ZWaveNode:
     def _threadingAlarm(self, *args, **kwargs):
         timeOut = time.time() + 10
         alarmSourceNodeId = None
-        nbStep = len(kwargs['vAlarms'])
+        nbStep = 2 # version 1
         self.log.debug(u"Node {0} starting alarm report on {1} step".format(self.refName, nbStep))
         for value in kwargs['vAlarms'] :
             if value.valueData['index'] == 0 : alarmType = value
             elif value.valueData['index'] == 1 : alarmLevel = value
-            elif value.valueData['index'] == 2 : alarmSourceNodeId = value
-            else: alarmReport = value
-        if alarmSourceNodeId is None : alarmReport = alarmType  # Handle version alarm version 1
+            elif value.valueData['index'] == 2 :
+                nbStep = 4  # version 2
+                alarmSourceNodeId = value
         while not self.stop.isSet() and timeOut < time.time() and len(self._alarmSteps) != nbStep:
             time.sleep(.1)
         if len(self._alarmSteps) == nbStep :
             self.log.debug(u"Node {0} all alarm report step required".format(self.refName))
             if alarmLevel.valuData['value'] == 0 :
                 self.log.debug(u"Node {0} alarm report level at 0".format(self.refName))
-            sensor_msg = alarmReport.getAlarmSensorMsg()
-            self._alarmSteps = []
+            sensor_msg = self._alarmSteps[-1].getAlarmSensorMsg()
             if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
         else :
             self.log.warning(u"Node {0} alarm reporting stopped by timeout or plugin stopped".format(self.refName))
+        self._alarmSteps = []
 
 
     def getValuesForCommandClass(self, commandClass) :
