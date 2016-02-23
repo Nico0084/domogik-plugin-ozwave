@@ -96,26 +96,28 @@ function RefreshValueNodeData(NetworkID, NodeID, value) {
 function RefreshGroupsNodeData(NetworkID, NodeID, groups) {
     for (var i=0; i < nodesData.length; i++) {
         if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
-            if (groups[0].index != undefined) {
-                nodesData[i].Groups = groups;
-            } else {
-                var exist = false;
-                for (var g=0; g <groups.length; g++) {
-                    exist = false;
-                    for (var grp=0; grp<nodesData[i].Groups.length; grp++) {
-                        if (nodesData[i].Groups[grp].index == groups[g].idx) {
-                            nodesData[i].Groups[grp].members = groups[g].mbs;
-                            exist = true;
-                            break;
+            if (groups) {
+                if (groups[0].idx != undefined) {
+                    nodesData[i].Groups = groups;
+                } else {
+                    var exist = false;
+                    for (var g=0; g <groups.length; g++) {
+                        exist = false;
+                        for (var grp=0; grp<nodesData[i].Groups.length; grp++) {
+                            if (nodesData[i].Groups[grp].idx == groups[g].idx) {
+                                nodesData[i].Groups[grp].members = groups[g].mbs;
+                                exist = true;
+                                break;
+                            };
                         };
-                    };
-                    if (!exist) {
-                        new PNotify({
-                            type: 'error',
-                            title: 'Corrupted group association data .',
-                            text: 'For node ' + nodesData[i].NetworkID + "." + nodesData[i].NodeID + " groups index " + groups[g].idx + " not exist !",
-                            delay: 6000
-                        });
+                        if (!exist) {
+                            new PNotify({
+                                type: 'error',
+                                title: 'Corrupted group association data .',
+                                text: 'For node ' + nodesData[i].NetworkID + "." + nodesData[i].NodeID + " groups index " + groups[g].idx + " not exist !",
+                                delay: 6000
+                            });
+                        };
                     };
                 };
             };

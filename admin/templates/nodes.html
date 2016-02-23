@@ -27,7 +27,7 @@
                                 <td>{{ node.Type }}</td>
                                 <td>{{ node["Last update"] }}</td>
                                 <td>Actions...</td>
-                            </tr> 
+                            </tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -118,7 +118,7 @@
                             case "monitornode" :
                                 if (!nodeData.Monitored) {
                                     action ='StartMonitorNode';
-                                } else { 
+                                } else {
                                     action ='StopMonitorNode';
                                 };
                                 sendRequest("ozwave.node.action", {"action": action, "networkId": NetworkID, "nodeId": NodeID}, function(data, result) {
@@ -168,11 +168,11 @@
                                                 "</div>",
                                     data: nodeData,
                                     buttons: [{
-                                        id: 'btn-cancel',   
+                                        id: 'btn-cancel',
                                         label: 'Cancel',
-                                        className: 'btn-danger', 
+                                        className: 'btn-danger',
                                         autospin: false,
-                                        callback: function(dialogRef){    
+                                        callback: function(dialogRef){
                                             console.log("Cancel refresh Node : " + NetworkID+ "." + NodeID);
                                         }
                                     }]
@@ -249,15 +249,16 @@
                                                 "</div>",
                                     data: nodeData,
                                     buttons: [{
-                                        id: 'btn-cancel',   
+                                        id: 'btn-cancel',
                                         label: 'Quit',
-                                        className: 'btn-danger', 
+                                        className: 'btn-danger',
                                         autospin: false,
-                                        callback: function(dialogRef){    
+                                        callback: function(dialogRef){
                                             console.log("Exit edit association.");
+                                            ws.onmessage = ws_onmessage_diaggrp;
                                         }
                                     },{
-                                        id: 'btn-sendchange',   
+                                        id: 'btn-sendchange',
                                         label: 'Send modification',
                                         className: 'btn-primary',
                                         autospin: false,
@@ -294,12 +295,32 @@
                                             });
                                             return false;
                                         }
-                                    }]
+                                    }],
+                                    onEscape: function() {
+                                        console.log("Exit by escape.");
+                                        ws.onmessage = ws_onmessage_diaggrp;
+                                    },
                                 });
                                 bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeData);
                                 bdiag.getnewgroups = function () {
                                     var newgrps =  GetNewGroups(this.stageGrps, nodeData);
                                     return newgrps;
+                                };
+                                var ws_onmessage_diaggrp = ws.onmessage;
+                                ws.onmessage = function(e) {
+                                    ws_onmessage_diaggrp(e);
+                                    var data = JSON.parse(e.data);
+                                    if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
+                                        nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
+                                        RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
+                                        console.log('Yes capture msg :=)')
+                                        new PNotify({
+                                                        type: 'success',
+                                                        title: 'Set group association',
+                                                        text: 'Association modification confirmed by node.',
+                                                        delay: 4000
+                                                    });
+                                    };
                                 };
                                 bdiag.modal('show');
                                 break;
