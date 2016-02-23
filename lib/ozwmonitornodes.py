@@ -84,8 +84,11 @@ class ManageMonitorNodes(threading.Thread):
         while not self._stop.isSet() and self._running :
             if self.__reports :
                 report = self.__reports.popleft()
+                idNetwork = 0
+                if 'homeId' in report : idNetwork =  report['homeId']
+                elif 'networkId' in report : idNetwork =  report['networkId']
                 try :
-                    self.logNode(report['date'], report['type'], report['homeId'], report['nodeId'], report['datas'])
+                    self.logNode(report['date'], report['type'], idNetwork, report['nodeId'], report['datas'])
                 except:
                     self._pluginLog.warning(u"Monitor node bad report : {0}".format(report))
             else : self._stop.wait(0.01)
@@ -109,22 +112,23 @@ class ManageMonitorNodes(threading.Thread):
     def mq_report(self, device, dmgId):
         """Callback from MQ message"""
         if device is not None :
+            homeId = self._ozwManager.getHomeID(device['networkid'])
             if 'node' in device :
-                if self.isMonitored(self._ozwManager.getHomeID(device['networkid']), device['node']) :
+                if self.isMonitored(homeId, device['node']) :
                     if 'instance' in device :
                         self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                                'networkid': device['networkid'],
+                                'homeId': homeId,
                                 'nodeId': device['node'],
                                 'instance': device['instance'],
                                 'domogik DB' : str(dmgId)})
                     else:
                         self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                                'networkid': device['networkid'],
+                                'homeId': homeId,
                                 'nodeId': device['node'],
                                 'domogik DB' : str(dmgId)})
             else :
                 self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                    'networkid': device['networkid'],
+                    'homeId': homeId,
                     'domogik DB' : str(dmgId)})
         else :
             self._pluginLog.warning(u"Can't do MQ report, domogik device controler of networkid unknown : {0} ".format(device))
