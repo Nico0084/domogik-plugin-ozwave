@@ -742,9 +742,7 @@ class ZWaveNode:
                 nbStep = 4  # version 2
                 alarmSourceNodeId = value
         self.log.debug(u"Node {0} starting alarm report on {1} step".format(self.refName, nbStep))
-        print (u"{0}, {1}, {2}".format(not self.stop.isSet(), timeOut <= time.time(), len(self._alarmSteps) != nbStep))
-        while (not self.stop.isSet()) and (timeOut <= time.time()) and (len(self._alarmSteps) != nbStep) :
-            print (u"     ---  waiting, {0}".format(self._alarmSteps))
+        while (not self.stop.isSet()) and (timeOut > time.time()) and (len(self._alarmSteps) != nbStep) :
             time.sleep(.1)
         if len(self._alarmSteps) == nbStep :
             self.log.debug(u"Node {0} all alarm report step required".format(self.refName))
