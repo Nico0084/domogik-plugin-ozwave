@@ -719,7 +719,7 @@ class ZWaveNode:
 
     def handleAlarmStep(self, valueStep):
         """Handle step by step alarm value ozw notification"""
-        if not self._alarmRunning :
+        if self._alarmRunning :
             self.log.debug(u"Node {0} alarm report new step : {1}".format(self.refName, valueStep.valueData['label']))
             self._alarmSteps.append(valueStep)
         else :
