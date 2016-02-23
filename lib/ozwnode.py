@@ -101,7 +101,6 @@ class ZWaveNode:
         self._newDeviceTypes = {}
         self._dmgDevices = []
         self._alarmSteps = []
-        self._timerAlarm = 0
 
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
@@ -659,7 +658,7 @@ class ZWaveNode:
         timerWait = threading.Thread(None, self.runTimer, "th_node-timer-request", args, kwargs)
         timerWait.start()
 
-    def runTimer(self, *args,  **kwargs):
+    def runTimer(self, *args, **kwargs):
         """Attends wait secondes avant de lancer la requette (callback) sur le reseaux zwave."""
         self.stop.wait(kwargs['wait'])
         callback = kwargs['callback']
@@ -707,17 +706,19 @@ class ZWaveNode:
                     return vdic['value'] == 'True'
         return False
 
-    def _getAlarms(self):
+    def _getAlarms(self, instance = 1):
         """Return value for all command class alarm family"""
-        values = self._getValuesForCommandClass(0x71)           # COMMAND_CLASS_ALARM
+        values = self._getValuesForCommandClass(0x71)        # COMMAND_CLASS_ALARM
         values.extend(self._getValuesForCommandClass(0x9C))  # COMMAND_CLASS_SENSOR_ALARM
-        return values
+        retVal = list()
+        for value in values :
+            if value.valueData['instance'] == instance : retVal.append(value)
+        return retVal
 
     def handleAlarmStep(self, valueStep):
         """Handle step by step alarm value ozw notification"""
-        self._timerAlarm = time.time()
-        if self._alarmSteps or self._timerAlarm + 2 > time.time() :
-            # 2 sec should be enough to receive all ozw alarm notifications
+        if self._alarmSteps :
+            self.log.debug(u"Node {0} alarm report new step {1}".format(self.refName, valueStep.valueData['label']))
             self._alarmSteps.append(valueStep)
         else :
             self._alarmSteps = [valueStep]
@@ -725,16 +726,31 @@ class ZWaveNode:
                                    self._threadingAlarm,
                                    "{0}-AlarmStep".format(self.refName),
                                    (),
-                                   {}).start()
+                                   {'vAlarms': self._getAlarms(valueStep.valueData['instance'])}).start()
 
-    def _threadingAlarm(self):
-        self._timerAlarm = time.time()
-        while self._timerAlarm + 2 < time.time() and  not self.stop.isSet():
+    def _threadingAlarm(self, *args, **kwargs):
+        timeOut = time.time() + 10
+        alarmSourceNodeId = None
+        nbStep = len(kwargs['vAlarms'])
+        self.log.debug(u"Node {0} starting alarm report on {1} step".format(self.refName), nbStep)
+        for value in kwargs['vAlarms'] :
+            if value.valueData['index'] == 0 : alarmType = value
+            elif value.valueData['index'] == 1 : alarmLevel = value
+            elif value.valueData['index'] == 2 : alarmSourceNodeId = value
+            else: alarmReport = value
+        if alarmSourceNodeId is None : alarmReport = alarmType  # Handle version alarm version 1
+        while not self.stop.isSet() and timeOut < time.time() and len(self._alarmSteps) != nbStep:
             time.sleep(.1)
-        if self._alarmSteps :
-            sensor_msg = self._alarmSteps[-1].getAlarmSensorMsg()
+        if len(self._alarmSteps) == nbStep :
+            self.log.debug(u"Node {0} all alarm report step required".format(self.refName))
+            if alarmLevel.valuData['value'] == 0 :
+                self.log.debug(u"Node {0} alarm report level at 0".format(self.refName))
+            sensor_msg = alarmReport.getAlarmSensorMsg()
             self._alarmSteps = []
             if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
+        else :
+            self.log.warning(u"Node {0} alarm reporting stopped by timeout or plugin stopped".format(self.refName))
+
 
     def getValuesForCommandClass(self, commandClass) :
         """Retourne les Values correspondant à la commandeClass"""

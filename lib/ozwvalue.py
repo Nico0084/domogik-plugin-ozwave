@@ -526,6 +526,9 @@ class ZWaveValueNode:
         # TODO: Traiter le formattage en fonction du type de message à envoyer à domogik rajouter ici le traitement pour chaque command_class
         # Ne pas modifier celles qui fonctionnent mais rajouter. la fusion ce fera après implémentation des toutes les command-class.
         sensorMsg = None
+        if self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
+            self._node.handleAlarmStep(self)
+            return None
         deviceParam =  self.getDmgDeviceParam()
         if deviceParam is not None :
             dmgSensor = self.getDmgSensor(deviceParam['label'])
@@ -572,10 +575,9 @@ class ZWaveValueNode:
                             value = self._valueData['value']
                         sensorMsg ['data'] = {'type' : self.labelDomogik,  'current' : value}
                         if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
-                    elif self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
-                        self._node.handleAlarmStep(self)
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
-                        self._node.handleAlarmStep(self)
+                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0} # gestion du sensor binary pour widget binary
+#                        self._node.handleAlarmStep(self)
                     else : sensorMsg = None
                 if sensorMsg is not None : self.log.debug(u"Sensor value to Dmg device : {0}".format(sensorMsg))
             else : self.log.debug(u"No sensor find for device {0} - {1}".format(deviceParam, self.labelDomogik))
