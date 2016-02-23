@@ -723,6 +723,7 @@ class ZWaveNode:
             self.log.debug(u"Node {0} alarm report new step : {1}".format(self.refName, valueStep.valueData['label']))
             self._alarmSteps.append(valueStep)
         else :
+            self._alarmRunning = True
             self._alarmSteps = [valueStep]
             threading.Thread(None,
                                    self._threadingAlarm,
@@ -731,7 +732,6 @@ class ZWaveNode:
                                    {'vAlarms': self._getAlarms(valueStep.valueData['instance'])}).start()
 
     def _threadingAlarm(self, *args, **kwargs):
-        self._alarmRunning = True
         timeOut = time.time() + 10
         alarmSourceNodeId = None
         nbStep = 2 # version 1
