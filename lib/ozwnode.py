@@ -746,7 +746,7 @@ class ZWaveNode:
             time.sleep(.1)
         if len(self._alarmSteps) == nbStep :
             self.log.debug(u"Node {0} all alarm report step required".format(self.refName))
-            if alarmLevel.valuData['value'] == 0 :
+            if alarmLevel.valueData['value'] == 0 :
                 self.log.debug(u"Node {0} alarm report level at 0".format(self.refName))
             sensor_msg = self._alarmSteps[-1].getAlarmSensorMsg()
             if sensor_msg : self._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
