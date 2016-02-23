@@ -101,6 +101,8 @@ class ZWaveNode:
         self._newDeviceTypes = {}
         self._dmgDevices = []
         self._alarmSteps = []
+        self._alarmRunning = False
+
 
     # On accède aux attributs uniquement depuis les property
     # Chaque attribut est une propriétée qui est automatique à jour au besoin via le réseaux Zwave
@@ -717,7 +719,7 @@ class ZWaveNode:
 
     def handleAlarmStep(self, valueStep):
         """Handle step by step alarm value ozw notification"""
-        if self._alarmSteps != [] :
+        if not self._alarmRunning :
             self.log.debug(u"Node {0} alarm report new step : {1}".format(self.refName, valueStep.valueData['label']))
             self._alarmSteps.append(valueStep)
         else :
@@ -729,16 +731,17 @@ class ZWaveNode:
                                    {'vAlarms': self._getAlarms(valueStep.valueData['instance'])}).start()
 
     def _threadingAlarm(self, *args, **kwargs):
+        self._alarmRunning = True
         timeOut = time.time() + 10
         alarmSourceNodeId = None
         nbStep = 2 # version 1
-        self.log.debug(u"Node {0} starting alarm report on {1} step".format(self.refName, nbStep))
         for value in kwargs['vAlarms'] :
             if value.valueData['index'] == 0 : alarmType = value
             elif value.valueData['index'] == 1 : alarmLevel = value
             elif value.valueData['index'] == 2 :
                 nbStep = 4  # version 2
                 alarmSourceNodeId = value
+        self.log.debug(u"Node {0} starting alarm report on {1} step".format(self.refName, nbStep))
         while not self.stop.isSet() and timeOut < time.time() and len(self._alarmSteps) != nbStep:
             time.sleep(.1)
         if len(self._alarmSteps) == nbStep :
@@ -750,6 +753,7 @@ class ZWaveNode:
         else :
             self.log.warning(u"Node {0} alarm reporting stopped by timeout or plugin stopped".format(self.refName))
         self._alarmSteps = []
+        self._alarmRunning = False
 
 
     def getValuesForCommandClass(self, commandClass) :
