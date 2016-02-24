@@ -597,7 +597,7 @@ class ZWaveValueNode:
                         vConv = self._node._ozwmanager.getCmdClassLabelConversions('COMMAND_CLASS_ALARM', self.labelDomogik)
                         value = self._valueData['value']
                         for v, vc in vConv.iteritems() :
-                            if v == value :
+                            if int(v) == value :
                                 self.log.debug(u"COMMAND_CLASS_ALARM {0},converted value {1} to {2} for sensor {3}".format(self.labelDomogik, value, vc, dmgSensor[sensor]))
                                 value = vc
                                 break;
