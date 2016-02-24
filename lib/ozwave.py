@@ -271,8 +271,20 @@ class OZWavemanager():
             if dT == name : return self._dataTypes[dT]
         return {}
 
+    def getCmdClassLabelConversions(self, cmdClss, label):
+        """Load file lib/cmd_class_conversion.json and return possible values for a label of  commandclass."""
+        json_file = "{0}/cmd_class_conversion.json".format(self._plugin.get_lib_directory())
+        cmdClasses = json.load(open(json_file))
+        label = label.lower()
+        for cmdC, labels in cmdClasses.iteritems() :
+            if cmdC == cmdClss :
+                for l, values in labels.iteritems() :
+                    if l.lower() == label :
+                        return values
+        return {}
+
     def InitDomogikLabelAvailable(self):
-        # Add additionnal setpoint openzwave labels
+        # Add additionnal openzwave labels
         json_file = "{0}/linkedlabels.json".format(self._plugin.get_lib_directory())
         linkedLabels = json.load(open(json_file))
         self.linkedLabels = {}

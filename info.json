@@ -185,7 +185,7 @@
             "name" : "Power Applied",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Power_applied_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -199,7 +199,7 @@
             "name" : "Power failure",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -647,7 +647,7 @@
             "name" : "Tamper event",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "from_Tamper_Event_to_DT_OpenClose",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -671,11 +671,25 @@
                     "round_value": 0
             }
         },
+        "power-management-alarm" : {
+            "name" : "Power Management",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "smoke-alarm" : {
             "name" : "smoke",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -689,7 +703,7 @@
             "name" : "Carbonmonoxide",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -703,7 +717,7 @@
             "name" : "Carbondioxide",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -717,7 +731,7 @@
             "name" : "heat",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -731,7 +745,7 @@
             "name" : "flood",
             "incremental": false,
             "data_type" : "DT_Binary",
-            "conversion" : "from_Level_to_DT_Binary",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -1112,6 +1126,60 @@
             "name" : "Switch with power failure",
             "commands": ["switch"],
             "sensors": ["switch", "power-failure"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.power-failure_switch__switch" :{
+            "description" : "A simple switch with power failure detection",
+            "id": "ozwave.power-failure_switch__switch",
+            "name" : "Switch with power failure",
+            "commands": ["switch"],
+            "sensors": ["switch", "power-failure"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            }]
+        },
+        "ozwave.power-management_switch__switch" :{
+            "description" : "A simple switch with power management detection",
+            "id": "ozwave.power-management-alarm_switch__switch",
+            "name" : "Switch with power failure",
+            "commands": ["switch"],
+            "sensors": ["switch", "power-management-alarm"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,

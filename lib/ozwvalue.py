@@ -594,7 +594,14 @@ class ZWaveValueNode:
                 for sensor in dmgSensor :
                     sensorMsg = {'id': dmgSensor[sensor]['id'], 'data_type':  dmgSensor[sensor]['data_type'], 'device': deviceParam}
                     if self._valueData['commandClass'] == 'COMMAND_CLASS_ALARM' :
-                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
+                        vConv = self._node._ozwmanager.CmdClassLabelConversions('COMMAND_CLASS_ALARM', self.labelDomogik)
+                        value = self._valueData['value']
+                        for v, vc in vConv.iteritems() :
+                            if v == value :
+                                self.log.debug(u"COMMAND_CLASS_ALARM {0},converted value {1} to {2} for sensor {3}".format(self.labelDomogik, value, vc, dmgSensor[sensor]))
+                                value = vc
+                                break;
+                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current': value}
                         if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
                         sensorMsg ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0} # gestion du sensor binary pour widget binary
