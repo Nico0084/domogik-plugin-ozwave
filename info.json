@@ -19,7 +19,7 @@
             "name" : "HSM02 Mini Door-Window Detector",
             "documentation" : "http://www.everspring.com/Products/SecuritySystem/HSM02.aspx",
             "id" : "HSM02",
-            "type": "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event"
+            "type": "ozwave.alarm-str-report_battery-level_opening-sensor"
         }, {
             "name" : "ZME_KFOB 4 Button Key Fob",
             "id" : "ZME_KFOB",
