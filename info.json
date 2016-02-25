@@ -643,6 +643,20 @@
                     "round_value": 0
             }
         },
+        "alarm-str-report" : {
+            "name" : "Alarm report",
+            "incremental": false,
+            "data_type" : "DT_String",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": true,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "tamper-event" : {
             "name" : "Tamper event",
             "incremental": false,
@@ -1174,7 +1188,7 @@
                 "min_value": 1
             }]
         },
-        "ozwave.power-management_switch__switch" :{
+        "ozwave.power-management-alarm_switch__switch" :{
             "description" : "A simple switch with power management detection",
             "id": "ozwave.power-management-alarm_switch__switch",
             "name" : "Switch with power failure",
@@ -1233,12 +1247,12 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event" :{
-            "description" : "Opening sensor with tamper security (battery)",
-            "id": "ozwave.battery-level_low-battery_opening-sensor_power-applied_tamper-event",
-            "name" : "Sensor Opening/Power applied/Tamper (battery)",
+        "ozwave.alarm-str-report_battery-level_opening-sensor" :{
+            "description" : "Opening sensor with tamper,low battery and power applied alarm (battery)",
+            "id": "ozwave.alarm-str-report_battery-level_opening-sensor",
+            "name" : "Sensor Opening/Power applied/Tamper event(battery)",
             "commands": [],
-            "sensors": ["opening-sensor", "power-applied", "battery-level", "low-battery", "tamper-event"],
+            "sensors": ["opening-sensor", "battery-level", "alarm-str-report"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
