@@ -70,17 +70,11 @@
 			"1" : 1,
 			"254" : 0
 		},
-		"Tamper Event" : {
-			"0" : 0,
-			"17" : 1
-		},
-		"low battery":{
-			"0" : 0,
-			"255" : 1
-		},
-		"Power Applied":{
-			"0" : 0,
-			"2" : 1
+		"Alarm Level" : {
+			"0" : "No Alarm",
+			"2" : "Power Applied",
+			"17" : "Tamper Event",
+			"255" : "Low Battery"
 		}
 	}
 }

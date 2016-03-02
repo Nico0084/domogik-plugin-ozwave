@@ -644,7 +644,7 @@
             }
         },
         "alarm-str-report" : {
-            "name" : "Alarm report",
+            "name" : "Alarm Report",
             "incremental": false,
             "data_type" : "DT_String",
             "conversion" : "",
