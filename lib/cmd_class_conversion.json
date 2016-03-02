@@ -75,6 +75,12 @@
 			"2" : "Power Applied",
 			"17" : "Tamper Event",
 			"255" : "Low Battery"
+		},
+		"Alarm Report" : {
+			"0" : "No Alarm",
+			"2" : "Power Applied",
+			"17" : "Tamper Event",
+			"255" : "Low Battery"
 		}
 	}
 }
