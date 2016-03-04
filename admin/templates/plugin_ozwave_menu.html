@@ -276,13 +276,13 @@
                             $("#ozw-status").removeClass().addClass("label status-stopped");
                             $("#manager-status").removeClass().addClass("label status-stopped");
                             $("#manager-init").text("Stopped");
-                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped").attr("data-original-title","Controller not in line");
                             if (data.content['event'] == "starting"){$("[id^='ctrl-tab_']").text('To discover');};
                         } else {
                             $("#ozw-status").removeClass().addClass("label status-starting");
                             $("#manager-status").removeClass().addClass("label status-stopped");
                             $("#manager-init").text("Starting");
-                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped");
+                            $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped").attr("data-original-title","Controller starting");
                         };
                     };
                 };
@@ -294,7 +294,7 @@
                     switch (msgId[2]) {
                         case "state" :
                             if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                                $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("title",data.content.init);
+                                $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("data-original-title",data.content.init);
                                 $("#ctrl-tab_"+data.content.NetworkID).text(data.content.NetworkID + " - " + data.content.HomeID);
                                 if (data.content.HomeID != null) {
                                     updateBtSavedConf(data.content.NetworkID, data.content.saved);
@@ -364,17 +364,19 @@
                                  tabNew = "<li> <a data-toggle='tab' href='#" + data.content.Controllers[item].NetworkID +"' onclick=" +
                                         "'selectActiveNetwork(" + '"' + data.content.Controllers[item].NetworkID + '"' + ");return true;'" +
                                         "'> <h4 style='margin-top: 0px; margin-bottom: 0px;'> <span id='ctrl-tab_" + data.content.Controllers[item].NetworkID +
-                                        "' class='label status-" + data.content.Controllers[item].state + "' title='" + data.content.Controllers[item].init + "'>" +
+                                        "' class='label status-" + data.content.Controllers[item].state + "' data-toggle='tooltip' data-placement='bottom' title='" + data.content.Controllers[item].init + "'>" +
                                         data.content.Controllers[item].NetworkID + " - " + data.content.Controllers[item].HomeID + "</span>"+
                                         "<span id='saveconf_" + data.content.Controllers[item].NetworkID+"' class='btn btn-xs pull-right " + saveSt
                                  if (data.content.Controllers[item].HomeID == null) {tabNew += " hide" };
-                                   tabNew += "' title='Save openzwave network config'>" +
+                                   tabNew += "' data-toggle='tooltip' data-placement='bottom' title='Save openzwave network config'>" +
                                         "<span id='icsaveconf_" + data.content.Controllers[item].NetworkID+"' class='glyphicon "+ saveIc +"'></span> </span>" +
                                         "</h4> </a> </li>";
                                  $(tabNew).insertBefore("#debug-tab");
                                  tabNew = "<div class='tab-pane' id='" + data.content.Controllers[item].NetworkID + "'></div>";
                                  $(tabNew).insertBefore("#debug-pane");
                                  $('#ozwave-navbar a[href="#'+data.content.Controllers[item].NetworkID+'"]').tab('show');
+                                 $("#ctrl-tab_" + data.content.Controllers[item].NetworkID).tooltip();
+                                 $("#saveconf_" + data.content.Controllers[item].NetworkID).tooltip();
                                  selectActiveNetwork(data.content.Controllers[item].NetworkID);
                             };
                         };
