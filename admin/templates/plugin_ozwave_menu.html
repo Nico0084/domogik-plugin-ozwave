@@ -27,7 +27,7 @@
         </h4>
         <div class="panel panel-default center-block" id="detailOZWconfig" style="width: 95%; display: none;" hidden>
             <div class="row" style="margin:10px" >
-                <button class="btn btn-default center-block" id="refrechdevList" title="{% trans %}If you modify (create/remove/edit) domogik device, click to refresh plugin data.{% endtrans %}">
+                <button class="btn btn-default center-block" id="refrechdevList" data-toggle="tooltip" data-placement="bottom" title="{% trans %}If you modify (create/remove/edit) domogik device, click to refresh plugin data.{% endtrans %}">
                     <i class="fa fa-refresh" id="refrechdevList-ic"></i>
                     <span id="runctrl-text"> {% trans %}Refresh domogik device list{% endtrans %}</span>
                 </button>
@@ -82,10 +82,10 @@
             <li {% if network_active == network.NetworkID %}class="active"{% endif %}>
                 <a data-toggle="tab" href="#{{ network.NetworkID }}" onclick="selectActiveNetwork('{{ network.NetworkID }}');return true;">
                 <h4 style="margin-top: 0px; margin-bottom: 0px;">
-                    <span id="ctrl-tab_{{ network.NetworkID }}" class="label status-{{ network.state }}" title="{{ network.init }}">
+                    <span id="ctrl-tab_{{ network.NetworkID }}" class="label status-{{ network.state }}" data-toggle="tooltip" data-placement="bottom" title="{{ network.init }}">
                         {{ network.NetworkID }} - {{ network.HomeID }}
                     </span>
-                    <span id="saveconf_{{ network.NetworkID }}" class="btn btn-xs btn-info pull-right{% if network.HomeID == 'None' %} hide{% endif %}" title="Save openzwave network config">
+                    <span id="saveconf_{{ network.NetworkID }}" class="btn btn-xs btn-info pull-right{% if network.HomeID == 'None' %} hide{% endif %}" data-toggle="tooltip" data-placement="bottom" title="Save openzwave network config">
                         <span id="icsaveconf_{{ network.NetworkID }}" class="glyphicon glyphicon-floppy-saved"></span>
                     </span>
                </h4>
@@ -263,6 +263,9 @@
     $( document ).ready(function() {
         var ws_onmessage_menu = ws.onmessage;
         if (activeNetwork == "" || activeNetwork == "tools") {sidebarVisible('network-menu', false);};
+        $('[data-toggle="tooltip"]').tooltip({
+                    html:true
+                });
         ws.onmessage = function(e) {
             ws_onmessage_menu(e);
             var data = JSON.parse(e.data);

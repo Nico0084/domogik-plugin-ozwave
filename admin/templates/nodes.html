@@ -69,6 +69,13 @@
         "drawCallback": function(settings) {
             var api = this.api();
             var data = api.rows({page:'current'}).data()
+            $("[data-toggle = 'popover']").popover({
+                                html:true,
+                                trigger:'hover click'
+                            });
+            $('[data-toggle="tooltip"]').tooltip({
+                                html:true
+                            });
             $( "input[type='text'][datatype='node']").not("[isHandled]" ).each(function(rowN, nData) {
                 try {
                     var cell = api.cell(rowN, 0);

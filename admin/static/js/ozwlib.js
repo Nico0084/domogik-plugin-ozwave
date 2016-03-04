@@ -289,7 +289,8 @@ function renderInputText(refId, name, dtype, value, title, label) {
     if (label != undefined) {
         inputRender += '<label class="control-label vert-align" for="'+idInput+'">'+label+'</label>';
     }
-    inputRender += '<input type="text" id="'+ idInput +'" class="form-control input-sm" name="'+name+'" datatype="'+dtype+'" title="'+title+'" value="'+value+'">'+
+    inputRender += '<input type="text" id="'+ idInput +'" class="form-control input-sm" name="'+name+'" datatype="'+dtype+
+                            '" data-toggle="tooltip" data-placement="bottom" title="'+title+'" value="'+value+'">'+
                             '<span class="input-group-addon input-addon-xs"><span id="st_'+ idInput +'" class="btn btn-xs btn-info">' +
                                 '<span id="stic_'+ idInput +'" class="glyphicon glyphicon-floppy-saved"></span></span></span>' +
                         '</div>' +
@@ -461,35 +462,39 @@ function renderNodeStatusCol(data, type, full, meta) {
             } else if (nodeData.BatteryLevel >= 25) {st = 'fa-battery-quarter icon-success';
             } else if (nodeData.BatteryLevel >= 15) {st = 'fa-battery-quarter icon-warning';
             } else if (nodeData.BatteryLevel >= 5)  {st = 'fa-battery-empty icon-danger';};
-        bat = "<span id='battery" + nodeData.NodeID + "' class='fa btnspacing fa-rotate-270 " + st +"' title='Battery level " + nodeData.BatteryLevel + " %'></span>";
+        bat = "<span id='battery" + nodeData.NodeID + "' class='fa btnspacing fa-rotate-270 " + st +
+                "' data-toggle='tooltip' data-placement='right' title='Battery level<br>" + nodeData.BatteryLevel + " %'></span>";
         var bCheck = "";
         var tCheck =  "Check to request battery level at each awake.";
         if (nodeData.BatteryChecked) {
             bCheck = " checked";
             tCheck = "Battery level is requested at each awake.";
         };
-        bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck + " title='"+ tCheck + "'/>"
+        bat += "<input type='checkbox' class='medium' id='batcheck" + nodeRef + "' " + bCheck +
+                   " data-toggle='tooltip' data-placement='right' title='"+ tCheck + "'/>"
     };
     var devState = "";
-    var devTitle = "";
+    var devContent = "";
     var dmgDev = "";
     var knDev = "";
     var newDev = "";
     if (nodeData.DmgDevices.length != 0) {
         devState = "fa-check-circle icon-success";
-        devTitle = "Domogik device associated : \n";
+        devContent = '<div class="container-fluid">';
         for (nD in nodeData.DmgDevices) {
             var header = nodeData.DmgDevices[nD].name
             if (nodeData.DmgDevices[nD].parameters.instance != undefined) {
                 header += ", instance " + nodeData.DmgDevices[nD].parameters.instance.value;
             };
-            devTitle += header + " : " + JSON.stringify(nodeData.DmgDevices[nD], null, '\t') + "\n";
+            devContent += "<p><strong>"+ header + " :</strong><pre>"  + JSON.stringify(nodeData.DmgDevices[nD], null, 2) + "</pre></p>";
         };
+        devContent += "</div>";
         dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-check-circle icon-success extbtn'" +
-               " title='" + devTitle + "'></span>";
+                " data-toggle='popover' title='Domogik device associated'" +
+                " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
-        devTitle = "No domogik device associate. Create it with : \n";
+        devContent = '<div class="container-fluid">';
         var find = false;
         for (nD in nodeData.KnownDeviceTypes) {
             var insert = true;
@@ -511,32 +516,39 @@ function renderNodeStatusCol(data, type, full, meta) {
                 };
             };
             if (insert) {
-                devTitle += nD + " : " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, '\t') + "\n";
+                devContent += "<p><strong>"+ nD + " :</strong> " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, 2) + "</p>";
                 find = true;
             };
         };
+        devContent += "</div>";
         if (find) {
             knDev = "<span id='knowndevicetypes"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
-                    " title='" + devTitle + "'></span>";
+                    " data-toggle='popover' title='<h4>No domogik device associate.<br>Create it with device-type :</h4>'" +
+                    " data-container='body' data-content='" + devContent + "'></span>";
         };
     };
     if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
-        devTitle = "No domogik device type associate. Send a developper request to create it with : \n";
+        devContent = '<div class="container-fluid">';
         for (nD in nodeData.NewDeviceTypes) {
-            devTitle += nD + " : " + JSON.stringify(nodeData.NewDeviceTypes[nD], null, '\t') + "\n";
+            devContent += "<p><strong>"+ nD + " :</strong><pre>" + JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2) + "</pre></p>";
         };
+        devContent += "</div>";
         newDev = "<span id='newdevicetypes"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
-               " title='" + devTitle + "'></span>";
+                " data-toggle='popover' title='<h4>No domogik device type associate.<br>Send a developper request to create it with :</h4>'" +
+                " data-container='body' data-content='" + devContent + "'></span>";
     };
-    if (devTitle == "") {
-        devTitle = "Neither domogik device type find !";
-        if (initState !='completed') {devTitle += "\n Wait for complet initialisation...";};
+    if (devContent == "") {
+        devContent = "";
+        if (initState !='completed') {devContent = "Wait for complet initialisation...";
+        } else {devContent = "Try to launch detection again...";};
         dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
-               " title='" + devTitle + "'></span>";
+               " data-toggle='popover' title='Neither domogik device type find !'" +
+               " data-content='" + devContent + "'></span>";
     }
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
-               "' title='" + nodeData.InitState + initStateExt + "\n Current stage : " + nodeData.Stage + "'></span>" + bat +
-               dmgDev + knDev + newDev;
+                "' data-toggle='tooltip' data-placement='right' title='" +
+                nodeData.InitState + initStateExt + "<br> Current stage : " + nodeData.Stage + "'></span>" + bat +
+                dmgDev + knDev + newDev;
 };
 
 function renderNodeNameCol(data, type, full, meta) {
@@ -567,7 +579,7 @@ function renderNodeAwakeCol(data, type, full, meta) {
     var nodeData = GetZWNodeByRow(cell);
     if (nodeData) {
         if (nodeData['lastStatus'] === undefined) {dt= '';
-        } else {dt = ' since : ' + nodeData['lastStatus'];};
+        } else {dt = ' since :<br>' + nodeData['lastStatus'];};
         if (nodeData['State sleeping']==true) { //Sleeping
             textstatus = 'Inactive on network' + dt;
             st = 'icon-warning glyphicon-bed' //'unknown';
@@ -575,7 +587,8 @@ function renderNodeAwakeCol(data, type, full, meta) {
             textstatus = 'Active on network' + dt;
             st = 'icon-success glyphicon-signal';
         };
-        return  "<span id='infosleepnode" + nodeData.NodeID + "'class='glyphicon " + st + "' title='" + textstatus + "' /span>";
+        return  "<span id='infosleepnode" + nodeData.NodeID + "'class='glyphicon " + st + "'" +
+                " data-toggle='tooltip' data-placement='left' title='" + textstatus + "' /span>";
     } else {
         return 'No Data';
     };
@@ -587,12 +600,13 @@ function renderNodeTypeCol(data, type, full, meta) {
     var nodeData = GetZWNodeByRow(cell);
     if (nodeData) {
         var text = '';
-        if (nodeData.Capabilities.length > 1) {text= 'Capabilities :\n';
-        } else {text= 'Capability :\n';};
+        if (nodeData.Capabilities.length > 1) {text= 'Capabilities :<br>';
+        } else {text= 'Capability :<br>';};
         for (i=0; i<nodeData.Capabilities.length; i++) {
-            text = text + " -- " + nodeData.Capabilities[i] + '\n';
+            text = text + " -- " + nodeData.Capabilities[i] + '<br>';
         }
-        return  nodeData.Type + "  <span id='infotypenode" + nodeData.NodeID +"' class='fa fa-info-circle fa-lg icon-info' title='" + text + "' /span>";
+        return  nodeData.Type + " <span id='infotypenode" + nodeData.NodeID +"' class='fa fa-info-circle fa-lg icon-info'"+
+                " data-toggle='tooltip' data-placement='bottom' title='" + text + "' /span>";
     } else {
         return 'No Data';
     };
@@ -610,12 +624,15 @@ function renderNodeActionColl(data, type, full, meta) {
         if (tabDet) { // DetailNode opened
             stAct = 'fa-search-minus';
         };
-        var ret = "<span id='detailnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='CommandClass detail'>" +
+        var ret = "<span id='detailnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info'" +
+                        " data-toggle='tooltip' data-placement='left' title='CommandClass detail'>" +
                         "<span id='detailnodeic" + nodeRef + "' class='fa " + stAct + "'></span></span>"
-        ret += "<span id='refreshnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='Force Refresh Node'>" +
+        ret += "<span id='refreshnode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info'" +
+                        " data-toggle='tooltip' data-placement='left' title='Force Refresh Node'>" +
                         "<span id='refreshnodeic" + nodeRef + "' class='glyphicon glyphicon-refresh'></span></span>"
         if (nodeData.Groups.length > 0) {
-            ret += "<span id='updassoc" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='Edit association'>" +
+            ret += "<span id='updassoc" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info'" +
+                        " data-toggle='tooltip' data-placement='left' title='Edit association'>" +
                         "<span id='updassocic" + nodeRef + "' class='fa fa-link'></span></span>"
             };
         var stMonitored = "fa-play";
@@ -625,7 +642,8 @@ function renderNodeActionColl(data, type, full, meta) {
             tMonitored = "Node monitoring file : " + nodeData.Monitored + "/n/nClick to stop monitoring.";
             };
 
-        ret += "<span id='monitornode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info' title='" +tMonitored + "'>" +
+        ret += "<span id='monitornode" + nodeRef + "' type='nodeaction' class='btn btn-xs btnspacing btn-info'" +
+                " data-toggle='tooltip' data-placement='left' title='" +tMonitored + "'>" +
                 "<span id='monitornodeic" + nodeRef + "' class='fa " + stMonitored + "'></span></span>"
         return  ret;
     } else {

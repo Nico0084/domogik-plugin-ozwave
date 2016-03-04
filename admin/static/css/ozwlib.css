@@ -54,6 +54,21 @@
     top: 0px;
 }
 
+.popover-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.popover {
+    max-width: 600px;
+}
+
+.tooltip-inner {
+  color: #000;
+  background: #FAFAFA;
+  border: solid 1px #000;
+}
+
 /* Datattable Header cells cmdclss  */
 .headcmdclss {
     text-align: center !important;
