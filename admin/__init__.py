@@ -127,6 +127,31 @@ def network_ctrl_tools(client_id, network_id):
     except TemplateNotFound:
         abort(404)
 
+@plugin_ozwave_adm.route('/<client_id>/<network_id>/network')
+def network_netw(client_id, network_id):
+    detail = get_client_detail(client_id)
+    abort = False
+    if detail["status"] not in ["alive",  "starting"] : abort = True
+    openzwaveInfo = get_openzwave_info(abort)
+    if openzwaveInfo['error'] == 'Plugin timeout response.': abort = True
+    managerState = get_manager_state(abort)
+    if managerState['error'] == 'Plugin timeout response.': abort = True
+    networkState = get_controller_state(network_id, abort)
+    try:
+        return render_template('plugin_ozwave_network.html',
+            clientid = client_id,
+            client_detail = detail,
+            mactive="clients",
+            active = 'advanced',
+            network_active = network_id,
+            networkmenu_active = 'controller',
+            openzwaveInfo = openzwaveInfo,
+            managerState = managerState,
+            network_state = networkState)
+
+    except TemplateNotFound:
+        abort(404)
+
 @plugin_ozwave_adm.route('/<client_id>/tools')
 def plugin_tools(client_id):
     detail = get_client_detail(client_id)

@@ -1,5 +1,6 @@
 // Neighboors and group association library for showing zwave ode device.
 var grpsStage;
+var neighborsGraph;
 
 var nodeStateColor = {'inCarou' : [0, "#E9FBAA", 1, "#DCD100"],         // yellow
                                 'inCarouSelect': [0, "#685CDA", 1, "#1200B5"], // blue
@@ -75,15 +76,22 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         document.body.style.cursor = "default";
     });
 
+    this.pictureNode.on("dragstart", function() {
+        this.attrs.ktcNode.ktcGraph.tooltip.hide();
+        this.attrs.ktcNode.ktcGraph.tooltipLayer.draw();
+        this.moveToTop();
+    });
+
     this.pictureNode.on("dragmove", function() {
       for (var i=0; i<this.attrs.ktcNode.links.length;i++) {
           this.attrs.ktcNode.links[i].follownode(this.attrs.ktcNode);
       };
-      this.moveToTop();
     });
+
     this.pictureNode.on("mousemove", function(){
         var mousePos = this.attrs.ktcNode.ktcGraph.ktcStage.getPointerPosition();
-        this.attrs.ktcNode.ktcGraph.tooltip.setPosition(mousePos.x + 5, mousePos.y + 5);
+        this.attrs.ktcNode.ktcGraph.tooltip.x(mousePos.x)
+        this.attrs.ktcNode.ktcGraph.tooltip.y(mousePos.y - 5);
         var t = this.attrs.ktcNode.nodeZW.Type + ', Quality : ' + this.attrs.ktcNode.nodeZW.ComQuality + '%';
         for (var i=0; i<this.attrs.ktcNode.nodeZW.Groups.length; i++) {
             if (this.attrs.ktcNode.nodeZW.Groups[i].members.length !==0) {
@@ -96,7 +104,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
             };
             t = t + ' in index ' + this.attrs.ktcNode.nodeZW.Groups[i].index + ' named :' + this.attrs.ktcNode.nodeZW.Groups[i].label;
         };
-        this.attrs.ktcNode.ktcGraph.tooltip.setText(t);
+        this.attrs.ktcNode.ktcGraph.tooltip.getText().text(t);
         this.attrs.ktcNode.ktcGraph.tooltip.show();
         this.attrs.ktcNode.ktcGraph.tooltipLayer.draw();
         mousePos=0;
@@ -522,7 +530,7 @@ KtcNodeGrp.prototype.setState = function(state, inGrpAss) {
              for (var i = 0; i<this.grpAss.grpAss.members.length; i++){
                  if (this.nodeObj.NodeID == this.grpAss.grpAss.members[i].id){
                     zstate = this.grpAss.grpAss.members[i].status;
-                     stOrg  = true;
+                    stOrg  = true;
                     break;
                  };
              };
@@ -1175,4 +1183,352 @@ function RefreshGroups(stage, newGroups) {
         };
     };
     stage.draw();
+};
+
+// ************* Kinetic for Neighbors ********************
+
+KtcLink = function (N1,N2,layer) {
+            // build linelink
+    var t = N1.getTypeLink(N2);
+    var x1 = N1.pictureNode.getX(), y1 = N1.pictureNode.getY();
+    var x2 = N2.pictureNode.getX(), y2 = N2.pictureNode.getY();
+    var xm = (x1+x2)/2 , ym = (y1 + y2) / 2;
+    this.link = new Kinetic.Line({
+      strokeWidth: t['indice'], //10,
+      stroke: t['color'], // "green",
+      lineCap: 'round',
+      name: 'linknodes',
+      points: [x1, y1, xm, ym]
+    });
+    this.layer = layer;
+    this.ktcNodes = new Array (N1, N2);
+    this.layer.add(this.link);
+    N1.addlink(this);
+    N2.addlink(this);
+};
+
+KtcLink.prototype.addnode = function(ktcNode) {
+    var idx = this.ktcNodes.indexOf(ktcNode);
+    if (idx == -1) {
+        this.ktcNodes.push(ktcNode);
+        ktcNode.addnode(this);
+        this.layer.draw();
+    };
+};
+KtcLink.prototype.removelink= function(ktcNode) {
+    var idx = this.ktcNodes.indexOf(ktcNode);
+    if (idx != -1) {
+        this.ktcNodes.splice(idx, 1);
+        ktcNode.removenode(this);
+        this.layer.draw();
+    };
+};
+
+KtcLink.prototype.asnode= function(ktcNode) {
+    var id = this.ktcNodes.indexOf(ktcNode);
+    if (id1 != -1) {return true;
+    }else {return false};
+};
+
+KtcLink.prototype.follownode = function(ktcNode) {
+    var id1 = this.ktcNodes.indexOf(ktcNode);
+    var id2 =0;
+    if (id1 != -1) {
+        if (id1 ==0) {id2 =1;};
+        var p2 = this.ktcNodes[id2].pictureNode.getPosition();
+        var p1 = ktcNode.pictureNode.getPosition();
+        var pm = { 'x' : (p2.x+ p1.x) /2, 'y' : (p2.y + p1.y) /2};
+        this.link.attrs.points[id1*2] = p1.x;
+        this.link.attrs.points[(id1*2)+1] = p1.y;
+        this.link.attrs.points[id2*2] = pm.x;
+        this.link.attrs.points[(id2*2)+1] = pm.y;
+        if (id2 == 0) {
+            this.link.attrs.points[id2*2] = pm.x;
+            this.link.attrs.points[(id2*2)+1] = pm.y;
+            this.link.attrs.points[id1*2] = p2.x;
+            this.link.attrs.points[(id1*2)+1] = p2.y;
+            }
+        this.layer.draw();
+        }
+};
+
+KtcLink.prototype.update= function() {
+    var t = this.ktcNodes[0].getTypeLink(this.ktcNodes[2]);
+    this.link.setStrokeWidth (t['indice']);
+    this.link.setStroke(t['color']);
+    this.layer.draw();
+};
+
+ktcScrollbar = function (contenaire, direction, layer) {
+    this.ktcParent = contenaire;
+    this.direction = direction;
+    var thick = 20;
+    var lenght = 130;
+    if (this.ktcParent.ktcStage.nodeType = "Stage") {
+        thick = 20;
+        lenght = 130;
+    };
+    if (direction == 'horizontal') {
+        lenght = (this.ktcParent.ktcStage.getWidth() - thick)  / 3; //130;
+        var xOrg = 0, yOrg = this.ktcParent.ktcStage.getHeight() - thick;
+        var areaWidth = this.ktcParent.ktcStage.getWidth() - thick;
+        var areaHeight = thick;
+        var barWidth = lenght;
+        var barHeight = thick;
+        var xBar = (areaWidth - barWidth)/2;
+        var yBar = yOrg;
+    } else {
+        lenght = (this.ktcParent.ktcStage.getHeight() - thick)  / 3; //130;
+        var xOrg = this.ktcParent.ktcStage.getWidth() - thick, yOrg = 0;
+        var areaWidth = thick;
+        var areaHeight = this.ktcParent.ktcStage.getHeight() - thick;
+        var barWidth = thick;
+        var barHeight = lenght;
+        var xBar = xOrg ;
+        var yBar = (areaHeight - barHeight)/2;
+    };
+    this.scrollArea = new Kinetic.Rect({
+        x: xOrg,
+        y: yOrg,
+        width: areaWidth,
+        height:areaHeight,
+        fill: "black",
+        opacity: 0.3,
+        name: 'scrollbar'
+    });
+    this.scrollBar = new Kinetic.Rect({
+        x: xBar,
+        y: yBar,
+        width: barWidth,
+        height: barHeight,
+        fill: "#90C633",
+        draggable: true,
+        clearBeforeDraw: true,
+        area : this,
+        dragBoundFunc: function(pos) {
+           if (this.attrs.area.direction == 'horizontal') { // horizontale
+                var newX = 0;
+                var maxX = this.attrs.area.scrollArea.getWidth() - this.getWidth();
+                if ((pos.x > 0) && ( pos.x < maxX)) {
+                    newX = pos.x;
+                } else if (pos.x > maxX) {
+                    newX = maxX;
+                };
+                return {
+                    x: newX,
+                    y: this.getY()
+                };
+            } else { // verticale
+                var newY = 0;
+                var maxY = this.attrs.area.scrollArea.getHeight() -  this.getHeight();
+                if ((pos.y > 0) && ( pos.y < maxY)) {
+                    newY = pos.y;
+                } else if (pos.y > maxY) {
+                    newY = maxY;
+                };
+                return {
+                    x: this.getX(),
+                    y: newY
+                };
+            };
+        },
+        opacity: 0.9,
+        stroke: "black",
+        strokeWidth: 1,
+        name: 'scrollbar'
+    });
+    // scrollbars events assignation
+    this.scrollBar.on("mouseover touchstart", function() {
+        document.body.style.cursor = "pointer";
+    });
+    this.scrollBar.on("mouseout touchend", function() {
+        document.body.style.cursor = "default";
+    });
+    this.scrollBar.on("dragmove", function() {
+        var p = this.attrs.area.ktcParent.getNodesCenter();
+        if (this.attrs.area.direction == 'horizontal') { // horizontale
+            p.x = this.attrs.area.getScrollPosition();
+        } else {
+            p.y = this.attrs.area.getScrollPosition();
+        };
+        this.attrs.area.ktcParent.setNodesCenter(p.x, p.y);
+    });
+
+    this.scrollBar.on("dragend", function() {
+        this.attrs.area.ktcParent.nodeLayer.draw();
+        this.attrs.area.ktcParent.linkLayer.draw();
+    });
+
+    layer.add(this.scrollArea);
+    layer.add(this.scrollBar);
+};
+
+ktcScrollbar.prototype.reziseWidth = function (dw) {
+    if (this.direction == 'horizontal') {
+        var w = this.scrollArea.getWidth();
+        var ratio = (w+dw) / w;
+        var areaW = w + dw;
+        this.scrollArea.setWidth(areaW);
+        var lenght = areaW / 3;
+        this.scrollBar.setX(this.scrollBar.getX() * ratio);
+        this.scrollBar.setWidth(lenght);
+        var offset = this.ktcParent.getNodesCenter();
+        this.ktcParent.setNodesCenter(this.getScrollPosition(), offset.y);
+    } else {
+        this.scrollBar.setX(this.scrollBar.getX() + dw);
+        this.scrollArea.setX(this.scrollArea.getX() + dw);
+    };
+};
+
+ktcScrollbar.prototype.getScrollPosition = function () {
+    if (this.direction == 'horizontal') {
+        var areaW = this.scrollArea.getWidth();
+        var lenght = areaW / 3;
+        var scrollPos = (this.scrollBar.getX() + (lenght/2)) - (areaW/2);
+        var ratio = this.ktcParent.space.width/ (areaW - lenght);
+        var scrollPos = scrollPos * ratio ;
+    } else {
+        var areaW = this.scrollArea.getHeight();
+        var lenght = areaW / 3;
+        var scrollPos = (this.scrollBar.getY() + (lenght/2)) - (areaW/2);
+        var ratio = this.ktcParent.space.height/ (areaW - lenght);
+        var scrollPos = scrollPos * ratio ;
+    };
+    return scrollPos;
+};
+
+KtcNeighborsGraph = function (divId, secId){
+    var cont = $("#containerneighbors");
+    var width = 810;
+    for (var i=0; i < cont.length; i++) {
+        if (cont[i].offsetWidth !== 0) {
+            width = cont[i].offsetWidth - 30;
+            break;
+            };
+        };
+    this.ktcStage = new Kinetic.Stage({
+        container: divId,
+        width: width,
+        height: 500,
+        neighborsGraph : this
+    });
+    this.section = secId;
+    this.space = {width : 2000, height : 1000};
+    this.nodeLayer = new Kinetic.Layer();
+    this.linkLayer = new Kinetic.Layer();
+    this.scrollLayer = new Kinetic.Layer();
+
+    this.tooltip = new Kinetic.Label({
+        x: 0,
+        y: 0,
+        draggable: false
+    });
+    this.tooltip.add(new Kinetic.Tag({
+        fill: '#81DAF5',
+        stroke: '#333',
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOffset: {x:8,y:8},
+        shadowOpacity: 0.5,
+        lineJoin: 'round',
+        pointerDirection: 'down',
+        pointerWidth: 10,
+        pointerHeight: 20,
+        cornerRadius: 10
+    }));
+    this.tooltip.add(new Kinetic.Text({
+        text: "Not Init",
+        fontSize: 12,
+        fontFamily: "Calibri",
+        fill: "black",
+        align : "left",
+        padding: 3
+    }));
+
+    this.tooltipLayer = new Kinetic.Layer();
+    this.buildKineticNeighbors();
+    var graph = this
+    window.onresize = function resizeStage(){
+        var cont =  document.getElementById(graph.section);
+        var w = cont.getBoundingClientRect();
+        var dw = (w.width - 25) - graph.ktcStage.getWidth() ;
+        graph.ktcStage.setWidth(w.width - 25);
+        graph.hScrollBar.reziseWidth(dw);
+        graph.vScrollBar.reziseWidth(dw);
+     };
+};
+
+KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
+    var L = this.linkLayer.get('.linknodes');
+    L.each(function(node) {
+        node.destroy();
+        });
+    L = this.nodeLayer.get('.picturenode');
+    L.each(function(node) {
+         node.destroy();
+       });
+    L = this.scrollLayer.get('.scrollbar');
+    L.each(function(node) {
+         node.destroy();
+       });
+    this.scrollLayer.removeChildren();
+    this.tooltipLayer.removeChildren();
+    this.linkLayer.offsetX(0);
+    this.linkLayer.offsetY(0);
+    this.nodeLayer.offsetX(0);
+    this.nodeLayer.offsetY(0);
+    this.ktcStage.removeChildren();
+    this.hScrollBar = new ktcScrollbar(this, "horizontal", this.scrollLayer);
+    this.vScrollBar = new ktcScrollbar(this, "vertical", this.scrollLayer);
+    this.tooltipLayer.add(this.tooltip);
+    var xc= this.ktcStage.getWidth() / 2;
+    var yc= this.ktcStage.getHeight() / 2;
+    var stepR = 80;
+    var Ray = 100;
+    var a = 0,x=0,y=0; sta=20;
+    var r=100, RayF = Ray;
+    for (var i=0; i<nodesData.length;i++) {
+        if (nodesData[i].Type == 'Static PC Controller') {r = 40;
+            x= xc;
+            y= yc;
+        } else {r=25;
+            RayF = Ray + ((100 - (nodesData[i].ComQuality)) * 1.5);
+            x= xc + RayF * Math.cos(a*Math.PI/180);
+            y= yc + RayF * Math.sin(a*Math.PI/180);
+            if (a > 330) { a = sta;
+                sta = sta +20;
+                Ray = Ray + stepR;
+            } else { a= a + 40;
+            };
+        };
+        nodesData[i].ktcNode = new KtcNode(x,y,r,nodesData[i],this.nodeLayer,this);
+      };
+    for (var id1=0; id1<nodesData.length;id1++)  {
+        for (var in1=0; in1<nodesData[id1].Neighbors.length;in1++) {
+            for (var id2=0; id2<nodesData.length;id2++) {
+                if (nodesData[id2].NodeID == nodesData[id1].Neighbors[in1]) {
+                    Link = new KtcLink(nodesData[id1].ktcNode, nodesData[id2].ktcNode, this.linkLayer);
+                    break;
+                };
+            };
+        };
+    };
+
+    this.ktcStage.add(this.linkLayer);
+    this.ktcStage.add(this.nodeLayer);
+    this.ktcStage.add(this.tooltipLayer);
+    this.ktcStage.add(this.scrollLayer);
+};
+
+KtcNeighborsGraph.prototype.getNodesCenter = function () {
+    return this.nodeLayer.getOffset();
+};
+
+KtcNeighborsGraph.prototype.setNodesCenter = function (x, y) {
+    this.linkLayer.offsetX(x);
+    this.linkLayer.offsetY(y);
+    this.nodeLayer.offsetX(x);
+    this.nodeLayer.offsetY(y);
+    this.nodeLayer.batchDraw();
+    this.linkLayer.batchDraw();
 };

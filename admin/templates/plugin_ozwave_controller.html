@@ -9,7 +9,7 @@
 <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwctrlactions.js"></script>
 
 <div class="container" id="test-move">
-{% include "network.html" %}
+{% include "controller.html" %}
 </div>
 <script type="text/javascript">
     $( document ).ready(function() {
@@ -113,9 +113,9 @@
                             'dosecurity': $('#dosecurity').bootstrapSwitch('state'),
                             'arg': $('#numberOpt').val(),
                             };
-                            
+
             sendRequest("ozwave.ctrl.action", {"networkId": "{{ network_active }}", "action": JSON.stringify(action)}, function(data, result) {
-                $('#btctrlaction').removeClass('disabled'); 
+                $('#btctrlaction').removeClass('disabled');
                 if (data.content.message != '' && data.content.message != undefined) {
                     $('#actionmessage').text(data.content.message);
                     $('#actionmessage').show();
@@ -174,7 +174,7 @@
                     });
                 };
             });
-                
+
         });
         $('#softreset').click(function() {
             bootbox.confirm('<h3 class="text-center alert-info">Soft Reset of PC ZWave Controller</h3> ' +
@@ -214,7 +214,7 @@
                     if (result) {
                         $('#softreset').addClass('disabled'); // Disables visually + functionally
                         sendRequest("ozwave.ctrl.hardreset", {"networkId": "{{ network_active }}"}, function(data, result) {
-                            $('#softreset').removeClass('disabled'); 
+                            $('#softreset').removeClass('disabled');
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',
@@ -244,7 +244,7 @@
                     if (result) {
                         $('#healnetwork').addClass('disabled'); // Disables visually + functionally
                         sendRequest("ozwave.ctrl.healnetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
-                            $('#healnetwork').removeClass('disabled'); 
+                            $('#healnetwork').removeClass('disabled');
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',

@@ -1,0 +1,78 @@
+{% extends theme("base/base.html") %}
+{% import theme("base/wtf.html") as wtf %}
+
+{% block content %}
+{% include theme("client_menu.html") %}
+{% include "plugin_ozwave_menu.html" %}
+
+<!-- Kinetic -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/kinetic-v5.1.0.min.js"></script>
+
+<!-- ozwave lib -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwkineticsnode.js"></script>
+
+<div class="container" id="test-move">
+{% include "network.html" %}
+</div>
+<script type="text/javascript">
+    $( document ).ready(function() {
+        var container = document.getElementById("{{ network_active }}");
+        $('#test-move').appendTo("#{{ network_active }}");
+        var ws_onmessage_netw = ws.onmessage;
+        sendRequest("ozwave.ctrl.nodes",{"networkId": "{{ network_active }}"}, function(data, result) {
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Controller  {{ network_active }} , list nodes fail.'  ,
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                nodesData = data.content.nodes;
+                neighborsGraph = new KtcNeighborsGraph('containerneighbors','containerneighbors');
+            };
+        });
+        ws.onmessage = function(e) {
+            ws_onmessage_netw(e);
+            data = JSON.parse(e.data);
+            msgId = data.msgid.split(".");
+            if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
+                console.log("Zwave controller receive :)", data.msgid);
+                console.log(data.content);
+                if (msgId[2] == "state" && data.content.NetworkID == "{{ network_active }}") {
+                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                        $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
+                        $("#ctrl-status").text(data.content.init);
+                        if (data.content.status == 'alive' || data.content.status =='starting') {
+                            var icon = 'stop';
+                            var text = ' Stop controller';
+                            var color = 'red';
+                        } else {
+                            var icon = 'play';
+                            var text = ' Start controller';
+                            var color = 'green';
+                        }
+                        $("#runctrl-text").text(text);
+                        $("#runctrl-ic").attr('style', "color:"+ color ).removeClass().addClass("fa fa-"+icon);
+                    };
+                } else if (msgId[2] == "command" && data.content.NetworkID == "{{ network_active }}") {
+                    renderStateAction(data.content.command, data.content.state, data.content.error + data.content.usermsg);
+                } else {
+                    if (data.content.type == 'node-state-changed') {
+                        if (data.content.data.state == "sleep") {
+                            renderBadgeCount("count_sleep", data.content["Node sleeping"]);
+                            $("#statistic_sleep").text(data.content["Node sleeping"]);
+                        };
+                        if (data.content.data.state == "fail") {
+                            renderBadgeCount("count_fail", data.content["Node fail"]);
+                            $("#statistic_fail").text(data.content["Node fail"]);
+                        };
+                        if (data.content["Node count"] != undefined) {$('#count_node').text(data.content["Node count"]);};
+                    };
+                };
+            };
+        };
+    });
+</script>
+
+{% endblock %}
