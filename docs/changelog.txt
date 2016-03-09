@@ -2,7 +2,7 @@
 Change log
 ==========
 
-0.5.0 : (25-01-2016)
+0.5.0 : (09-03-2016)
 --------------------
 
 * Compatibility with Domogik 0.5+ and non xpl devices
@@ -16,8 +16,10 @@ Change log
     - Sensors adressing with key "name".
     - Commands adressing with key "key" of command parameters.
     - Add linked label, definition in lib/linkedlabels.json
+    - Add dynamic command_class conversion, definition in lib/cmd_class_conversion.json
     - Auto load domogik openzwave labels availaible from info.json.
     - Add Detected domogik devices.
+    - Add graph neibhbors whitn new possitionning algorithm and dynamic update.
     - Handled non ASCII exception from python_openzwave 0.3.0b8.
     - Add install dependencies script.
     - Add refresh admin domogik device button.
