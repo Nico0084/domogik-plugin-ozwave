@@ -532,6 +532,8 @@ class ZWaveNode:
             self.log.warning('Probable OZW bug: Node [{0}] is sleeping and reports {1} neighbors; marking neighbors as none.'.format(self.refName, len(self._neighbors)))
             self._neighbors = None
         self.log.debug('Node [%d] neighbors are: %s', self._nodeId, self._neighbors)
+        self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Neighbors updated.',
+                               'data': {'state':  'Neighbors', 'Neighbors': self._groups}})
 
     def updateGroup(self, groupIdx):
         """Update a group/association informations of node."""

@@ -37,37 +37,19 @@
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-                console.log("Zwave controller receive :)", data.msgid);
+                console.log("Zwave network receive :)", data.msgid);
                 console.log(data.content);
-                if (msgId[2] == "state" && data.content.NetworkID == "{{ network_active }}") {
-                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                        $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
-                        $("#ctrl-status").text(data.content.init);
-                        if (data.content.status == 'alive' || data.content.status =='starting') {
-                            var icon = 'stop';
-                            var text = ' Stop controller';
-                            var color = 'red';
-                        } else {
-                            var icon = 'play';
-                            var text = ' Start controller';
-                            var color = 'green';
-                        }
-                        $("#runctrl-text").text(text);
-                        $("#runctrl-ic").attr('style', "color:"+ color ).removeClass().addClass("fa fa-"+icon);
-                    };
-                } else if (msgId[2] == "command" && data.content.NetworkID == "{{ network_active }}") {
-                    renderStateAction(data.content.command, data.content.state, data.content.error + data.content.usermsg);
-                } else {
-                    if (data.content.type == 'node-state-changed') {
-                        if (data.content.data.state == "sleep") {
-                            renderBadgeCount("count_sleep", data.content["Node sleeping"]);
-                            $("#statistic_sleep").text(data.content["Node sleeping"]);
-                        };
-                        if (data.content.data.state == "fail") {
-                            renderBadgeCount("count_fail", data.content["Node fail"]);
-                            $("#statistic_fail").text(data.content["Node fail"]);
-                        };
-                        if (data.content["Node count"] != undefined) {$('#count_node').text(data.content["Node count"]);};
+                if (data.content.NetworkID == "{{ network_active }}") {
+                    switch (msgId[2]) {
+                        case "state" :
+                            if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                                $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
+                                $("#ctrl-status").text(data.content.init);
+                            };
+                            break;
+                        case "report" :
+                            HandleDataNodeUpdMsg(data);
+                            break;
                     };
                 };
             };

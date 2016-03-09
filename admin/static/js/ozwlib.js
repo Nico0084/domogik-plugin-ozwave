@@ -23,6 +23,135 @@ function GetValueRefId(NetworkID, NodeID, ValueID) {
     return  "_" + NetworkID + "_" + NodeID + "_" + ValueID;
 };
 
+
+// Handle all messages for nodes state, init, change, value updating.
+function HandleDataNodeUpdMsg(data) {
+    var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+    if (nodeData) {
+        switch (data.content.type){
+            case 'node-state-changed':
+                var refresh = false;
+                var dTableCol = [];
+                switch (data.content.data.state) {
+                    case "sleep" :
+                        nodeData['State sleeping'] = data.content.data.value;
+                        nodeData.lastStatus = data.content.data.lastStatus;
+                        dTableCol.push({col: 4, value: data.content.data.value});
+                        refresh = true;
+                        break;
+                    case "Named" :
+                        if (nodeData.Name != data.content.data.name && data.content.data.name != "") {
+                            nodeData.Name = data.content.data.name;
+                            dTableCol.push({col: 1, value: data.content.data.name});
+                        };
+                        if (nodeData.Location != data.content.data.location && data.content.data.location != "") {
+                            nodeData.Location = data.content.data.location;
+                            dTableCol.push({col: 2, value: data.content.data.location});
+                        };
+                        if (nodeData.Model != data.content.data.model && data.content.data.model != " -- ") {
+                            nodeData.Model = data.content.data.model;
+                            dTableCol.push({col: 3, value: data.content.data.model});
+                        };
+                        refresh = true;
+                        break;
+                    case "DmgDevices" :
+                        if (data.content.data.DmgDevices != undefined) {nodeData['DmgDevices'] = data.content.data.DmgDevices;};
+                        if (data.content.data.KnownDeviceTypes != undefined) {nodeData['KnownDeviceTypes'] = data.content.data.KnownDeviceTypes;};
+                        if (data.content.data.NewDeviceTypes != undefined) {nodeData['NewDeviceTypes'] = data.content.data.NewDeviceTypes;};
+                        dTableCol.push({col: 0, value: data.content.NetworkID+"."+data.content.NodeID});
+                        refresh = true;
+                        break;
+                    case "GrpsAssociation" :
+                        nodeData['Groups'] = data.content.data.Groups;
+                        dTableCol.push({col: 7, value: data.content.NetworkID+"."+data.content.NodeID});
+                        refresh = true;
+                        break;
+                    case "Neighbors" :
+                        nodeData['Neighbors'] = data.content.data.Neighbors;
+                        refresh = true;
+                        break;
+                };
+                if (refresh) {
+                    RefreshDataNode(nodeData);
+                    try { var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                    } catch (err) { var table = false; };
+                    if (table) {   // DataTable exit so update it.
+                        var d = new Date();
+                        var date = d.toLocaleString();
+                        for (i=0; i < dTableCol.length; i++) {
+                            var cell = GetNodeCell(table, data.content.NodeID, dTableCol[i].col);
+                            if (cell) {
+                                cell.data(dTableCol[i].value).draw('page');
+                                HighlightCell(cell.node(), date);
+                            } else { // Adding node in dataTable.
+                                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                                break;
+                            };
+                        };
+                    };
+                };
+                break;
+            case 'init-process' :
+                nodeData.InitState = data.content.data;
+                RefreshDataNode(nodeData);
+                try { var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                } catch (err) { var table = false; };
+                if (table) {   // DataTable exit so update it.
+                    var cell = GetNodeCell(table, data.content.NodeID, 0);
+                    if (cell) {
+                        var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                        cell.data(data.content.NetworkID+"."+data.content.NodeID).draw('page');  // set data required to force draw
+                        var d = new Date();
+                        var date = d.toLocaleString();
+                        HighlightCell(cell.node(), date);
+                    };
+                };
+                requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+                break;
+            case 'node-removed' :
+                RemoveDataNode(nodeData);
+                try { var table = $("#tabnodes_" + data.content.NetworkID).DataTable();
+                } catch (err) { var table = false; };
+                if (table) {   // DataTable exit so update it.
+                    var cell = GetNodeCell(table, data.content.NodeID, 0);
+                    if (cell) {
+                        var row = table.row(cell.index().row);
+                        row.remove().draw;
+                    };
+                };
+                new PNotify({
+                            type: 'success',
+                            title: 'Exclusion.',
+                            text: data.content.usermsg,
+                            delay: 4000
+                    });
+                break;
+            case 'value-changed' :
+                if (nodeData.Values != undefined) {
+                    for (var v in nodeData.Values) {
+                        if (nodeData.Values[v].id == data.content.data.id) {
+                            nodeData.Values[v].value = data.content.data.value;
+                            nodeData.Values[v].realvalue = data.content.data.realvalue;
+                            RefreshValuesNodeData(nodeData.Values);
+                            var table = $('#valuesNode' + GetNodeRefId(data.content.NetworkID, data.content.NodeID)).DataTable();
+                            var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.data.id), 3);
+                            if (cell) {
+                                cell.data(data.content.data.value).draw('page');  // set data required to force draw
+                                var d = new Date();
+                                var date = d.toLocaleString();
+                                HighlightCell(cell.node(), date);
+                            };
+                            break;
+                        };
+                    };
+                };
+                break;
+        };
+    } else { // Node not known in JS so requesing all node data to add it
+        requestZWNodeInfos(data.content.NetworkID, data.content.NodeID);
+    };
+};
+
 function RefreshDataNode(dataNode, Kbuild) {
     var idx = -1;
     for (var i = 0; i < nodesData.length; i++) {
@@ -35,7 +164,9 @@ function RefreshDataNode(dataNode, Kbuild) {
         nodesData[idx] = dataNode;
         if (nodesData[idx].ktcNode) {
             nodesData[idx].ktcNode.update();
-            };
+        } else {
+            if (neighborsGraph) { neighborsGraph.addNode(nodesData[idx]); };
+        };
     } else {
         var d = new Date();
         dataNode.LastReqRefresh = d.getTime();
@@ -63,9 +194,9 @@ function RemoveDataNode(dataNode) {
         };
     };
     if (idx != -1) {
-       // if (nodesData[idx].ktcNode) {
-       //     nodesData[idx].ktcNode.remove();
-       //     };
+        if (nodesData[idx].ktcNode) {
+            nodesData[idx].ktcNode.destroy();
+        };
         nodesData.splice(idx, 1);
     };
 };
@@ -167,7 +298,8 @@ function GetZWNodeByRow(rowCell) {
 
 function updateNode(newNodeData, date) {
     var nodeData = GetZWNode(newNodeData.NetworkID, newNodeData.NodeID);
-    var table = $("#tabnodes_" + newNodeData.NetworkID).DataTable();
+    try { var table = $("#tabnodes_" + newNodeData.NetworkID).DataTable();
+    } catch (err) { var table = false; };
     var keyToUpdate = [];
     if (nodeData) { // Node allready exist in nodesData list
         for (key in newNodeData) { // update or add key
@@ -177,9 +309,9 @@ function updateNode(newNodeData, date) {
             };
         };
         nodeData = RefreshDataNode(nodeData);
-        var nodeTableColUpd = {};
-        for (key in keyToUpdate) {
-            if (table) {
+        if (table) {
+            var nodeTableColUpd = {};
+            for (key in keyToUpdate) {
                 var cell = GetNodeCell(table, nodeData.NodeID, COL_NODE_REF[key]);
                 if (cell) {
                     if (nodeTableColUpd[COL_NODE_REF[key]] === undefined  || !nodeTableColUpd[COL_NODE_REF[key]] ) {

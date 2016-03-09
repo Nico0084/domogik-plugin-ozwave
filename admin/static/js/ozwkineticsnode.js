@@ -112,6 +112,14 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     this.layer.add(this.pictureNode);
 };
 
+KtcNode.prototype.destroy = function () {
+    for (var idx in this.links) {
+            this.links[idx].destroy();
+    };
+    this.pictureNode.destroy();
+    this.layer.draw();
+};
+
 KtcNode.prototype.addlink = function(linker) {
     var idx = this.links.indexOf(linker);
     if (idx == -1) {
@@ -141,17 +149,19 @@ KtcNode.prototype.checklinks= function() {
         };
     };
     var create = true;
-    for (idn in this.nodeZW.Neighbors) {
-        create = true;
-        for (idx in this.links) {
-            if (this.links[idx].ktcNodes[1].nodeZW.NodeID == this.nodeZW.Neighbors[idn]) {
-                create = false;
-                break;
+    if (typeof this.nodeZW.Neighbors != "string") {
+        for (idn in this.nodeZW.Neighbors) {
+            create = true;
+            for (idx in this.links) {
+                if (this.links[idx].ktcNodes[1].nodeZW.NodeID == this.nodeZW.Neighbors[idn]) {
+                    create = false;
+                    break;
+                };
             };
-        };
-        if (create) {
-            N2 = GetZWNode(this.nodeZW.NetworkID, this.nodeZW.Neighbors[idn]);
-            if (N2) {new KtcLink(this, N2.ktcNode, this.ktcGraph.linkLayer);};
+            if (create) {
+                N2 = GetZWNode(this.nodeZW.NetworkID, this.nodeZW.Neighbors[idn]);
+                if (N2) {new KtcLink(this, N2.ktcNode, this.ktcGraph.linkLayer);};
+            };
         };
     };
     this.ktcGraph.linkLayer.draw();
@@ -170,7 +180,7 @@ KtcNode.prototype.getColorState = function() {
             colors = [0, 'yellow', 0.5, 'yellow', 1, 'green'];
             break;
         case 'In progress - Devices initializing' :
-            colors = [0, 'orange', 0.5, 'brown', 1, 'violet'];
+            colors = [0.2, 'yellow', 0.6, 'green', 1, 'orange'];
             break;
         case 'In progress - Linked to controller' :
             colors = [0, 'brown', 0.5, 'violet', 1, 'turquoise'];
@@ -190,7 +200,7 @@ KtcNode.prototype.getColorState = function() {
 
 KtcNode.prototype.getTypeLink = function(Node2) {
     var indice = 1, color = 'green';
-    if (this.nodeZW.Capabilities.indexOf("Primary Controller" ) != -1 ) { indice =8;  color ='blue'}
+    if (this.nodeZW.Capabilities.indexOf("Primary Controller" ) != -1 ) { indice = 8;  color ='blue'}
     if (this.nodeZW.Capabilities.indexOf("Routing") != -1) {indice = indice + 2;}
     if (this.nodeZW.Capabilities.indexOf("Beaming" ) != -1) {indice = indice + 1;}
     if (this.nodeZW.Capabilities.indexOf("Listening" ) != -1) { indice = indice + 3;}
@@ -209,9 +219,9 @@ KtcNode.prototype.update = function() {
     if (this.nodeZW['State sleeping']) {op = 0.3; };
     this.pictureImg.opacity(op);
     for (var l in this.links)  {this.links[l].update();};
-    this.pictureNode.draw();
-    this.ktcGraph.tooltipLayer.draw();
-    this.ktcGraph.linkLayer.draw();
+    this.ktcGraph.linkLayer.batchDraw ();
+    this.ktcGraph.tooltipLayer.batchDraw ();
+    this.layer.batchDraw ();
     console.log('redraw kinetic node :' + this.nodeZW.NodeID);
 };
 
@@ -1198,6 +1208,7 @@ KtcLink = function (N1,N2,layer) {
       stroke: t['color'], // "green",
       lineCap: 'round',
       name: 'linknodes',
+      tension : 3,
       points: [x1, y1, xm, ym]
     });
     this.layer = layer;
@@ -1215,6 +1226,11 @@ KtcLink.prototype.addnode = function(ktcNode) {
         this.layer.draw();
     };
 };
+
+KtcLink.prototype.destroy = function () {
+    this.link.destroy();
+};
+
 KtcLink.prototype.removelink= function(ktcNode) {
     var idx = this.ktcNodes.indexOf(ktcNode);
     if (idx != -1) {
@@ -1262,10 +1278,10 @@ KtcLink.prototype.update= function() {
 ktcScrollbar = function (contenaire, direction, layer) {
     this.ktcParent = contenaire;
     this.direction = direction;
-    var thick = 20;
+    var thick = 16;
     var lenght = 130;
     if (this.ktcParent.ktcStage.nodeType = "Stage") {
-        thick = 20;
+        thick = 16;
         lenght = 130;
     };
     if (direction == 'horizontal') {
@@ -1409,7 +1425,7 @@ KtcNeighborsGraph = function (divId, secId){
     this.ktcStage = new Kinetic.Stage({
         container: divId,
         width: width,
-        height: 500,
+        height: 700,
         neighborsGraph : this
     });
     this.section = secId;
@@ -1483,25 +1499,16 @@ KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
     this.tooltipLayer.add(this.tooltip);
     var xc= this.ktcStage.getWidth() / 2;
     var yc= this.ktcStage.getHeight() / 2;
-    var stepR = 80;
-    var Ray = 100;
-    var a = 0,x=0,y=0; sta=20;
-    var r=100, RayF = Ray;
+    var pos = [0, 0, 0];
     for (var i=0; i<nodesData.length;i++) {
-        if (nodesData[i].Type == 'Static PC Controller') {r = 40;
-            x= xc;
-            y= yc;
-        } else {r=25;
-            RayF = Ray + ((100 - (nodesData[i].ComQuality)) * 1.5);
-            x= xc + RayF * Math.cos(a*Math.PI/180);
-            y= yc + RayF * Math.sin(a*Math.PI/180);
-            if (a > 330) { a = sta;
-                sta = sta +20;
-                Ray = Ray + stepR;
-            } else { a= a + 40;
-            };
+        if (nodesData[i].Capabilities.indexOf("Primary Controller") != -1) {
+            pos = [xc, yc, 0];
+            r = 40;
+        } else {
+            pos = this.calculNodePosition(25, nodesData[i], pos[2]);
+            r=25;
         };
-        nodesData[i].ktcNode = new KtcNode(x,y,r,nodesData[i],this.nodeLayer,this);
+        nodesData[i].ktcNode = new KtcNode(pos[0], pos[1], r, nodesData[i], this.nodeLayer, this);
       };
     for (var id1=0; id1<nodesData.length;id1++)  {
         for (var in1=0; in1<nodesData[id1].Neighbors.length;in1++) {
@@ -1520,6 +1527,27 @@ KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
     this.ktcStage.add(this.scrollLayer);
 };
 
+KtcNeighborsGraph.prototype.addNode = function(nodeData) {
+    if (nodeData.Capabilities.indexOf("Primary Controller") != -1) {
+        var r = 40;
+        pos = [xc, yc, 0];
+    } else {
+        var r = 25;
+        pos = this.calculNodePosition(r, nodeData, 0);
+    };
+    nodeData.ktcNode = new KtcNode(pos[0], pos[1], r, nodeData, this.nodeLayer, this);
+    for (var in1=0; in1<nodeData.Neighbors.length;in1++) {
+        for (var id2=0; id2<nodesData.length;id2++) {
+            if (nodesData[id2].NodeID == nodeData.Neighbors[in1]) {
+                Link = new KtcLink(nodeData.ktcNode, nodesData[id2].ktcNode, this.linkLayer);
+                break;
+            };
+        };
+    };
+    this.nodeLayer.batchDraw();
+    this.linkLayer.batchDraw();
+};
+
 KtcNeighborsGraph.prototype.getNodesCenter = function () {
     return this.nodeLayer.getOffset();
 };
@@ -1531,4 +1559,87 @@ KtcNeighborsGraph.prototype.setNodesCenter = function (x, y) {
     this.nodeLayer.offsetY(y);
     this.nodeLayer.batchDraw();
     this.linkLayer.batchDraw();
+};
+
+KtcNeighborsGraph.prototype.getNodesPos = function (s) {
+    var nodesPos = [];
+    for (n in nodesData) {
+        if (nodesData[n].ktcNode != undefined) {
+            pos = nodesData[n].ktcNode.pictureNode.position();
+            size = nodesData[n].ktcNode.pictureNode.size();
+            if (size.width == 0) {
+                size.width = s;
+                size.height = s;
+            };
+            nodesPos.push({"NodeID": nodesData[n].NodeID,
+                    "gRect": {"x1": pos.x - (size.width /2), "y1": pos.y - (size.height /2), "x2": pos.x + (size.width /2), "y2": pos.y + (size.height /2)},
+                    "force" : getGraphForce(nodesData[n])});
+        };
+    };
+    return nodesPos;
+};
+
+KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, lastAngle) {
+    var nodesPos = this.getNodesPos(2 * rNode);
+    var xc= this.ktcStage.getWidth() / 2;
+    var yc= this.ktcStage.getHeight() / 2;
+    var minF = 100;
+    if (lastAngle == undefined) {var angle = 0;
+    } else { angle = lastAngle; };
+    var x=0, y=0;
+    var nb = 0, nbLap = 1;
+    var find = false, intersec = false;
+    var force = minF + getGraphForce(nodeData);
+    var stepA = 2 * Math.asin((4*rNode)/(2*force));
+    console.log("Node position ("+nodeData.NodeID+"), force "+force);
+    while (!find) {
+        angleC = angle;
+        x= xc + force * Math.cos(angle);
+        y= yc + force * Math.sin(angle);
+        if (angle >= (2*Math.PI)) { // A covered lap and no position find
+            angle = angle - (2*Math.PI);
+            if (nbLap == 10) { // position find for A n lap. Increases force
+                minF = minF + rNode;
+                force = minF + getGraphForce(nodeData);
+                stepA = 2 * Math.asin((4*rNode)/(2*force));
+                nbLap = 1;
+                console.log("      Node position, No solution on this lap. Change force " + force);
+            } else { nbLap++
+                console.log("      Node position, New lap " + nbLap);
+                };
+        } else {
+            angle += stepA;
+        };
+        // check if position not interfer with other node.
+        x1 = x - rNode, y1 = y - rNode, x2 = x + rNode, y2 = y + rNode;
+        intersec = false;
+        if (nodesPos.length != 0 ) {
+            for (np in nodesPos) {
+                if (nodesPos[np].NodeID != nodeData.NodeID) {
+                    if (pointInRect(x1, y1, nodesPos[np].gRect) || pointInRect(x1, y2, nodesPos[np].gRect) ||
+                        pointInRect(x2, y1, nodesPos[np].gRect) || pointInRect(x2, y2, nodesPos[np].gRect)) {
+                            intersec = true;
+                            break;
+                    };
+                };
+            };
+        };
+        if (!intersec) { find = true; };
+        nb++;
+        if (nb > 256) { find = true; };
+    };
+    console.log("   Node position, nb iteration :" +nb + " angle " + angleC *(180/Math.PI) + "°");
+    return [x, y, angle];
+};
+
+function pointInRect(x, y, gRect) {
+    if ((x >= gRect.x1) && (x <= gRect.x2) && (y >= gRect.y1) && (y <= gRect.y2)) {
+        return true;
+    } else {
+        return  false;
+    };
+};
+
+function getGraphForce (nodeData) {
+    return (100 - (nodeData.ComQuality)) * 6
 };
