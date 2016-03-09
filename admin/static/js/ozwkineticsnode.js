@@ -1415,7 +1415,7 @@ ktcScrollbar.prototype.getScrollPosition = function () {
 
 KtcNeighborsGraph = function (divId, secId){
     var cont = $("#containerneighbors");
-    var width = 810;
+    var width = 800;
     for (var i=0; i < cont.length; i++) {
         if (cont[i].offsetWidth !== 0) {
             width = cont[i].offsetWidth - 30;
@@ -1425,7 +1425,7 @@ KtcNeighborsGraph = function (divId, secId){
     this.ktcStage = new Kinetic.Stage({
         container: divId,
         width: width,
-        height: 700,
+        height: 600,
         neighborsGraph : this
     });
     this.section = secId;

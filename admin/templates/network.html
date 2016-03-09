@@ -10,16 +10,24 @@
         </div>
     </h3>
     <div class='row'>
-            <div class='panel panel-default'>
-                <div class='panel-heading'>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
                         <h4>
                             <span>&nbsp;&nbsp;{% trans %}Zwave neighbors{% endtrans %}</span>
                         </h4>
-                </div>
-                <div class='panel-body' id='containerneighbors' style="width: 100%;">
-                </div>
+                        <div class='btn-group pull-right' role='group'>
+                            <button id='zoomIn' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='left' title='Zoon In'>
+                                <i class='fa fa-search-plus'></i>
+                            </button>
+                            <button id='zoomOut' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='left' title='Zoon Out'>
+                                <i class='fa fa-search-minus'></i>
+                            </button>
+                        </div>
+            </div>
+            <div class='panel-body' id='containerneighbors' style="width: 100%;">
+            </div>
         </div>
-
+    </div>
 </div>
 
  {% endblock %}

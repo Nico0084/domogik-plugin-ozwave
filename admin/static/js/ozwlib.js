@@ -152,7 +152,7 @@ function HandleDataNodeUpdMsg(data) {
     };
 };
 
-function RefreshDataNode(dataNode, Kbuild) {
+function RefreshDataNode(dataNode) {
     var idx = -1;
     for (var i = 0; i < nodesData.length; i++) {
         if (nodesData[i].NodeID == dataNode.NodeID) {
@@ -165,23 +165,15 @@ function RefreshDataNode(dataNode, Kbuild) {
         if (nodesData[idx].ktcNode) {
             nodesData[idx].ktcNode.update();
         } else {
-            if (neighborsGraph) { neighborsGraph.addNode(nodesData[idx]); };
+            if (neighborsGraph != undefined) { neighborsGraph.addNode(nodesData[idx]); };
         };
     } else {
         var d = new Date();
         dataNode.LastReqRefresh = d.getTime();
         nodesData.push(dataNode);
         idx = nodesData.length - 1;
+        if (neighborsGraph != undefined) { neighborsGraph.addNode(nodesData[idx]); };
     };
-//    if (Kbuild) {
-//        if  (initialized) {setTimeout(function () {
-//             neighborsGraph.buildKineticNeighbors();
-//            },1000);
-//        } else {setTimeout(function () {
-//            neighborsGraph = new KtcNeighborsGraph('containerneighbors','graphneighbors');
-//            },1000); };
-//        initialized = true;
-//        };
     return nodesData[idx];
 };
 
