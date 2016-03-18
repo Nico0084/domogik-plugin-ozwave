@@ -16,13 +16,17 @@
                             <span>&nbsp;&nbsp;{% trans %}Zwave neighbors{% endtrans %}</span>
                         </h4>
                         <div class='btn-group pull-right' role='group'>
-                            <button id='zoomIn' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='left' title='Zoon In'>
+                            <button id='zoomIn' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='top' title='{% trans %}Zoon In{% endtrans %}'>
                                 <i class='fa fa-search-plus'></i>
                             </button>
-                            <button id='zoomOut' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='left' title='Zoon Out'>
+                            <button id='zoomOut' type='button' class="btn btn-default" data-toggle='tooltip' data-placement='top' title='{% trans %}Zoon Out{% endtrans %}'>
                                 <i class='fa fa-search-minus'></i>
                             </button>
                         </div>
+                        <label>
+                            <input id='dragConstrain' type="checkbox" value="" checked data-toggle='tooltip' data-placement='right' title='{% trans %}Constrain node placement depending of his communication quality.{% endtrans %}'>
+                            {% trans %}Node move constrain{% endtrans %}
+                        </label>
             </div>
             <div class='panel-body' id='containerneighbors' style="width: 100%;">
             </div>

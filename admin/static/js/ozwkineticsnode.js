@@ -3,21 +3,45 @@ var grpsStage;
 var neighborsGraph;
 
 var nodeStateColor = {'inCarou' : [0, "#E9FBAA", 1, "#DCD100"],         // yellow
-                                'inCarouSelect': [0, "#685CDA", 1, "#1200B5"], // blue
-                                'inGrp': [0, "#FFA9FF", 1, "#DC00D9"],              // pink
-                                'inGrpSelect': [0, "#FC9090", 1, "#D00000"]     // red
-                               };
+                      'inCarouSelect': [0, "#685CDA", 1, "#1200B5"], // blue
+                      'inGrp': [0, "#FFA9FF", 1, "#DC00D9"],              // pink
+                      'inGrpSelect': [0, "#FC9090", 1, "#D00000"]     // red
+                     };
 
 KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     this.nodeZW = nodeZW;
     this.ktcGraph = graph;
     this.pictureNode = new Kinetic.Group({
-          x: x,
-          y: y,
-          draggable: true,
-          name: 'picturenode',
-          ktcNode : this
-        });
+        x: x,
+        y: y,
+        draggable: true,
+        name: 'picturenode',
+        ktcNode : this,
+        dragBoundFunc : function(pos){
+            var newPos = {x: pos.x, y: pos.y};
+            if (dragConstrain && this.attrs.ktcNode.nodeZW.Capabilities.indexOf("Primary Controller" ) == -1) {
+                var minF = 100;
+                var radius = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
+                var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
+                if (ktcCtrl) {
+                    var x = ktcCtrl.pictureNode.getX(); // center point
+                    var y = ktcCtrl.pictureNode.getY(); // center point
+                } else {
+                    var x= this.attrs.ktcNode.ktcStage.getWidth() / 2;
+                    var y= this.attrs.ktcNode.ktcStage.getHeight() / 2;
+                };
+                var scale = radius / Math.sqrt(Math.pow(newPos.x - x, 2) + Math.pow(newPos.y - y, 2)); // distance formula ratio
+                if (scale < 0.9 || scale > 1.1) {
+//                    scale = (scale < 0.9) ? 0.9 : 1.1;
+                    newPos = {
+                         x: Math.round((newPos.x - x) * scale + x),
+                         y: Math.round((newPos.y - y) * scale + y)
+                    };
+                };
+            };
+            return newPos;
+        }
+    });
     var op =1;
     if (this.nodeZW['State sleeping']) {op = 0.3; };
     this.pictureImg = new Kinetic.Circle({
@@ -56,10 +80,17 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     this.pictureNode.add(this.text);
     this.links = new Array ();
     this.layer = layer;
+
     this.pictureNode.on("mouseover touchstart", function() {
         var img = this.get(".pictureImg");
         img[0].setFillRadialGradientColorStops([0, 'turquoise', 1, 'blue']);
         img[0].opacity(0.5);
+        var layerL;
+        for (var idx in this.attrs.ktcNode.links) {
+            this.attrs.ktcNode.links[idx].link.opacity(1);
+            layerL = this.attrs.ktcNode.links[idx].layer;
+        };
+        if (layerL != undefined) { layerL.draw();};
         this.parent.draw();
         document.body.style.cursor = "pointer";
         });
@@ -71,21 +102,85 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         var op =1;
         if (this.attrs.ktcNode.nodeZW['State sleeping']) {op = 0.3; };
         img[0].opacity(op);
+        var layerL;
+        for (var idx in this.attrs.ktcNode.links) {
+            this.attrs.ktcNode.links[idx].link.opacity(0.5);
+            layerL = this.attrs.ktcNode.links[idx].layer;
+        };
+        if (layerL != undefined) { layerL.draw();};
         this.parent.draw();
         this.attrs.ktcNode.ktcGraph.tooltipLayer.draw();
         document.body.style.cursor = "default";
     });
 
     this.pictureNode.on("dragstart", function() {
+        if (this.attrs.ktcNode.nodeZW.Capabilities.indexOf("Primary Controller" ) == -1 ) {
+            this.dragHelper = new Kinetic.Group({
+                x: 0,
+                y: 0,
+                draggable: false,
+                name: 'dragHelper'
+            });
+            var minF = 100;
+            var ray = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
+            var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
+            if (ktcCtrl) {
+                var xOrg = ktcCtrl.pictureNode.getX(); // center point
+                var yOrg = ktcCtrl.pictureNode.getY(); // center point
+            } else {
+                var xOrg= this.attrs.ktcNode.ktcStage.getWidth() / 2;
+                var yOrg= this.attrs.ktcNode.ktcStage.getHeight() / 2;
+            };
+            var size = this.attrs.ktcNode.size();
+            var s = (size.width + size.height) / 4;
+            this.dragHelper.add(new Kinetic.Circle({
+                x: xOrg,
+                y: yOrg,
+                radius: (0.9 * ray) - s,
+                stroke: 'black',
+                strokeWidth: 2,
+                dash: [10, 5],
+                name:"DragCircle"
+                })
+            );
+            this.dragHelper.add(new Kinetic.Circle({
+                x: xOrg,
+                y: yOrg,
+                radius: (1.1 * ray) + s,
+                stroke: 'red',
+                strokeWidth: 2,
+                dash: [10, 5],
+                name:"DragCircle"
+            })
+            );
+            this.parent.add(this.dragHelper);
+        };
         this.attrs.ktcNode.ktcGraph.tooltip.hide();
         this.attrs.ktcNode.ktcGraph.tooltipLayer.draw();
         this.moveToTop();
     });
 
+    this.pictureNode.on("dragend", function() {
+        if (this.dragHelper != undefined) {
+            this.dragHelper.destroyChildren();
+            this.dragHelper.destroy();
+        };
+    });
+
     this.pictureNode.on("dragmove", function() {
-      for (var i=0; i<this.attrs.ktcNode.links.length;i++) {
-          this.attrs.ktcNode.links[i].follownode(this.attrs.ktcNode);
-      };
+        var layer;
+        var qPts;
+        for (var i=0; i<this.attrs.ktcNode.links.length;i++) {
+            if (this.attrs.ktcNode.links[i].calculatePos) {
+                var qPts = this.attrs.ktcNode.links[i].ktcNodes[0].ktcGraph.findPath(
+                        this.attrs.ktcNode.links[i].ktcNodes[0],
+                        this.attrs.ktcNode.links[i].ktcNodes[1]);
+                this.attrs.ktcNode.links[i].link.attrs.curved =  qPts.curved;
+                this.attrs.ktcNode.links[i].calculatePos = false;
+                layer = this.attrs.ktcNode.links[i].follownode(this.attrs.ktcNode, qPts);
+            };
+        };
+        if (layer != undefined) {layer.batchDraw();};
     });
 
     this.pictureNode.on("mousemove", function(){
@@ -120,11 +215,26 @@ KtcNode.prototype.destroy = function () {
     this.layer.draw();
 };
 
+KtcNode.prototype.haslinktonode = function(nodeZW) {
+    if (this.nodeZW.Neighbors.indexOf(nodeZW.NodeID) != -1) {
+        return true;
+    };
+    return false;
+};
+
+KtcNode.prototype.getLinkToNode = function(ktcNode) {
+    for (var idx in this.links) {
+        if (ktcNode.nodeZW.NodeID == this.links[idx].ktcNodes[1].nodeZW.NodeID) {
+                return this.links[idx];
+            };
+    };
+    return false;
+};
+
 KtcNode.prototype.addlink = function(linker) {
     var idx = this.links.indexOf(linker);
     if (idx == -1) {
         this.links.push(linker);
-        linker.addnode(this);
     };
 };
 
@@ -137,12 +247,14 @@ KtcNode.prototype.removelink= function(linker) {
     };
 };
 
-KtcNode.prototype.checklinks= function() {
-    var idn = -1;
+KtcNode.prototype.checklinks = function() {
+    var id, id2;
     for (var idx in this.links) {
-        if (this.links[idx].ktcNodes[1].nodeZW.NodeID != this.nodeZW.NodeID) {
-            idn = this.nodeZW.Neighbors.indexOf(this.links[idx].ktcNodes[1].nodeZW.NodeID);
-            if (idn == -1) { // Link must me removed
+        var id = this.links[idx].ktcNodes.indexOf(this);
+        id2 = (id ==0) ? 1 : 0;
+        if (this.nodeZW.Neighbors.indexOf(this.links[idx].ktcNodes[id2].nodeZW.NodeID) == -1) {
+            if (this.links[idx].ktcNodes[id2].nodeZW.Neighbors.indexOf(this.nodeZW.NodeID) == -1) {
+            // Link must me removed
                 this.links[idx].destroy();
                 this.links.splice(idx, 1);
             };
@@ -150,17 +262,21 @@ KtcNode.prototype.checklinks= function() {
     };
     var create = true;
     if (typeof this.nodeZW.Neighbors != "string") {
-        for (idn in this.nodeZW.Neighbors) {
-            create = true;
-            for (idx in this.links) {
-                if (this.links[idx].ktcNodes[1].nodeZW.NodeID == this.nodeZW.Neighbors[idn]) {
-                    create = false;
-                    break;
+        for (var in1=0; in1<this.nodeZW.Neighbors.length; in1++) {
+            nodeData2 = GetZWNode(this.nodeZW.NetworkID, this.nodeZW.Neighbors[in1]);
+            if (nodeData2 && nodeData2.ktcNode != undefined) {
+                var link = this.getLinkToNode(nodeData2.ktcNode);
+                if (!link) {
+                    link = new KtcLink(this, nodeData2.ktcNode, this.ktcGraph.linkLayer);
+                    this.addlink(link);
                 };
-            };
-            if (create) {
-                N2 = GetZWNode(this.nodeZW.NetworkID, this.nodeZW.Neighbors[idn]);
-                if (N2) {new KtcLink(this, N2.ktcNode, this.ktcGraph.linkLayer);};
+                nodeData2.ktcNode.addlink(link);
+                link = nodeData2.ktcNode.getLinkToNode(this);
+                if (!link) {
+                    link = new KtcLink(nodeData2.ktcNode, this, this.ktcGraph.linkLayer);
+                    nodeData2.ktcNode.addlink(link);
+                };
+                this.addlink(link);
             };
         };
     };
@@ -198,15 +314,16 @@ KtcNode.prototype.getColorState = function() {
     return colors;
     };
 
-KtcNode.prototype.getTypeLink = function(Node2) {
+KtcNode.prototype.getTypeLink = function() {
     var indice = 1, color = 'green';
-    if (this.nodeZW.Capabilities.indexOf("Primary Controller" ) != -1 ) { indice = 8;  color ='blue'}
-    if (this.nodeZW.Capabilities.indexOf("Routing") != -1) {indice = indice + 2;}
+    if (this.nodeZW.Capabilities.indexOf("Routing") != -1) {indice = indice + 2; color ='#64FE2E';} // green light
     if (this.nodeZW.Capabilities.indexOf("Beaming" ) != -1) {indice = indice + 1;}
-    if (this.nodeZW.Capabilities.indexOf("Listening" ) != -1) { indice = indice + 3;}
+    if (this.nodeZW.Capabilities.indexOf("Listening" ) != -1) { indice = indice + 2; color ='#2E64FE';} // blue light
     if (this.nodeZW.Capabilities.indexOf("Security") != -1) { color ='yellow';}
     if (this.nodeZW.Capabilities.indexOf("FLiRS") != -1) { indice = indice + 2;}
+    if (this.nodeZW.Capabilities.indexOf("Primary Controller" ) != -1 ) { indice += 5;  color ='blue';}
     if (this.nodeZW['State sleeping']) {indice = indice -2; color = 'orange';}
+    if (indice < 1) {indice =1;};
     if (this.nodeZW['InitState'] == 'Out of operation') {indice = 1,  color = 'red';}
     return {'indice' : indice, 'color' : color}
 };
@@ -223,6 +340,10 @@ KtcNode.prototype.update = function() {
     this.ktcGraph.tooltipLayer.batchDraw ();
     this.layer.batchDraw ();
     console.log('redraw kinetic node :' + this.nodeZW.NodeID);
+};
+
+KtcNode.prototype.size = function() {
+    return this.pictureImg.size();
 };
 
 // Groups associations functions
@@ -1198,24 +1319,133 @@ function RefreshGroups(stage, newGroups) {
 // ************* Kinetic for Neighbors ********************
 
 KtcLink = function (N1,N2,layer) {
-            // build linelink
-    var t = N1.getTypeLink(N2);
-    var x1 = N1.pictureNode.getX(), y1 = N1.pictureNode.getY();
-    var x2 = N2.pictureNode.getX(), y2 = N2.pictureNode.getY();
-    var xm = (x1+x2)/2 , ym = (y1 + y2) / 2;
-    this.link = new Kinetic.Line({
-      strokeWidth: t['indice'], //10,
-      stroke: t['color'], // "green",
-      lineCap: 'round',
-      name: 'linknodes',
-      tension : 3,
-      points: [x1, y1, xm, ym]
-    });
+    // build linelink
+    var t = N1.getTypeLink();
+    var qPts = N1.ktcGraph.findPath(N1, N2);
+    this.calculatePos = false;
+    var self = this;
     this.layer = layer;
     this.ktcNodes = new Array (N1, N2);
+    var mirror = this.getMirrorLink();
+        if (mirror) {
+            mirror.attrs.ZwLink.link.attrs.qPts = qPts.to;
+            mirror.attrs.ZwLink.link.attrs.org = qPts.dest;
+            mirror.attrs.ZwLink.link.attrs.qPoints = qPts.points;
+            mirror.attrs.ZwLink.calculatePos = false;
+            mirror.attrs.ZwLink.link.attrs.curved = qPts.curved;
+        };
+    this.link = new Kinetic.Shape({
+        id: 'link_'+N1.nodeZW.NodeID+'_to_'+N2.nodeZW.NodeID,
+        stroke: t['color'],
+        strokeWidth: t['indice'],
+        lineCap: 'round',
+        name: 'linknodes',
+        qPts: qPts.from,
+        org: qPts.org,
+        qPoints: qPts.points,
+        curved : qPts.curved,
+        ZwLink: self,
+        opacity:0.5,
+        drawFunc: function(context) {
+            if(this.attrs.ZwLink.ktcNodes[0].haslinktonode(this.attrs.ZwLink.ktcNodes[1].nodeZW)) {
+                context.beginPath();
+                context.moveTo(this.attrs.org.x, this.attrs.org.y);
+                if (this.attrs.curved) {
+                    context.quadraticCurveTo(this.attrs.qPts[0],this.attrs.qPts[1],this.attrs.qPts[2],this.attrs.qPts[3]);
+                } else {
+                    context.lineTo(this.attrs.qPts[2],this.attrs.qPts[3]);
+                };
+                context.fillStrokeShape(this);
+                if(!this.attrs.ZwLink.ktcNodes[1].haslinktonode(this.attrs.ZwLink.ktcNodes[0].nodeZW)) {
+                    if (this.tipLink == undefined) {
+                        this.tipLink = new Kinetic.Group({
+                          x: this.attrs.qPts[2],
+                          y: this.attrs.qPts[3],
+                          draggable: false,
+                          opacity : 0.7,
+                          name: 'tipLink'
+                        });
+                        this.textEnd = new Kinetic.Text({
+                              x: 0,
+                              y: 0,
+                              text: this.attrs.ZwLink.ktcNodes[1].nodeZW.NodeID,
+                              fontSize: 12,
+                              fontFamily: 'Calibri',
+                              fill: 'red',
+                              name: 'textEnd'
+                            });
+                        this.textEnd.y((-this.textEnd.height()/2));
+                        this.rectEnd = new Kinetic.Rect({
+                            x: -2,
+                            y: -((this.textEnd.height()/2)+2),
+                            width: this.textEnd.width() + 4,
+                            height: this.textEnd.height() + 4,
+                            fill: "white",
+                            stroke: 'red',
+                            cornerRadius : 5,
+                            name: 'rectEnd'
+                        });
+                        this.tipLink.add(this.rectEnd);
+                        this.tipLink.add(this.textEnd);
+                        this.parent.add(this.tipLink);
+                    } else {
+                        this.tipLink.x(this.attrs.qPts[2]);
+                        this.tipLink.y(this.attrs.qPts[3]);
+                        this.textEnd.text(this.attrs.ZwLink.ktcNodes[1].nodeZW.NodeID);
+                    };
+                } else if (this.tipLink != undefined) {
+                        this.tipLink.destroyChildren();
+                        this.tipLink.destroy();
+                        this.tipLink = undefined;
+                };
+                var debug = false;
+                    if (debug) {
+                    if (this.curveDebug != undefined) {
+                        this.curveDebug.destroyChildren();
+                        this.curveDebug.destroy();
+                        this.curveDebug = undefined
+                    };
+                    if (this.attrs.curved) {
+                        color = 'red';
+        //            } else {
+        //                color = 'pink';};
+                        this.curveDebug = new Kinetic.Group({
+                              x: 0,
+                              y: 0,
+                              draggable: false,
+                              name: 'debugLink'
+                            });
+                        for (p=0; p < this.attrs.qPoints.length; p+=2) {
+                            this.curveDebug.add(new Kinetic.Circle({
+                                x:this.attrs.qPoints[p].x,
+                                y:this.attrs.qPoints[p].y,
+                                radius: 2,
+                                fill: color,
+                                stroke: color,
+                                strokeWidth: 1
+                                })
+                            );
+                        };
+                        this.parent.add(this.curveDebug);
+                    };
+                };
+                this.attrs.ZwLink.calculatePos = true;
+            };
+        }
+    });
     this.layer.add(this.link);
-    N1.addlink(this);
-    N2.addlink(this);
+};
+
+KtcLink.prototype.getMirrorLink = function(){
+    var links = this.layer.getChildren();
+    var searchId = 'link_'+this.ktcNodes[1].nodeZW.NodeID+'_to_'+this.ktcNodes[0].nodeZW.NodeID;
+    for (i=0; i < links.length; i++) {
+        var id = links[i].attrs.id;
+        if (links[i].attrs.id == searchId) {
+           return links[i];
+        };
+   }
+   return false;
 };
 
 KtcLink.prototype.addnode = function(ktcNode) {
@@ -1228,6 +1458,16 @@ KtcLink.prototype.addnode = function(ktcNode) {
 };
 
 KtcLink.prototype.destroy = function () {
+    if (this.link.tipLink != undefined) {
+        this.link.tipLink.destroyChildren();
+        this.link.tipLink.destroy();
+        this.link.tipLink = undefined;
+    };
+    if (this.link.curveDebug != undefined) {
+        this.link.curveDebug.destroyChildren();
+        this.link.curveDebug.destroy();
+        this.link.curveDebug = undefined
+    };
     this.link.destroy();
 };
 
@@ -1246,30 +1486,26 @@ KtcLink.prototype.asnode= function(ktcNode) {
     }else {return false};
 };
 
-KtcLink.prototype.follownode = function(ktcNode) {
-    var id1 = this.ktcNodes.indexOf(ktcNode);
-    var id2 =0;
-    if (id1 != -1) {
-        if (id1 ==0) {id2 =1;};
-        var p2 = this.ktcNodes[id2].pictureNode.getPosition();
-        var p1 = ktcNode.pictureNode.getPosition();
-        var pm = { 'x' : (p2.x+ p1.x) /2, 'y' : (p2.y + p1.y) /2};
-        this.link.attrs.points[id1*2] = p1.x;
-        this.link.attrs.points[(id1*2)+1] = p1.y;
-        this.link.attrs.points[id2*2] = pm.x;
-        this.link.attrs.points[(id2*2)+1] = pm.y;
-        if (id2 == 0) {
-            this.link.attrs.points[id2*2] = pm.x;
-            this.link.attrs.points[(id2*2)+1] = pm.y;
-            this.link.attrs.points[id1*2] = p2.x;
-            this.link.attrs.points[(id1*2)+1] = p2.y;
-            }
-        this.layer.draw();
-        }
+KtcLink.prototype.follownode = function(ktcNode, qPts) {
+    var id = this.ktcNodes.indexOf(ktcNode);
+    if (id != -1) {
+        this.link.attrs.qPts = qPts.from;
+        this.link.attrs.org = qPts.org;
+        this.link.attrs.qPoints = qPts.points;
+        var mirror = this.getMirrorLink();
+        if (mirror) {
+            mirror.attrs.ZwLink.link.attrs.qPts = qPts.to;
+            mirror.attrs.ZwLink.link.attrs.org = qPts.dest;
+            mirror.attrs.ZwLink.link.attrs.qPoints = qPts.points;
+            mirror.attrs.ZwLink.calculatePos = false;
+            mirror.attrs.ZwLink.link.attrs.curved = this.link.attrs.curved;
+        };
+    };
+    return this.layer;
 };
 
 KtcLink.prototype.update= function() {
-    var t = this.ktcNodes[0].getTypeLink(this.ktcNodes[2]);
+    var t = this.ktcNodes[0].getTypeLink();
     this.link.setStrokeWidth (t['indice']);
     this.link.setStroke(t['color']);
     this.layer.draw();
@@ -1279,27 +1515,27 @@ ktcScrollbar = function (contenaire, direction, layer) {
     this.ktcParent = contenaire;
     this.direction = direction;
     var thick = 16;
-    var lenght = 130;
+    var length = 130;
     if (this.ktcParent.ktcStage.nodeType = "Stage") {
         thick = 16;
-        lenght = 130;
+        length = 130;
     };
     if (direction == 'horizontal') {
-        lenght = (this.ktcParent.ktcStage.getWidth() - thick)  / 3; //130;
+        length = (this.ktcParent.ktcStage.getWidth() - thick)  / 3; //130;
         var xOrg = 0, yOrg = this.ktcParent.ktcStage.getHeight() - thick;
         var areaWidth = this.ktcParent.ktcStage.getWidth() - thick;
         var areaHeight = thick;
-        var barWidth = lenght;
+        var barWidth = length;
         var barHeight = thick;
         var xBar = (areaWidth - barWidth)/2;
         var yBar = yOrg;
     } else {
-        lenght = (this.ktcParent.ktcStage.getHeight() - thick)  / 3; //130;
+        length = (this.ktcParent.ktcStage.getHeight() - thick)  / 3; //130;
         var xOrg = this.ktcParent.ktcStage.getWidth() - thick, yOrg = 0;
         var areaWidth = thick;
         var areaHeight = this.ktcParent.ktcStage.getHeight() - thick;
         var barWidth = thick;
-        var barHeight = lenght;
+        var barHeight = length;
         var xBar = xOrg ;
         var yBar = (areaHeight - barHeight)/2;
     };
@@ -1385,9 +1621,9 @@ ktcScrollbar.prototype.reziseWidth = function (dw) {
         var ratio = (w+dw) / w;
         var areaW = w + dw;
         this.scrollArea.setWidth(areaW);
-        var lenght = areaW / 3;
+        var length = areaW / 3;
         this.scrollBar.setX(this.scrollBar.getX() * ratio);
-        this.scrollBar.setWidth(lenght);
+        this.scrollBar.setWidth(length);
         var offset = this.ktcParent.getNodesCenter();
         this.ktcParent.setNodesCenter(this.getScrollPosition(), offset.y);
     } else {
@@ -1399,15 +1635,15 @@ ktcScrollbar.prototype.reziseWidth = function (dw) {
 ktcScrollbar.prototype.getScrollPosition = function () {
     if (this.direction == 'horizontal') {
         var areaW = this.scrollArea.getWidth();
-        var lenght = areaW / 3;
-        var scrollPos = (this.scrollBar.getX() + (lenght/2)) - (areaW/2);
-        var ratio = this.ktcParent.space.width/ (areaW - lenght);
+        var length = areaW / 3;
+        var scrollPos = (this.scrollBar.getX() + (length/2)) - (areaW/2);
+        var ratio = this.ktcParent.space.width/ (areaW - length);
         var scrollPos = scrollPos * ratio ;
     } else {
         var areaW = this.scrollArea.getHeight();
-        var lenght = areaW / 3;
-        var scrollPos = (this.scrollBar.getY() + (lenght/2)) - (areaW/2);
-        var ratio = this.ktcParent.space.height/ (areaW - lenght);
+        var length = areaW / 3;
+        var scrollPos = (this.scrollBar.getY() + (length/2)) - (areaW/2);
+        var ratio = this.ktcParent.space.height/ (areaW - length);
         var scrollPos = scrollPos * ratio ;
     };
     return scrollPos;
@@ -1512,15 +1748,23 @@ KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
       };
     for (var id1=0; id1<nodesData.length;id1++)  {
         for (var in1=0; in1<nodesData[id1].Neighbors.length;in1++) {
-            for (var id2=0; id2<nodesData.length;id2++) {
-                if (nodesData[id2].NodeID == nodesData[id1].Neighbors[in1]) {
-                    Link = new KtcLink(nodesData[id1].ktcNode, nodesData[id2].ktcNode, this.linkLayer);
-                    break;
+            nodeData2 = GetZWNode(nodesData[id1].NetworkID, nodesData[id1].Neighbors[in1]);
+            if (nodeData2 && nodeData2.ktcNode != undefined) {
+                var link = nodesData[id1].ktcNode.getLinkToNode(nodeData2.ktcNode);
+                if (!link) {
+                    link = new KtcLink(nodesData[id1].ktcNode, nodeData2.ktcNode, nodesData[id1].ktcNode.ktcGraph.linkLayer);
+                    nodesData[id1].ktcNode.addlink(link);
                 };
+                nodeData2.ktcNode.addlink(link);
+                link = nodeData2.ktcNode.getLinkToNode(nodesData[id1].ktcNode);
+                if (!link) {
+                    link = new KtcLink(nodeData2.ktcNode, nodesData[id1].ktcNode, nodesData[id1].ktcNode.ktcGraph.linkLayer);
+                    nodeData2.ktcNode.addlink(link);
+                };
+                nodesData[id1].ktcNode.addlink(link);
             };
         };
     };
-
     this.ktcStage.add(this.linkLayer);
     this.ktcStage.add(this.nodeLayer);
     this.ktcStage.add(this.tooltipLayer);
@@ -1537,11 +1781,17 @@ KtcNeighborsGraph.prototype.addNode = function(nodeData) {
     };
     nodeData.ktcNode = new KtcNode(pos[0], pos[1], r, nodeData, this.nodeLayer, this);
     for (var in1=0; in1<nodeData.Neighbors.length;in1++) {
-        for (var id2=0; id2<nodesData.length;id2++) {
-            if (nodesData[id2].NodeID == nodeData.Neighbors[in1]) {
-                Link = new KtcLink(nodeData.ktcNode, nodesData[id2].ktcNode, this.linkLayer);
-                break;
+        nodeData2 = GetZWNode(nodeData.NetworkID, nodeData.Neighbors[in1]);
+        if (nodeData2 && nodeData2.ktcNode != undefined) {
+            var link = nodeData.ktcNode.getLinkToNode(nodeData2.ktcNode);
+            if (!link) {
+                link = nodeData2.ktcNode.getLinkToNode(nodeData.ktcNode);
+                if (!link) {
+                    link = new KtcLink(nodeData.ktcNode, nodeData2.ktcNode, this.linkLayer);
+                };
             };
+            nodeData.ktcNode.addlink(link);
+            nodeData2.ktcNode.addlink(link);
         };
     };
     this.nodeLayer.batchDraw();
@@ -1563,15 +1813,16 @@ KtcNeighborsGraph.prototype.setNodesCenter = function (x, y) {
 
 KtcNeighborsGraph.prototype.getNodesPos = function (s) {
     var nodesPos = [];
+    var size;
     for (n in nodesData) {
         if (nodesData[n].ktcNode != undefined) {
             pos = nodesData[n].ktcNode.pictureNode.position();
-            size = nodesData[n].ktcNode.pictureNode.size();
+            size = nodesData[n].ktcNode.size();
             if (size.width == 0) {
                 size.width = s;
                 size.height = s;
             };
-            nodesPos.push({"NodeID": nodesData[n].NodeID,
+            nodesPos.push({"ktcNode": nodesData[n].ktcNode,
                     "gRect": {"x1": pos.x - (size.width /2), "y1": pos.y - (size.height /2), "x2": pos.x + (size.width /2), "y2": pos.y + (size.height /2)},
                     "force" : getGraphForce(nodesData[n])});
         };
@@ -1591,7 +1842,7 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
     var find = false, intersec = false;
     var force = minF + getGraphForce(nodeData);
     var stepA = 2 * Math.asin((4*rNode)/(2*force));
-    console.log("Node position ("+nodeData.NodeID+"), force "+force);
+//    console.log("Node position ("+nodeData.NodeID+"), force "+force);
     while (!find) {
         angleC = angle;
         x= xc + force * Math.cos(angle);
@@ -1603,9 +1854,9 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
                 force = minF + getGraphForce(nodeData);
                 stepA = 2 * Math.asin((4*rNode)/(2*force));
                 nbLap = 1;
-                console.log("      Node position, No solution on this lap. Change force " + force);
+//                console.log("      Node position, No solution on this lap. Change force " + force);
             } else { nbLap++
-                console.log("      Node position, New lap " + nbLap);
+//                console.log("      Node position, New lap " + nbLap);
                 };
         } else {
             angle += stepA;
@@ -1615,7 +1866,7 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
         intersec = false;
         if (nodesPos.length != 0 ) {
             for (np in nodesPos) {
-                if (nodesPos[np].NodeID != nodeData.NodeID) {
+                if (nodesPos[np].ktcNode.nodeZW.NodeID != nodeData.NodeID) {
                     if (pointInRect(x1, y1, nodesPos[np].gRect) || pointInRect(x1, y2, nodesPos[np].gRect) ||
                         pointInRect(x2, y1, nodesPos[np].gRect) || pointInRect(x2, y2, nodesPos[np].gRect)) {
                             intersec = true;
@@ -1628,8 +1879,61 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
         nb++;
         if (nb > 256) { find = true; };
     };
-    console.log("   Node position, nb iteration :" +nb + " angle " + angleC *(180/Math.PI) + "°");
+//    console.log("   Node position, nb iteration :" +nb + " angle " + angleC *(180/Math.PI) + "°");
     return [x, y, angle];
+};
+
+KtcNeighborsGraph.prototype.findPath = function (kN1, kN2){
+    var nodesPos = this.getNodesPos(50);
+    var x1 = kN1.pictureNode.getX(), y1 = kN1.pictureNode.getY();
+    var x2 = kN2.pictureNode.getX(), y2 = kN2.pictureNode.getY();
+    var xm = (x1+x2)/2 , ym = (y1 + y2) / 2;
+    var pmT = {"x": xm, "y": ym};
+    var qPts = {"org": {"x": x1, "y": y1},
+                "dest" :{"x": x2, "y": y2},
+                "from": [0, 0, xm, ym],
+                "to":[0, 0, xm, ym],
+                "points": getLinePoints(x1, y1, x2, y2),
+                "curved": false};
+    var tension = 0;
+    var stepT = 5;
+    var maxT = (Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2)) / 2) - stepT;
+    if (nodesPos.length != 0 ) {
+        var solved = false;
+        var nb =0;
+        while (!solved) {
+            solved = true;
+            for (p in qPts.points) {
+                for (np in nodesPos) {
+                    if (nodesPos[np].ktcNode != kN1 && nodesPos[np].ktcNode != kN2){
+                        if (pointInRect(qPts.points[p].x, qPts.points[p].y, nodesPos[np].gRect)) {
+//                            console.log("    Point Position ("+qPts.points[p].x+","+qPts.points[p].y+") intersec node "+nodesPos[np].ktcNode.nodeZW.NodeID);
+                            tension += stepT;
+                            pmT = moveMedianPts(x1,y1, xm, ym, x2, y2, tension);
+                            qPts = quadraticPoints(x1, y1, pmT.x, pmT.y, x2, y2);
+                            solved = false;
+                            break;
+                        };
+                    };
+                };
+                if (!solved) { break; };
+            };
+            if (Math.abs(tension) >= maxT) {
+                if (Math.sign(tension) == -1) {
+                    console.log("Find Path have no solution with tension ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
+                    solved = true;
+                } else {
+                    tension = 0;
+                    stepT = -5;
+                };
+            };
+            if (nb > 200) {
+                console.log("Find Path have no solution, max iteration ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
+                solved = true};
+            nb +=1;
+        };
+    };
+    return qPts;
 };
 
 function pointInRect(x, y, gRect) {
@@ -1643,3 +1947,139 @@ function pointInRect(x, y, gRect) {
 function getGraphForce (nodeData) {
     return (100 - (nodeData.ComQuality)) * 6
 };
+
+function moveMedianPts (x1, y1, xm, ym, x2, y2, tension) {
+    var a1 = (y2-y1)/(x2-x1);
+    if (a1 == 0) {
+        var a;
+        var b = 0;
+    } else {
+        var a = -1/a1;
+        var b = ym -(a*xm);
+    };
+    var len = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+    if (Math.abs(tension) >= len -10) {
+        tension = Math.sign(tension)*(len -10);
+    };
+    return  getPointTension(xm, ym, a, b, tension);
+};
+
+function getLinePoints(x1, y1, x2, y2) {
+    var a = (y2-y1)/(x2-x1);
+    var b = y1 -(a*x1);
+    var len = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+    var points = [];
+    if (x1 < x2) {
+        var x = x1;
+        var y = y1;
+    } else {
+        var x = x2;
+        y = y2;
+    };
+    for (var l=10; l<len-10; l+=10) {
+        points.push(getPointTension(x, y, a, b, l));
+    };
+    return points;
+};
+
+function getPointTension (x, y, a, b, tension) {
+    // Solve quadratic eaquation
+    var point = {"x": x, "y": y};
+    if (tension !=0) {
+        if (a != undefined) {
+            var aa = (1+Math.pow(a,2));
+            var bb = 2*((a*b)-(a*y)-x);
+            var cc = Math.pow(x,2) + Math.pow(y,2) + Math.pow(b,2) - Math.pow(tension,2) - (2*y*b);
+            var dd = Math.pow(bb,2)- (4*(aa*cc)); // discriminant
+            var x2 = x;
+            if (dd < 0) {
+    //            console.log("Humm annoying, no solution ");
+            } else if (dd == 0) {
+    //            console.log("One solution ");
+                x2 = -bb/(2*aa);
+            } else if (tension > 0) {
+    //            console.log("First solution ");
+                x2 = (-bb + Math.sqrt(dd))/(2*aa)
+            } else {
+    //            console.log("Second solution ");
+                x2 = (-bb - Math.sqrt(dd))/(2*aa)
+            };
+            point = {"x": x2, "y": (a*x2)+b};
+        } else {
+            point = {"x": x, "y": y + tension};
+        };
+    };
+    return point;
+};
+
+function quadraticPoints (x1, y1, xm, ym, x2, y2) {
+    var mL1 = {'x': (x1+xm)/2, 'y': (y1+ym)/2};
+    var mL2 = {'x': (xm+x2)/2, 'y': (ym+y2)/2};
+    var a1 = (ym-y1)/(xm-x1);
+    var a2 = (y2-ym)/(x2-xm);
+    var a = (y2-y1)/(x2-x1);
+    var bm = ym-(a*xm);
+    var len = Math.abs(Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2))) / 2;
+    if (a1 == 0) {
+        var x1p = mL1.x;
+    } else {
+        var a1p = -1/a1;
+        var b1p = mL1.y - (a1p*mL1.x);
+        var x1p = (b1p-bm)/(a-a1p);
+    };
+    var y1p = (a*x1p) + bm;
+
+    if (a2 == 0) {
+        var x2p =mL2.x
+    } else {
+        var a2p =  -1/a2;
+        var b2p = mL2.y - (a2p*mL2.x);
+        var x2p = (b2p-bm)/(a-a2p);
+    };
+    var y2p = (a*x2p) + bm;
+
+    var tab1 = [];
+    var tab2 = [];
+    for (var l=10; l<len-10; l+=10) {
+        t = l/len;
+//        t3b = Math.pow(1 - t, 3);
+//        t2b = 3 * Math.pow(1 - t, 2) * t;
+//        t2 = 3 * (1 - t) * Math.pow(t, 2);
+//        t3 = Math.pow(t, 3);
+//        x = t3b * x1 + t2b* x1p + t2 * x1p + t3 * xm;
+//        y = t3b * y1 + t2b* y1p + t2 * y1p + t3 * ym;
+        var t2 = Math.pow(t,2);
+        var t2b =  Math.pow(1 - t, 2);
+        var tbt = 2*(1-t)* t;
+        x = t2b * x1 + tbt * x1p + t2 * xm;
+        y = t2b * y1 + tbt * y1p + t2 * ym;
+        tab1.push({"x": x, "y": y});
+//        x = t3b * xm + t2b* x2p + t2 * x2p + t3 * x2;
+//        y = t3b * ym + t2b* y2p + t2 * y2p + t3 * y2;
+        x = t2b * xm + tbt * x2p + t2 * x2;
+        y = t2b * ym + tbt * y2p + t2 * y2;
+        tab2.push({"x": x, "y": y});
+    };
+    var tab = tab1.concat(tab2);
+    return {"org":{"x": x1, "y": y1}, "dest":{"x": x2, "y": y2}, "from":[x1p, y1p, xm, ym], "to":[x2p, y2p, xm, ym], "points":tab, "curved": true}
+};
+
+// Points are objects with x and y properties
+// p0: start point
+// p1: 1st crossing point
+// p2: 2nd crossing point
+// p3: end point
+// t: progression along curve 0..1
+// returns an object containing x and y values for the given t
+function bezierCubicXY (p0, p1, p2, p3, t) {
+    var ret = {};
+    var coords = ['x', 'y'];
+    var i, k;
+
+    for (i in coords) {
+        k = coords[i];
+        ret[k] = Math.pow(1 - t, 3) * p0[k] + 3 * Math.pow(1 - t, 2) * t * p1[k] + 3 * (1 - t) * Math.pow(t, 2) * p2[k] + Math.pow(t, 3) * p3[k];
+    }
+    return ret;
+}
+

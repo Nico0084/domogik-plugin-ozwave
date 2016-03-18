@@ -23,7 +23,6 @@ function GetValueRefId(NetworkID, NodeID, ValueID) {
     return  "_" + NetworkID + "_" + NodeID + "_" + ValueID;
 };
 
-
 // Handle all messages for nodes state, init, change, value updating.
 function HandleDataNodeUpdMsg(data) {
     var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
@@ -250,6 +249,15 @@ function RefreshGroupsNodeData(NetworkID, NodeID, groups) {
     return false;
 };
 
+function GetControllerNode(NetworkID) {
+    for (var i = 0; i < nodesData.length; i++) {
+        if (nodesData[i].NetworkID == NetworkID && nodesData[i].Capabilities.indexOf("Primary Controller") != -1) {
+            return nodesData[i];
+        };
+    };
+    return false;
+};
+
 function GetValueZWNode(NetworkID, NodeID, ValueID) {
     for (var i=0; i < nodesData.length; i++) {
         if ((nodesData[i].NodeID == NodeID) && (nodesData[i].NetworkID == NetworkID)) {
@@ -345,9 +353,8 @@ function requestZWNodeInfos(NetworkID, nodeId) {
             nodeId: nodeId
             },
             function(data, result, request) {
-                console.log("Retour de get node infos :" + JSON.stringify(data));
                 if (data.result == 'success') {
-                    console.log("updating datatable...");
+                    console.log("Receive update Info for NetworkID = " + NetworkID + ", nodeId = " +nodeId);
                     data.content.LastReqRefresh = d.getTime();
                     updateNode(data.content);
                 } else {
