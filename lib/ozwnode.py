@@ -533,7 +533,7 @@ class ZWaveNode:
             self._neighbors = None
         self.log.debug('Node [%d] neighbors are: %s', self._nodeId, self._neighbors)
         self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Neighbors updated.',
-                               'data': {'state':  'Neighbors', 'Neighbors': self._neighbors}})
+                               'data': {'state':  'Neighbors', 'Neighbors': list(self._neighbors)}})
 
     def updateGroup(self, groupIdx):
         """Update a group/association informations of node."""

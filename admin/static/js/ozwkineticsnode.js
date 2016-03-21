@@ -57,7 +57,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         strokeWidth: 2,
         shadowColor: 'black',
         shadowBlur: 2,
-        shadowOffset: 5,
+        shadowOffset: {x:5,y:5},
         shadowOpacity: 0.5,
         name:"pictureImg",
         opacity: op,

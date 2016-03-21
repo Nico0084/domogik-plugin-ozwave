@@ -32,6 +32,152 @@
             </div>
         </div>
     </div>
+    <div class='row'>
+        <div class='col-md-6'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <a class="bg-info" href="#" onclick="toggleVisible('nodesCaption', 'toggle-nodesCaption');return false;">
+                        <h4>
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-nodesCaption" aria-hidden="true" data-target="caracCTRL"></span>
+                            <span>&nbsp;&nbsp;{% trans %}Node state caption{% endtrans %}</span>
+                        </h4>
+                    </a>
+                </div>
+                <div class='panel-body' id="nodesCaption" style="width: 95%; display: none;" hidden>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Node awake</th>
+                                    <th>Init state</th>
+                                    <th>Node sleeping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/1-Node-W.png"></td>
+                                    <td>{% trans %}Uninitialized{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/1-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/2-Node-W.png"></td>
+                                    <td>{% trans %}Initialized - not known	{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/2-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/3-Node-W.png"></td>
+                                    <td>{% trans %}In progress - Linked to controller{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/3-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/4-Node-W.png"></td>
+                                    <td>{% trans %}In progress - Can receive messages{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/4-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/5-Node-W.png"></td>
+                                    <td>{% trans %}In progress - Can receive messages (Not linked) Means that node probably sleeping during init process, at his wake-up initialization will be completed.{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/5-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/6-Node-W.png"></td>
+                                    <td>{% trans %}In progress - Devices initializing{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/6-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/7-Node-W.png"></td>
+                                    <td>{% trans %}Completed{% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/7-Node-S.png"></td>
+                                </tr>
+                                <tr>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/8-Node-W.png"></td>
+                                    <td>{% trans %}Out of operation (failed){% endtrans %}</td>
+                                    <td><img src = "/plugin_ozwave/static/images/caption/8-Node-S.png"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <a class="bg-info" href="#" onclick="toggleVisible('linksCaption', 'toggle-linksCaption');return false;">
+                        <h4>
+                            <span class="glyphicon glyphicon-chevron-down pull-left" id="toggle-linksCaption" aria-hidden="true" data-target="caracCTRL"></span>
+                            <span>&nbsp;&nbsp;{% trans %}Links caption{% endtrans %}</span>
+                        </h4>
+                    </a>
+                </div>
+                <div class='panel-body' id="linksCaption" style="width: 95%; display: none;" hidden>
+                    <h5>{% trans %}Thickness and color according to node capabilities{% endtrans %}</h5>
+                    <p><img src = "/plugin_ozwave/static/images/caption/orphan-link.png"> {% trans %}Tag specifies the node number for orphan link{% endtrans %}</p>
+                    <div class="table-responsive">
+                      <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Color</th>
+                                <th>Capability</th>
+                                <th>Priority color</th>
+                                <th>Thickness (pts)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:red; vertical-align: middle"></i></td>
+                                <td>{% trans %}Out of operation (failed){% endtrans %}</td>
+                                <td>1</td>
+                                <td>=1</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:orange"></i></td>
+                                <td>{% trans %}State sleeping{% endtrans %}</td>
+                                <td>2</td>
+                                <td>-2</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:blue"></i></td>
+                                <td>{% trans %}Primary Controller{% endtrans %}</td>
+                                <td>3</td>
+                                <td>+5</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:green"></i></td>
+                                <td>{% trans %}FLiRS{% endtrans %}</td>
+                                <td>4</td>
+                                <td>+2</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:yellow"></i></td>
+                                <td>{% trans %}Security{% endtrans %}</td>
+                                <td>5</td>
+                                <td>+0</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:#2E64FE"></td>
+                                <td>{% trans %}Listening{% endtrans %}</td>
+                                <td>6</td>
+                                <td>+2</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:green"></i>
+                                <td>{% trans %}Beaming{% endtrans %}</td>
+                                <td>7</td>
+                                <td>+1</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-minus fa-3x" style="color:#64FE2E"></i></td>
+                                <td>{% trans %}Routing{% endtrans %}</td>
+                                <td>8</td>
+                                <td>+2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
  {% endblock %}
