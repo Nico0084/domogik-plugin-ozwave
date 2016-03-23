@@ -32,7 +32,6 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
                 };
                 var scale = radius / Math.sqrt(Math.pow(newPos.x - x, 2) + Math.pow(newPos.y - y, 2)); // distance formula ratio
                 if (scale < 0.9 || scale > 1.1) {
-//                    scale = (scale < 0.9) ? 0.9 : 1.1;
                     newPos = {
                          x: Math.round((newPos.x - x) * scale + x),
                          y: Math.round((newPos.y - y) * scale + y)
@@ -93,6 +92,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         if (layerL != undefined) { layerL.draw();};
         this.parent.draw();
         document.body.style.cursor = "pointer";
+        setupContextMenuNode(this);
         });
 
     this.pictureNode.on("mouseout touchend", function() {
@@ -205,6 +205,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         mousePos=0;
     });
     this.layer.add(this.pictureNode);
+
 };
 
 KtcNode.prototype.destroy = function () {
@@ -580,9 +581,6 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
         this.moveToTop();
     });
 
-//    this.pictNodeGrp.on("mousemove touchmove", function(e){
-//        this.attrs.nodeP.tooltip.hide();
-//    });
     this.layer.add(this.pictNodeGrp);
     this.tooltip.hide();
 };
@@ -1649,7 +1647,7 @@ ktcScrollbar.prototype.getScrollPosition = function () {
     return scrollPos;
 };
 
-KtcNeighborsGraph = function (divId, secId){
+KtcNeighborsGraph = function (divId){
     var cont = $("#containerneighbors");
     var width = 800;
     for (var i=0; i < cont.length; i++) {
@@ -1664,7 +1662,6 @@ KtcNeighborsGraph = function (divId, secId){
         height: 600,
         neighborsGraph : this
     });
-    this.section = secId;
     this.space = {width : 2000, height : 1000};
     this.nodeLayer = new Kinetic.Layer();
     this.linkLayer = new Kinetic.Layer();
@@ -1701,7 +1698,7 @@ KtcNeighborsGraph = function (divId, secId){
     this.buildKineticNeighbors();
     var graph = this
     window.onresize = function resizeStage(){
-        var cont =  document.getElementById(graph.section);
+        var cont =  document.getElementById(divId);
         var w = cont.getBoundingClientRect();
         var dw = (w.width - 25) - graph.ktcStage.getWidth() ;
         graph.ktcStage.setWidth(w.width - 25);
@@ -2083,3 +2080,155 @@ function bezierCubicXY (p0, p1, p2, p3, t) {
     return ret;
 }
 
+function onContextMenuShow (target, pos) {
+        console.log(target);
+        console.log(pos);
+};
+
+function onContextMenuItemSelect (menuitem, target, href, pos) {
+    console.log("Menu select : "+menuitem);
+};
+
+function setupContextMenuNode(self) {
+    $.contextMenu('destroy', '#'+self.attrs.ktcNode.ktcGraph.ktcStage.attrs.container.id);
+    var nodeZW = self.attrs.ktcNode.nodeZW;
+    $.contextMenu({
+        selector: '#'+self.attrs.ktcNode.ktcGraph.ktcStage.attrs.container.id,
+        className:'ktcNodeMenu-title',
+        callback: function(key, options) {
+            console.log("start request") + key;
+            switch (key) {
+                case 'HealNode' :
+                    sendRequest("ozwave.node.action", {"action": key, "networkId": nodeZW.NetworkID, "nodeId": nodeZW.NodeID}, function(data, result) {
+                        console.log("ws send done");
+                        if (result == "error" || data.result == "error") {
+                            new PNotify({
+                                type: 'error',
+                                title: 'Refresh node',
+                                text: data.content.error,
+                                delay: 6000
+                            });
+                        } else {
+                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                            new PNotify({
+                                type: 'success',
+                                title: 'Refresh node sended',
+                                text: data.content.usermsg,
+                                delay: 4000
+                            });
+                        };
+                    });
+                    break;
+                case "updassoc" :
+                    var bdiag = bootbox.dialog({
+                        show: false,
+                        className: 'text-center',
+                        title: 'Edit associations groups.' + "<br> " + nodeZW.Model + " " + nodeZW.NetworkID + '.' + nodeZW.NodeID,
+                        message:  "<div class='contenaire-fluid'>" +
+                                        "<div id='contgrpass'>" +
+                                        "</div>" +
+                                    "</div>",
+                        data: nodeZW,
+                        buttons: [{
+                            id: 'btn-cancel',
+                            label: 'Quit',
+                            className: 'btn-danger',
+                            autospin: false,
+                            callback: function(dialogRef){
+                                console.log("Exit edit association.");
+                                ws.onmessage = ws_onmessage_diaggrp;
+                            }
+                        },{
+                            id: 'btn-sendchange',
+                            label: 'Send modification',
+                            className: 'btn-primary',
+                            autospin: false,
+                            callback: function(dialogRef){
+                                var grps =[];
+                                var newgrps = bdiag.getnewgroups();
+                                for (var i=0; i<newgrps.length; i++){
+                                    grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
+                                };
+                                console.log("Send association modification : " + JSON.stringify(grps));
+                                document.body.style.cursor = "wait";
+                                $('#btn-cancel').addClass('disabled');
+                                sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
+                                    var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+                                    document.body.style.cursor = "default";
+                                    $('#btn-cancel').removeClass('disabled');
+                                    if (result == "error" || data.result == "error") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: 'Set group association fail.',
+                                            text: data.content.error,
+                                            delay: 6000
+                                        });
+                                    } else {
+                                        nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.groups);
+                                        RefreshGroups(bdiag.stageGrps, data.content.groups);
+                                        new PNotify({
+                                            type: 'success',
+                                            title: 'Set group association',
+                                            text: 'Association modification are sended.',
+                                            delay: 4000
+                                        });
+                                    };
+                                });
+                                return false;
+                            }
+                        }],
+                        onEscape: function() {
+                            console.log("Exit by escape.");
+                            ws.onmessage = ws_onmessage_diaggrp;
+                        },
+                    });
+                    bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeZW);
+                    bdiag.getnewgroups = function () {
+                        var newgrps =  GetNewGroups(self.stageGrps, nodeZW);
+                        return newgrps;
+                    };
+                    var ws_onmessage_diaggrp = ws.onmessage;
+                    ws.onmessage = function(e) {
+                        ws_onmessage_diaggrp(e);
+                        var data = JSON.parse(e.data);
+                        if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
+                            nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
+                            RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
+                            console.log('Yes capture msg :=)')
+                            new PNotify({
+                                            type: 'success',
+                                            title: 'Set group association',
+                                            text: 'Association modification confirmed by node.',
+                                            delay: 4000
+                                        });
+                        };
+                    };
+                    bdiag.modal('show');
+                    break;
+            };
+        },
+        items: {
+            updassoc: {
+                name: "Edit Associations",
+                icon: function(){
+                    return 'context-menu-icon contextmenu-icon-fa fa-link';
+                }},
+            HealNode: {
+                name: "Heal node with reroute",
+                icon: function(){
+                    return 'context-menu-icon contextmenu-icon-fa fa-road';
+                }},
+            quit: {
+                name: "Quitter", icon: function(){
+                return 'context-menu-icon context-menu-icon-quit';
+            }}
+        },
+        events: {
+            hide: function(options){
+                $.contextMenu('destroy', '#'+nodeZW.ktcNode.ktcGraph.ktcStage.attrs.container.id);
+                return true;
+            }
+        }
+    });
+    $('.ktcNodeMenu-title').attr('data-menutitle', getLabelDevice(self.attrs.ktcNode.nodeZW));
+};

@@ -7,6 +7,11 @@
 
 <!-- Kinetic -->
     <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/kinetic-v5.1.0.min.js"></script>
+<!-- Jquery contextMenu -->
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/jquery.contextMenu.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/libraries/js/jquery.ui.position.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/plugin_ozwave/static/libraries/css/jquery.contextMenu.min.css">
 
 <!-- ozwave lib -->
     <script type="text/javascript" charset="utf8" src="/plugin_ozwave/static/js/ozwkineticsnode.js"></script>
@@ -51,7 +56,7 @@
                 });
             } else {
                 nodesData = data.content.nodes;
-                neighborsGraph = new KtcNeighborsGraph('containerneighbors','containerneighbors');
+                neighborsGraph = new KtcNeighborsGraph('containerneighbors');
             };
         });
         ws.onmessage = function(e) {

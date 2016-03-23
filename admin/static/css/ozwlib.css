@@ -94,3 +94,26 @@
   .icon-danger {
       color : #FF0000;
   }
+
+/* Kineticjs context node menu header via data attribute */
+.ktcNodeMenu-title:before {
+    content: attr(data-menutitle);
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: #DDD;
+    padding: 2px;
+
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+}
+.ktcNodeMenu-title :first-child {
+    margin-top: 20px;
+}
+
+.contextmenu-icon-fa:before {
+    font-family: FontAwesome !important;
+}
