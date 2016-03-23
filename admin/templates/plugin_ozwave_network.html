@@ -64,8 +64,8 @@
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-                console.log("Zwave network receive :)", data.msgid);
-                console.log(data.content);
+//                console.log("Zwave network receive :)", data.msgid);
+//                console.log(data.content);
                 if (data.content.NetworkID == "{{ network_active }}") {
                     switch (msgId[2]) {
                         case "state" :

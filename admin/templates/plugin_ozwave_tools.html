@@ -138,13 +138,13 @@
             var data = JSON.parse(e.data);
             var msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "manager") {
-                console.log("Zwave tools receive :)", data.msgid);
-                console.log(data.content);
+//                console.log("Zwave tools receive :)", data.msgid);
+//                console.log(data.content);
                 switch (msgId[2]) {
                     case "tbd" :
                         if ("{{ network_active }}" == data.content.NetworkID) {
                             var table = $("#tabnodes_{{ network_active }}").DataTable();
-                            console.log("Clear nodes table");
+//                            console.log("Clear nodes table");
                             table.clear().draw();
                             nodesData = [];
                         };

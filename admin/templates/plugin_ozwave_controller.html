@@ -64,8 +64,8 @@
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
             if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-                console.log("Zwave controller receive :)", data.msgid);
-                console.log(data.content);
+//                console.log("Zwave controller receive :)", data.msgid);
+//                console.log(data.content);
                 if (msgId[2] == "state" && data.content.NetworkID == "{{ network_active }}") {
                     if ((data.content.type == 'change') || (data.content.type == 'status')) {
                         $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);

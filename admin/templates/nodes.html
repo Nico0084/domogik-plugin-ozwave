@@ -180,15 +180,15 @@
                                         className: 'btn-danger',
                                         autospin: false,
                                         callback: function(dialogRef){
-                                            console.log("Cancel refresh Node : " + NetworkID+ "." + NodeID);
+//                                            console.log("Cancel refresh Node : " + NetworkID+ "." + NodeID);
                                         }
                                     }]
                                 });
                                 bdiag.on("shown.bs.modal", function() {
                                     $("[type='refresh']").click(function() {
-                                        console.log("start request") + this.id
+//                                        console.log("start request") + this.id
                                         sendRequest("ozwave.node.action", {"action": this.id, "networkId": NetworkID, "nodeId": NodeID}, function(data, result) {
-                                            console.log("ws send done");
+//                                            console.log("ws send done");
                                             if (result == "error" || data.result == "error") {
                                                 new PNotify({
                                                     type: 'error',
@@ -261,7 +261,7 @@
                                         className: 'btn-danger',
                                         autospin: false,
                                         callback: function(dialogRef){
-                                            console.log("Exit edit association.");
+//                                            console.log("Exit edit association.");
                                             ws.onmessage = ws_onmessage_diaggrp;
                                         }
                                     },{
@@ -275,7 +275,7 @@
                                             for (var i=0; i<newgrps.length; i++){
                                                 grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
                                             };
-                                            console.log("Send association modification : " + JSON.stringify(grps));
+//                                            console.log("Send association modification : " + JSON.stringify(grps));
                                             document.body.style.cursor = "wait";
                                             $('#btn-cancel').addClass('disabled');
                                             sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
@@ -304,7 +304,7 @@
                                         }
                                     }],
                                     onEscape: function() {
-                                        console.log("Exit by escape.");
+//                                       console.log("Exit by escape.");
                                         ws.onmessage = ws_onmessage_diaggrp;
                                     },
                                 });
@@ -320,7 +320,7 @@
                                     if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
                                         nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
                                         RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
-                                        console.log('Yes capture msg :=)')
+//                                        console.log('Yes capture msg :=)')
                                         new PNotify({
                                                         type: 'success',
                                                         title: 'Set group association',

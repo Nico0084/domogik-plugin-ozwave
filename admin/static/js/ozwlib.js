@@ -326,7 +326,7 @@ function updateNode(newNodeData, date) {
     if (table) {
         var cell = GetNodeCell(table, nodeData.NodeID, 0);
         if (!cell) {
-            console.log("Node must be add in nodesData");
+//            console.log("Node must be add in nodesData");
             addNodeTableRow(table, nodeData);
         };
     };
@@ -343,27 +343,27 @@ function requestZWNodeInfos(NetworkID, nodeId) {
         var d = new Date();
         if (nodeData) {
             if (nodeData.LastReqRefresh <= d.getTime() + 5000) {
-                console.log("Request node infos to close, request abort (NetworkID = " + NetworkID + ", nodeId = " +nodeId + ")");
+//                console.log("Request node infos to close, request abort (NetworkID = " + NetworkID + ", nodeId = " +nodeId + ")");
                 return;
             };
         };
-        console.log("Requesting node infos, NetworkID = " + NetworkID + ", nodeId = " +nodeId);
+//        console.log("Requesting node infos, NetworkID = " + NetworkID + ", nodeId = " +nodeId);
         $.getJSON('/plugin_ozwave/' + clientID + '/request/ozwave.node.infos', {
             networkID: NetworkID,
             nodeId: nodeId
             },
             function(data, result, request) {
                 if (data.result == 'success') {
-                    console.log("Receive update Info for NetworkID = " + NetworkID + ", nodeId = " +nodeId);
+//                    console.log("Receive update Info for NetworkID = " + NetworkID + ", nodeId = " +nodeId);
                     data.content.LastReqRefresh = d.getTime();
                     updateNode(data.content);
                 } else {
-                    console.warn("Request node infos fail (NetworkID = " + NetworkID + ", nodeId = " +nodeId + ") ", data);
+//                    console.warn("Request node infos fail (NetworkID = " + NetworkID + ", nodeId = " +nodeId + ") ", data);
                 };
             }
         );
     } else {
-        console.warn("Can't request undefined address (NetworkID = " + NetworkID + ",nodeId = " +nodeId + ")");
+//        console.warn("Can't request undefined address (NetworkID = " + NetworkID + ",nodeId = " +nodeId + ")");
     };
 };
 

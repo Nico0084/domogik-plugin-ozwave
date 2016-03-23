@@ -340,7 +340,7 @@ KtcNode.prototype.update = function() {
     this.ktcGraph.linkLayer.batchDraw ();
     this.ktcGraph.tooltipLayer.batchDraw ();
     this.layer.batchDraw ();
-    console.log('redraw kinetic node :' + this.nodeZW.NodeID);
+//    console.log('redraw kinetic node :' + this.nodeZW.NodeID);
 };
 
 KtcNode.prototype.size = function() {
@@ -491,13 +491,12 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
             this.parent.draw();
             document.body.style.cursor = "default";
         } else {
-            console.log("Persistance node remove");};
+//            console.log("Persistance node remove");};
         this.getStage().draw();
     });
 
     this.pictNodeGrp.on("dragstart", function(e) {
-//        var stage = this.getStage();
-        console.log("dragstart node :" + this.attrs.nodeP.nodeObj.NodeID);
+//        console.log("dragstart node :" + this.attrs.nodeP.nodeObj.NodeID);
         var newstate = 'unallowable';
         if (!this.attrs.nodeP.isMember()) {
             this.attrs.nodeP.duplicateIt()
@@ -535,24 +534,23 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     });
 
     this.pictNodeGrp.on("dragend", function(e) {
-        console.log("dragend node :" + this.attrs.nodeP.nodeObj.NodeID);
+//        console.log("dragend node :" + this.attrs.nodeP.nodeObj.NodeID);
         var inGrp = this.attrs.nodeP.inGroup();
         this.attrs.nodeP.tooltip.hide();
         if (!this.attrs.nodeP.isMember()) {
             if (!inGrp){
                 this.removeChildren();
-                console.log("Hors d'un groupe, destruction de la copie.");
+//                console.log("Hors d'un groupe, destruction de la copie.");
                 delete(this.attrs.nodeP);
                 delete(this);
             }else {
-                console.log('dans un groupe, ajouter au groupe si pas doublon.');
+//                console.log('dans un groupe, ajouter au groupe si pas doublon.');
                 if (inGrp.attrs.grpAssP.addNode(this.attrs.nodeP)) {
                     this.attrs.nodeP.grpAss =inGrp.attrs.grpAssP;
                     this.attrs.nodeP.setState('to update');
                     inGrp.attrs.grpAssP.nodeArea.add(this);
-             //       inGrp.attrs.grpAssP.refreshText();
                 } else {
-                    console.log('En doublons, suppression de la copie');
+//                    console.log('En doublons, suppression de la copie');
                     this.removeChildren();
                     delete(this.attrs.nodeP);
                     delete(this);
@@ -562,11 +560,10 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
         } else {
             if ((inGrp==null) || (inGrp.attrs.grpAssP != this.attrs.nodeP.grpAss)){
                 this.attrs.nodeP.grpAss.delNode(this.attrs.nodeP);
-            //    inGrp.attrs.grpAssP.refreshText();
                 this.removeChildren();
-                console.log('Hors du groupe, node retiré du group et détruit');
+//                console.log('Hors du groupe, node retiré du group et détruit');
             }else {
-                console.log('toujours dans le groupe, remis à sa place.');
+//                console.log('toujours dans le groupe, remis à sa place.');
                 this.x(this.attrs.nodeP.xOrg).y(this.attrs.nodeP.yOrg);
                 };
             };
@@ -574,9 +571,9 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     });
 
     this.pictNodeGrp.on("mousedown", function(e) {
-        console.log("mousedown node :" + this.attrs.nodeP.nodeObj.NodeID);
+//        console.log("mousedown node :" + this.attrs.nodeP.nodeObj.NodeID);
         if (this.attrs.nodeP.isMember()) {
-            console.log("move node outside to exclude it");
+//            console.log("move node outside to exclude it");
         };
         this.moveToTop();
     });
@@ -684,7 +681,7 @@ KtcNodeGrp.prototype.setState = function(state, inGrpAss) {
                 break;
        };
     } else {
-         console.log("setState sur node persistant") ;
+//         console.log("setState sur node persistant") ;
     };
 };
 
@@ -933,10 +930,10 @@ KtcGrpAss.prototype.addNode = function (kNode) {
             this.refreshText();
             return true;
             } else {
-                console.log ("Plus de place disponible, pas d'ajout");
+//                console.log ("Plus de place disponible, pas d'ajout");
                 return false};
         }else {
-            console.log ("Nombre max atteint, pas d'ajout");
+//            console.log ("Nombre max atteint, pas d'ajout");
             return false};
     } else { return false;};
 };
@@ -1276,7 +1273,7 @@ function wrapText(text, maxWidth) {
   }
 
 function GetNewGroups (stage, node) {
-    console.log('get new grp for sending');
+//    console.log('get new grp for sending');
     var groups = stage.get('.ngroupass');
     for (var gnew= 0; gnew < groups.length; gnew++) {
         for (var g in node.Groups) {
@@ -1291,7 +1288,7 @@ function GetNewGroups (stage, node) {
 };
 
 function RefreshGroups(stage, newGroups) {
-    console.log("Refresh state members groups");
+//    console.log("Refresh state members groups");
     var groups = stage.get('.ngroupass');
     for (var grp= 0; grp < groups.length; grp++) {
         for (var gn in newGroups) {
@@ -1917,7 +1914,7 @@ KtcNeighborsGraph.prototype.findPath = function (kN1, kN2){
             };
             if (Math.abs(tension) >= maxT) {
                 if (Math.sign(tension) == -1) {
-                    console.log("Find Path have no solution with tension ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
+//                    console.log("Find Path have no solution with tension ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
                     solved = true;
                 } else {
                     tension = 0;
@@ -1925,7 +1922,7 @@ KtcNeighborsGraph.prototype.findPath = function (kN1, kN2){
                 };
             };
             if (nb > 200) {
-                console.log("Find Path have no solution, max iteration ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
+//                console.log("Find Path have no solution, max iteration ("+kN1.nodeZW.NodeID+" to "+kN2.nodeZW.NodeID+")");
                 solved = true};
             nb +=1;
         };
@@ -2080,15 +2077,6 @@ function bezierCubicXY (p0, p1, p2, p3, t) {
     return ret;
 }
 
-function onContextMenuShow (target, pos) {
-        console.log(target);
-        console.log(pos);
-};
-
-function onContextMenuItemSelect (menuitem, target, href, pos) {
-    console.log("Menu select : "+menuitem);
-};
-
 function setupContextMenuNode(self) {
     $.contextMenu('destroy', '#'+self.attrs.ktcNode.ktcGraph.ktcStage.attrs.container.id);
     var nodeZW = self.attrs.ktcNode.nodeZW;
@@ -2100,7 +2088,7 @@ function setupContextMenuNode(self) {
             switch (key) {
                 case 'HealNode' :
                     sendRequest("ozwave.node.action", {"action": key, "networkId": nodeZW.NetworkID, "nodeId": nodeZW.NodeID}, function(data, result) {
-                        console.log("ws send done");
+//                        console.log("ws send done");
                         if (result == "error" || data.result == "error") {
                             new PNotify({
                                 type: 'error',
@@ -2135,7 +2123,7 @@ function setupContextMenuNode(self) {
                             className: 'btn-danger',
                             autospin: false,
                             callback: function(dialogRef){
-                                console.log("Exit edit association.");
+//                                console.log("Exit edit association.");
                                 ws.onmessage = ws_onmessage_diaggrp;
                             }
                         },{
@@ -2149,7 +2137,7 @@ function setupContextMenuNode(self) {
                                 for (var i=0; i<newgrps.length; i++){
                                     grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
                                 };
-                                console.log("Send association modification : " + JSON.stringify(grps));
+//                                console.log("Send association modification : " + JSON.stringify(grps));
                                 document.body.style.cursor = "wait";
                                 $('#btn-cancel').addClass('disabled');
                                 sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
@@ -2178,7 +2166,7 @@ function setupContextMenuNode(self) {
                             }
                         }],
                         onEscape: function() {
-                            console.log("Exit by escape.");
+//                            console.log("Exit by escape.");
                             ws.onmessage = ws_onmessage_diaggrp;
                         },
                     });

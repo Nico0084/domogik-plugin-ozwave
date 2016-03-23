@@ -150,7 +150,7 @@ function buildValuesTab (data) {
                                 className: 'btn-danger',
                                 autospin: false,
                                 callback: function(dialogRef){
-                                    console.log("Cancel set polling value : " + refId[1]+ "." + refId[2]);
+//                                    console.log("Cancel set polling value : " + refId[1]+ "." + refId[2]);
                                 }
                             },{
                                 id: 'btn-ok',
@@ -158,7 +158,7 @@ function buildValuesTab (data) {
                                 className: 'btn-primary',
                                 autospin: false,
                                 callback: function(dialogRef){
-                                    console.log("Send set polling value : " + refId[1]+ "." + refId[2]);
+//                                    console.log("Send set polling value : " + refId[1]+ "." + refId[2]);
                                     var action = 'DisablePoll';
                                     if ($('#polled').is(':checked')) { action = 'EnablePoll';}
                                     var intensity  = $('#intensity').val();
@@ -269,7 +269,7 @@ function buildValuesTab (data) {
     }  else { // le Node n'as pas de command_class
         var thOut =[];
         thOut[0]="No Command_Class";
-        console.log("Dans createValuesTab no Cmd-Class : " + thOut);
+//        console.log("Dans createValuesTab no Cmd-Class : " + thOut);
     };
 };
 
