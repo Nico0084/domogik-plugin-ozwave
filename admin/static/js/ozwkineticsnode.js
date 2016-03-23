@@ -491,7 +491,7 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
             this.parent.draw();
             document.body.style.cursor = "default";
         } else {
-//            console.log("Persistance node remove");};
+            console.log("Persistance node remove");};
         this.getStage().draw();
     });
 
