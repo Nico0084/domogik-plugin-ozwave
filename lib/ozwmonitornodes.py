@@ -183,8 +183,8 @@ class ManageMonitorNodes(threading.Thread):
         retval = {'error': ''}
         node = self._ozwManager._getNode(homeId, nodeId)
         if node is not None :
+            fName = self.getFileName(homeId, nodeId)
             if not self.isMonitored(homeId, nodeId) :
-                fName = self.getFileName(homeId, nodeId)
                 fLog = open(fName,  "w")
                 self._pluginLog.info(u'Start monitor node {0} in log file : {1}.'.format(nodeId,  fName))
                 retval.update({'state': 'started','usermsg':'Start monitor node {0} in log file.'.format(nodeId), 'file': fName})
