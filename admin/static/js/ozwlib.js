@@ -332,6 +332,7 @@ function updateNode(newNodeData, date) {
     };
 };
 
+// ****************** WebSocket resquest *******************
 function sendRequest(request, data, callback) {
     $.getJSON('/plugin_ozwave/' + clientID + '/request/' + request, data,
         callback);
@@ -367,11 +368,102 @@ function requestZWNodeInfos(NetworkID, nodeId) {
     };
 };
 
+function requestNodeMonitoring(nodeData) {
+    sendRequest("ozwave.node.action", {"action": (!nodeData.Monitored) ? 'StartMonitorNode' : 'StopMonitorNode',
+                                       "networkId": nodeData.NetworkID, "nodeId": nodeData.NodeID}, function(data, result) {
+         if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Monitoring node',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+                if (data.content.state == "started") { nodeData.Monitored = data.content.file;
+                } else { nodeData.Monitored = ""; };
+                RefreshDataNode(nodeData);
+                updateBtMonitored(nodeData);
+                new PNotify({
+                    type: 'success',
+                    title: 'Monitoring node',
+                    text: data.content.usermsg + "/n" + data.content.file,
+                    delay: 4000
+                });
+            };
+        });
+};
+
+function requestRefreshNode(action, nodeData) {
+    sendRequest("ozwave.node.action", {"action": action, "networkId": nodeData.NetworkID, "nodeId": nodeData.NodeID}, function(data, result) {
+        if (result == "error" || data.result == "error") {
+            new PNotify({
+                type: 'error',
+                title: 'Refresh node',
+                text: data.content.error,
+                delay: 6000
+            });
+        } else {
+            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+            new PNotify({
+                type: 'success',
+                title: 'Refresh node sended',
+                text: data.content.usermsg,
+                delay: 4000
+            });
+        };
+    });
+
+};
+
+function DialBoxRequestRefreshNode(nodeData) {
+    var bdiag = bootbox.dialog({
+        show: false,
+        size: 'small',
+        className: 'text-center',
+        title: 'Send Refresh request to node <b>'+ nodeData.NetworkID + '.' + nodeData.NodeID + '<b>',
+        message: '<div class="row">  ' +
+                       "<div class='col-md-12'> " +
+                            "<div class='dropdown'> "+
+                                '<button class="btn btn-default dropdown-toggle" type="button" id="typerefresh" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
+                                    'Select type of refresh request' +
+                                    '<span class="caret"></span>' +
+                                ' </button>' +
+                                '<ul class="dropdown-menu" aria-labelledby="typerefresh">' +
+                                    '<li><a id="RefreshNodeInfo" type="refresh" href="#"><i class="fa fa-info"></i> Node informations</a></li>' +
+                                    '<li><a id="RefreshNodeState" type="refresh" href="#"><i class="fa fa-check"></i> State node</a></li>' +
+                                    '<li><a id="RefreshNodeDynamic" type="refresh" href="#"><i class="fa fa-spinner fa-spin"></i> Dynamics data</a></li>' +
+                                    '<li><a id="HealNode" type="refresh" href="#"><i class="fa fa-road"></i> Heal node with reroute</a></li>' +
+                                '</ul' +
+                            '</div> ' +
+                        "</div>"+
+                    "</div>",
+        data: nodeData,
+        buttons: [{
+            id: 'btn-cancel',
+            label: 'Cancel',
+            className: 'btn-danger',
+            autospin: false,
+            callback: function(dialogRef){
+//                                            console.log("Cancel refresh Node : " + nodeData.NetworkID+ "." + nodeData.NodeID);
+            }
+        }]
+    });
+    bdiag.on("shown.bs.modal", function() {
+        $("[type='refresh']").click(function() {
+            requestRefreshNode(this.id, nodeData);
+            bdiag.modal('hide');
+        });
+    });
+    bdiag.modal('show');
+};
+
+// ******************  Display helper ****************
+
 function HighlightCell(oCell, timeUpDate) {
     if (timeUpDate) {
         var t = 'Update at ' + Date(timeUpDate);
         oCell.title = t;
-   //     createToolTip("#" + oCell.id, 'right', t);
     };
     if (oCell.tagName == 'TD') {
         var elem = oCell;
@@ -550,7 +642,7 @@ function setValueCmdClss(refId, newValue) {
     });
 };
 
-// DataTable Nodes renderers
+// ****************** DataTable Nodes renderers *******************
 function renderNodeStatusCol(data, type, full, meta) {
      /* {0:,
               1:'Initialized - not known',

@@ -2079,7 +2079,7 @@ function bezierCubicXY (p0, p1, p2, p3, t) {
 
 function setupContextMenuNode(self) {
     $.contextMenu('destroy', '#'+self.attrs.ktcNode.ktcGraph.ktcStage.attrs.container.id);
-    var nodeZW = self.attrs.ktcNode.nodeZW;
+    var nodeData = self.attrs.ktcNode.nodeZW;
     $.contextMenu({
         selector: '#'+self.attrs.ktcNode.ktcGraph.ktcStage.attrs.container.id,
         className:'ktcNodeMenu-title',
@@ -2087,111 +2087,13 @@ function setupContextMenuNode(self) {
             console.log("start request") + key;
             switch (key) {
                 case 'HealNode' :
-                    sendRequest("ozwave.node.action", {"action": key, "networkId": nodeZW.NetworkID, "nodeId": nodeZW.NodeID}, function(data, result) {
-//                        console.log("ws send done");
-                        if (result == "error" || data.result == "error") {
-                            new PNotify({
-                                type: 'error',
-                                title: 'Refresh node',
-                                text: data.content.error,
-                                delay: 6000
-                            });
-                        } else {
-                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                            new PNotify({
-                                type: 'success',
-                                title: 'Refresh node sended',
-                                text: data.content.usermsg,
-                                delay: 4000
-                            });
-                        };
-                    });
+                case 'RefreshNodeInfo' :
+                case 'RefreshNodeState' :
+                case 'RefreshNodeDynamic' :
+                    requestRefreshNode(key, nodeData);
                     break;
                 case "updassoc" :
-                    var bdiag = bootbox.dialog({
-                        show: false,
-                        className: 'text-center',
-                        title: 'Edit associations groups.' + "<br> " + nodeZW.Model + " " + nodeZW.NetworkID + '.' + nodeZW.NodeID,
-                        message:  "<div class='contenaire-fluid'>" +
-                                        "<div id='contgrpass'>" +
-                                        "</div>" +
-                                    "</div>",
-                        data: nodeZW,
-                        buttons: [{
-                            id: 'btn-cancel',
-                            label: 'Quit',
-                            className: 'btn-danger',
-                            autospin: false,
-                            callback: function(dialogRef){
-//                                console.log("Exit edit association.");
-                                ws.onmessage = ws_onmessage_diaggrp;
-                            }
-                        },{
-                            id: 'btn-sendchange',
-                            label: 'Send modification',
-                            className: 'btn-primary',
-                            autospin: false,
-                            callback: function(dialogRef){
-                                var grps =[];
-                                var newgrps = bdiag.getnewgroups();
-                                for (var i=0; i<newgrps.length; i++){
-                                    grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
-                                };
-//                                console.log("Send association modification : " + JSON.stringify(grps));
-                                document.body.style.cursor = "wait";
-                                $('#btn-cancel').addClass('disabled');
-                                sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
-                                    var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
-                                    document.body.style.cursor = "default";
-                                    $('#btn-cancel').removeClass('disabled');
-                                    if (result == "error" || data.result == "error") {
-                                        new PNotify({
-                                            type: 'error',
-                                            title: 'Set group association fail.',
-                                            text: data.content.error,
-                                            delay: 6000
-                                        });
-                                    } else {
-                                        nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.groups);
-                                        RefreshGroups(bdiag.stageGrps, data.content.groups);
-                                        new PNotify({
-                                            type: 'success',
-                                            title: 'Set group association',
-                                            text: 'Association modification are sended.',
-                                            delay: 4000
-                                        });
-                                    };
-                                });
-                                return false;
-                            }
-                        }],
-                        onEscape: function() {
-//                            console.log("Exit by escape.");
-                            ws.onmessage = ws_onmessage_diaggrp;
-                        },
-                    });
-                    bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeZW);
-                    bdiag.getnewgroups = function () {
-                        var newgrps =  GetNewGroups(self.stageGrps, nodeZW);
-                        return newgrps;
-                    };
-                    var ws_onmessage_diaggrp = ws.onmessage;
-                    ws.onmessage = function(e) {
-                        ws_onmessage_diaggrp(e);
-                        var data = JSON.parse(e.data);
-                        if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
-                            nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
-                            RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
-                            console.log('Yes capture msg :=)')
-                            new PNotify({
-                                            type: 'success',
-                                            title: 'Set group association',
-                                            text: 'Association modification confirmed by node.',
-                                            delay: 4000
-                                        });
-                        };
-                    };
-                    bdiag.modal('show');
+                    openDialogAssoc(nodeData);
                     break;
             };
         },
@@ -2200,23 +2102,135 @@ function setupContextMenuNode(self) {
                 name: "Edit Associations",
                 icon: function(){
                     return 'context-menu-icon contextmenu-icon-fa fa-link';
-                }},
+                },
+                disabled:  (nodeData.Groups.length > 0) ? false : true,
+                },
+            sep1: "---------",
             HealNode: {
                 name: "Heal node with reroute",
                 icon: function(){
                     return 'context-menu-icon contextmenu-icon-fa fa-road';
-                }},
+                    }
+                },
+            RefreshNodeInfo: {
+                name:"Refresh node informations",
+                icon: function(){
+                    return 'context-menu-icon contextmenu-icon-fa fa-info';
+                    }
+                },
+            RefreshNodeState: {
+                name: "Refresh state node",
+                icon: function(){
+                    return 'context-menu-icon contextmenu-icon-fa fa-check';
+                    }
+                },
+            RefreshNodeDynamic: {
+                name: "Refresh dynamics data",
+                icon: function(){
+                    return 'context-menu-icon contextmenu-icon-fa fa-spinner';
+                    }
+                },
+            sep2: "---------",
             quit: {
                 name: "Quitter", icon: function(){
                 return 'context-menu-icon context-menu-icon-quit';
-            }}
+                }
+            }
         },
         events: {
             hide: function(options){
-                $.contextMenu('destroy', '#'+nodeZW.ktcNode.ktcGraph.ktcStage.attrs.container.id);
+                $.contextMenu('destroy', '#'+nodeData.ktcNode.ktcGraph.ktcStage.attrs.container.id);
                 return true;
             }
         }
     });
     $('.ktcNodeMenu-title').attr('data-menutitle', getLabelDevice(self.attrs.ktcNode.nodeZW));
 };
+
+function openDialogAssoc(nodeData) {
+    var bdiag = bootbox.dialog({
+        show: false,
+   //     size: 'small',
+        className: 'text-center',
+        title: 'Edit associations groups.' + "<br> " + nodeData.Model + " " + nodeData.NetworkID + '.' + nodeData.NodeID,
+        message:  "<div class='contenaire-fluid'>" +
+                        "<div id='contgrpass'>" +
+                        "</div>" +
+                    "</div>",
+        data: nodeData,
+        buttons: [{
+            id: 'btn-cancel',
+            label: 'Quit',
+            className: 'btn-danger',
+            autospin: false,
+            callback: function(dialogRef){
+//                                            console.log("Exit edit association.");
+                ws.onmessage = ws_onmessage_diaggrp;
+            }
+        },{
+            id: 'btn-sendchange',
+            label: 'Send modification',
+            className: 'btn-primary',
+            autospin: false,
+            callback: function(dialogRef){
+                var grps =[];
+                var newgrps = bdiag.getnewgroups();
+                for (var i=0; i<newgrps.length; i++){
+                    grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
+                };
+//                                            console.log("Send association modification : " + JSON.stringify(grps));
+                document.body.style.cursor = "wait";
+                $('#btn-cancel').addClass('disabled');
+                sendRequest("ozwave.node.set", {"key": "groups", "networkId": nodeData.NetworkID, "nodeId": nodeData.NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
+                    var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+                    document.body.style.cursor = "default";
+                    $('#btn-cancel').removeClass('disabled');
+                    if (result == "error" || data.result == "error") {
+                        new PNotify({
+                            type: 'error',
+                            title: 'Set group association fail.',
+                            text: data.content.error,
+                            delay: 6000
+                        });
+                    } else {
+                        nodeData = RefreshGroupsNodeData(data.content.NetworkID, data.content.NodeID, data.content.groups);
+                        RefreshGroups(bdiag.stageGrps, data.content.groups);
+                        new PNotify({
+                            type: 'success',
+                            title: 'Set group association',
+                            text: 'Association modification are sended.',
+                            delay: 4000
+                        });
+                    };
+                });
+                return false;
+            }
+        }],
+        onEscape: function() {
+//                                       console.log("Exit by escape.");
+            ws.onmessage = ws_onmessage_diaggrp;
+        },
+    });
+    bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeData);
+    bdiag.getnewgroups = function () {
+        var newgrps =  GetNewGroups(this.stageGrps, nodeData);
+        return newgrps;
+    };
+    var ws_onmessage_diaggrp = ws.onmessage;
+    ws.onmessage = function(e) {
+        ws_onmessage_diaggrp(e);
+        var data = JSON.parse(e.data);
+        if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
+            nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
+            RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
+//                                        console.log('Yes capture msg :=)')
+            new PNotify({
+                            type: 'success',
+                            title: 'Set group association',
+                            text: 'Association modification confirmed by node.',
+                            delay: 4000
+                        });
+        };
+    };
+    bdiag.modal('show');
+}

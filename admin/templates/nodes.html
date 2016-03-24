@@ -123,93 +123,10 @@
                         var nodeData = GetZWNode(refId[1], refId[2]);
                         switch (refId[0]) {
                             case "monitornode" :
-                                if (!nodeData.Monitored) {
-                                    action ='StartMonitorNode';
-                                } else {
-                                    action ='StopMonitorNode';
-                                };
-                                sendRequest("ozwave.node.action", {"action": action, "networkId": NetworkID, "nodeId": NodeID}, function(data, result) {
-                                     if (result == "error" || data.result == "error") {
-                                            new PNotify({
-                                                type: 'error',
-                                                title: 'Monitoring node',
-                                                text: data.content.error,
-                                                delay: 6000
-                                            });
-                                        } else {
-                                            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                                            if (data.content.state == "started") { nodeData.Monitored = data.content.file;
-                                            } else { nodeData.Monitored = ""; };
-                                            RefreshDataNode(nodeData);
-                                            updateBtMonitored(nodeData);
-                                            new PNotify({
-                                                type: 'success',
-                                                title: 'Monitoring node',
-                                                text: data.content.usermsg + "/n" + data.content.file,
-                                                delay: 4000
-                                            });
-                                        };
-                                    });
+                                requestNodeMonitoring(nodeData);
                                 break;
                             case "refreshnode" :
-                                var bdiag = bootbox.dialog({
-                                    show: false,
-                                    size: 'small',
-                                    className: 'text-center',
-                                    title: 'Send Refresh request to node <b>'+ NetworkID+ '.' + NodeID + '<b>',
-                                    message: '<div class="row">  ' +
-                                                   "<div class='col-md-12'> " +
-                                                        "<div class='dropdown'> "+
-                                                            '<button class="btn btn-default dropdown-toggle" type="button" id="typerefresh" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
-                                                                'Select type of refresh request' +
-                                                                '<span class="caret"></span>' +
-                                                            ' </button>' +
-                                                            '<ul class="dropdown-menu" aria-labelledby="typerefresh">' +
-                                                                '<li><a id="RefreshNodeInfo" type="refresh" href="#"><i class="fa fa-info"></i> Node informations</a></li>' +
-                                                                '<li><a id="RefreshNodeState" type="refresh" href="#"><i class="fa fa-check"></i> State node</a></li>' +
-                                                                '<li><a id="RefreshNodeDynamic" type="refresh" href="#"><i class="fa fa-spinner fa-spin"></i> Dynamics data</a></li>' +
-                                                                '<li><a id="HealNode" type="refresh" href="#"><i class="fa fa-road"></i> Heal node with reroute</a></li>' +
-                                                            '</ul' +
-                                                        '</div> ' +
-                                                    "</div>"+
-                                                "</div>",
-                                    data: nodeData,
-                                    buttons: [{
-                                        id: 'btn-cancel',
-                                        label: 'Cancel',
-                                        className: 'btn-danger',
-                                        autospin: false,
-                                        callback: function(dialogRef){
-//                                            console.log("Cancel refresh Node : " + NetworkID+ "." + NodeID);
-                                        }
-                                    }]
-                                });
-                                bdiag.on("shown.bs.modal", function() {
-                                    $("[type='refresh']").click(function() {
-//                                        console.log("start request") + this.id
-                                        sendRequest("ozwave.node.action", {"action": this.id, "networkId": NetworkID, "nodeId": NodeID}, function(data, result) {
-//                                            console.log("ws send done");
-                                            if (result == "error" || data.result == "error") {
-                                                new PNotify({
-                                                    type: 'error',
-                                                    title: 'Refresh node',
-                                                    text: data.content.error,
-                                                    delay: 6000
-                                                });
-                                            } else {
-                                                var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
-                                                new PNotify({
-                                                    type: 'success',
-                                                    title: 'Refresh node sended',
-                                                    text: data.content.usermsg,
-                                                    delay: 4000
-                                                });
-                                            };
-                                        });
-                                        bdiag.modal('hide');
-                                    });
-                                });
-                                bdiag.modal('show');
+                                DialBoxRequestRefreshNode(nodeData);
                                 break;
                             case "detailnode" :
                                 var tr = $(obj).closest('tr');
@@ -245,91 +162,7 @@
                                 };
                                 break;
                             case "updassoc" :
-                                var bdiag = bootbox.dialog({
-                                    show: false,
-                               //     size: 'small',
-                                    className: 'text-center',
-                                    title: 'Edit associations groups.' + "<br> " + nodeData.Model + " " + NetworkID + '.' + NodeID,
-                                    message:  "<div class='contenaire-fluid'>" +
-                                                    "<div id='contgrpass'>" +
-                                                    "</div>" +
-                                                "</div>",
-                                    data: nodeData,
-                                    buttons: [{
-                                        id: 'btn-cancel',
-                                        label: 'Quit',
-                                        className: 'btn-danger',
-                                        autospin: false,
-                                        callback: function(dialogRef){
-//                                            console.log("Exit edit association.");
-                                            ws.onmessage = ws_onmessage_diaggrp;
-                                        }
-                                    },{
-                                        id: 'btn-sendchange',
-                                        label: 'Send modification',
-                                        className: 'btn-primary',
-                                        autospin: false,
-                                        callback: function(dialogRef){
-                                            var grps =[];
-                                            var newgrps = bdiag.getnewgroups();
-                                            for (var i=0; i<newgrps.length; i++){
-                                                grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
-                                            };
-//                                            console.log("Send association modification : " + JSON.stringify(grps));
-                                            document.body.style.cursor = "wait";
-                                            $('#btn-cancel').addClass('disabled');
-                                            sendRequest("ozwave.node.set", {"key": "groups", "networkId": NetworkID, "nodeId": NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
-                                                var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
-                                                document.body.style.cursor = "default";
-                                                $('#btn-cancel').removeClass('disabled');
-                                                if (result == "error" || data.result == "error") {
-                                                    new PNotify({
-                                                        type: 'error',
-                                                        title: 'Set group association fail.',
-                                                        text: data.content.error,
-                                                        delay: 6000
-                                                    });
-                                                } else {
-                                                    nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.groups);
-                                                    RefreshGroups(bdiag.stageGrps, data.content.groups);
-                                                    new PNotify({
-                                                        type: 'success',
-                                                        title: 'Set group association',
-                                                        text: 'Association modification are sended.',
-                                                        delay: 4000
-                                                    });
-                                                };
-                                            });
-                                            return false;
-                                        }
-                                    }],
-                                    onEscape: function() {
-//                                       console.log("Exit by escape.");
-                                        ws.onmessage = ws_onmessage_diaggrp;
-                                    },
-                                });
-                                bdiag.stageGrps = createKineticsGrpAssoc('contgrpass', nodeData);
-                                bdiag.getnewgroups = function () {
-                                    var newgrps =  GetNewGroups(this.stageGrps, nodeData);
-                                    return newgrps;
-                                };
-                                var ws_onmessage_diaggrp = ws.onmessage;
-                                ws.onmessage = function(e) {
-                                    ws_onmessage_diaggrp(e);
-                                    var data = JSON.parse(e.data);
-                                    if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
-                                        nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
-                                        RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
-//                                        console.log('Yes capture msg :=)')
-                                        new PNotify({
-                                                        type: 'success',
-                                                        title: 'Set group association',
-                                                        text: 'Association modification confirmed by node.',
-                                                        delay: 4000
-                                                    });
-                                    };
-                                };
-                                bdiag.modal('show');
+                                openDialogAssoc(nodeData);
                                 break;
                         };
                         // send update to ws
