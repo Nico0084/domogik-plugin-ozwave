@@ -1531,6 +1531,8 @@ class OZWavemanager():
         if ctrl is None : return {"error" : "Zwave network not ready, can't find controller."}
         if ctrl.ready :
             self._manager.healNetwork(ctrl.homeId, upNodeRoute)
+            if upNodeRoute :
+                for node in self._nodes.itervalues(): node._updateNeighbors()
             return {"error": ""}
         else : return {"error": "Zwave network not ready, wait ready to heal network."}
 
@@ -1540,7 +1542,9 @@ class OZWavemanager():
         if ctrl is None : return {"error" : "Zwave network not ready, can't find controller"}
         if ctrl.ready :
             node = self._getNode(homeId,  nodeId)
-            if node : self._manager.healNetworkNode(ctrl.homeId, nodeId, upNodeRoute)
+            if node :
+                self._manager.healNetworkNode(ctrl.homeId, nodeId, upNodeRoute)
+                if upNodeRoute : node._updateNeighbors()
 
     def getGeneralStatistics(self, networkId):
         """Retourne les statistic générales du réseaux"""
