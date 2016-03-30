@@ -29,7 +29,7 @@
             <div class="row" style="margin:10px" >
                 <button class="btn btn-default center-block" id="refrechdevList" data-toggle="tooltip" data-placement="bottom" title="{% trans %}If you modify (create/remove/edit) domogik device, click to refresh plugin data.{% endtrans %}">
                     <i class="fa fa-refresh" id="refrechdevList-ic"></i>
-                    <span id="runctrl-text"> {% trans %}Refresh domogik device list{% endtrans %}</span>
+                    <span> {% trans %}Refresh domogik device list{% endtrans %}</span>
                 </button>
             </div>
             <li><b>{% trans %}Openzwave path{% endtrans %} : </b><span id="ozw-config">{{ openzwaveInfo.ConfigPath }}</span></li>
@@ -82,7 +82,7 @@
             <li {% if network_active == network.NetworkID %}class="active"{% endif %}>
                 <a data-toggle="tab" href="#{{ network.NetworkID }}" onclick="selectActiveNetwork('{{ network.NetworkID }}');return true;">
                 <h4 style="margin-top: 0px; margin-bottom: 0px;">
-                    <span id="ctrl-tab_{{ network.NetworkID }}" class="label status-{{ network.state }}" data-toggle="tooltip" data-placement="bottom" title="{{ network.init }}">
+                    <span id="ctrl-tab_{{ network.NetworkID }}" class="label status-{{ network.status }}" data-toggle="tooltip" data-placement="bottom" title="{{ network.init }}">
                         {{ network.NetworkID }} - {{ network.HomeID }}
                     </span>
                     <span id="saveconf_{{ network.NetworkID }}" class="btn btn-xs btn-info pull-right{% if network.HomeID == 'None' %} hide{% endif %}" data-toggle="tooltip" data-placement="bottom" title="Save openzwave network config">
@@ -286,120 +286,158 @@
                         };
                     };
                 };
-            };
-            var msgId = data.msgid.split(".");
-            if (msgId[0] == "ozwave") {
-//                console.log("Zwave menu publish receive :)", data);
-                if (msgId[1] == "ctrl") {
-                    switch (msgId[2]) {
-                        case "state" :
-                            if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                                $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("data-original-title",data.content.init);
-                                $("#ctrl-tab_"+data.content.NetworkID).text(data.content.NetworkID + " - " + data.content.HomeID);
-                                if (data.content.HomeID != null) {
+            } else {
+                var msgId = data.msgid.split(".");
+                if (msgId[0] == "ozwave") {
+                    console.log("Zwave menu publish receive :)", data);
+                    switch (msgId[1]) {
+                        case "ctrl" :
+                            switch (msgId[2]) {
+                                case "state" :
+                                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                                        $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("data-original-title",data.content.init);
+                                        $("#ctrl-tab_"+data.content.NetworkID).text(data.content.NetworkID + " - " + data.content.HomeID);
+                                        if (data.content.HomeID != null) {
+                                            updateBtSavedConf(data.content.NetworkID, data.content.saved);
+                                        };
+                                        <!-- debug infos -->
+                                        $("#debug-ctrl").text(JSON.stringify(data.content));
+                                    };
+                                    break;
+                                case "saveconf":
+                                    if (data.content.result == "error") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: 'Fail to save config file',
+                                            text: data.content.error,
+                                            delay: 6000
+                                        });
+                                    } else {
+                                        new PNotify({
+                                            type: 'success',
+                                            title: 'Config file saved',
+                                            text: data.content.msg,
+                                            delay: 4000
+                                        });
+                                    };
                                     updateBtSavedConf(data.content.NetworkID, data.content.saved);
+                                    break;
+                                case "saveconfchange":
+                                    updateBtSavedConf(data.content.NetworkID, data.content.saved);
+                                    if ( !data.content.saved ) {
+                                        new PNotify({
+                                            type: 'info',
+                                            title: 'ZWave network '+ data.content.NetworkID +' config change',
+                                            text: 'Save config file to keep your change.',
+                                            delay: 6000
+                                        });
+                                    };
+                                    break;
+                                case "opening":
+                                    new PNotify({
+                                        type: 'info',
+                                        title: 'ZWave controller',
+                                        text: 'Network '+ data.content.NetworkID +' opening driver '+ data.content.Driver,
+                                        delay: 6000
+                                    });
+                                    $("#manager-init").text('Opening driver '+data.content.Driver);
+                                    var ctrl_tab = $("#ctrl-tab_" + data.content.NetworkID);
+                                    if (ctrl_tab.length != 0) {
+                                        ctrl_tab.removeClass().addClass("label status-starting").attr("data-original-title", "{% trans %}Opening controller{% endtrans %}");
+                                    };
+                                    break;
+                                case "closed":
+                                    new PNotify({
+                                        type: 'info',
+                                        title: 'ZWave controller',
+                                        text: 'Network '+ data.content.NetworkID +' driver '+ data.content.Driver+' closed.',
+                                        delay: 6000
+                                    });
+                                    $("#manager-init").text('Driver '+data.content.Driver+' closed.');
+                                    var ctrl_tab = $("#ctrl-tab_" + data.content.NetworkID);
+                                    if (ctrl_tab.length != 0) {
+                                        ctrl_tab.removeClass().addClass("label status-stopped").attr("data-original-title", "{% trans %}Controller is stopped{% endtrans %}");
+                                    };
+                                    break;
+                            };
+                        break;
+                    case "lib" :
+                        if (msgId[2] == "state") {
+                            $("#ozw-status").removeClass().addClass("label status-" + data.content.status);
+                            $("#ozw-version").text(data.content.PYOZWLibVers);
+                            $("#ozw-config").text(data.content.ConfigPath);
+                            $("#ozw-user").text(data.content.UserPath);
+                            var options = '';
+                            for (option in data.content.Options) {
+                                if ((option != "UserPath") && (option != "ConfigPath")) {;
+                                    options = options + '<tr> <td><b>' + option +'</b></td> <td>' + data.content.Options[option]['value'] + '</td> <td>' +  data.content.Options[option]['doc'] + '</td> </tr>'
+                                };
+                            };
+                            $("#ozw-options").html(options);
+                            <!-- debug infos -->
+                            $("#debug-ozw").text(JSON.stringify(data.content));
+                        };
+                        break;
+                    case "manager" :
+                        switch (msgId[2]) {
+                            case "state" :
+                                $("#manager-status").removeClass().addClass("label status-" + data.content.status);
+                                $("#manager-init").text(data.content.init);
+                                var tabNew = "";
+                                var saveSt = "";
+                                var saveIc = "";
+                               for (item in data.content.Controllers) {
+                                    if (data.content.Controllers[item].saved) {saveSt = "btn-info"; saveIc = "glyphicon-floppy-saved";
+                                    } else {saveSt = "btn-warning"; saveIc = "glyphicon-floppy-save";};
+                                    var ctrl_tab = $("#ctrl-tab_" + data.content.Controllers[item].NetworkID);
+                                    if (ctrl_tab.length == 0) {
+                                         tabNew = "<li> <a data-toggle='tab' href='#" + data.content.Controllers[item].NetworkID +"' onclick=" +
+                                                "'selectActiveNetwork(" + '"' + data.content.Controllers[item].NetworkID + '"' + ");return true;'" +
+                                                "'> <h4 style='margin-top: 0px; margin-bottom: 0px;'> <span id='ctrl-tab_" + data.content.Controllers[item].NetworkID +
+                                                "' class='label status-" + data.content.Controllers[item].status + "' data-toggle='tooltip' data-placement='bottom' title='" + data.content.Controllers[item].init + "'>" +
+                                                data.content.Controllers[item].NetworkID + " - " + data.content.Controllers[item].HomeID + "</span>"+
+                                                "<span id='saveconf_" + data.content.Controllers[item].NetworkID+"' class='btn btn-xs pull-right " + saveSt
+                                         if (data.content.Controllers[item].HomeID == null) {tabNew += " hide" };
+                                           tabNew += "' data-toggle='tooltip' data-placement='bottom' title='Save openzwave network config'>" +
+                                                "<span id='icsaveconf_" + data.content.Controllers[item].NetworkID+"' class='glyphicon "+ saveIc +"'></span> </span>" +
+                                                "</h4> </a> </li>";
+                                         $(tabNew).insertBefore("#debug-tab");
+                                         tabNew = "<div class='tab-pane' id='" + data.content.Controllers[item].NetworkID + "'></div>";
+                                         $(tabNew).insertBefore("#debug-pane");
+                                         $('#ozwave-navbar a[href="#'+data.content.Controllers[item].NetworkID+'"]').tab('show');
+                                         $("#ctrl-tab_" + data.content.Controllers[item].NetworkID).tooltip();
+                                         $("#saveconf_" + data.content.Controllers[item].NetworkID).tooltip();
+                                         selectActiveNetwork(data.content.Controllers[item].NetworkID);
+                                    } else {
+                                        ctrl_tab.removeClass().addClass("label status-" + data.content.Controllers[item].status).attr("data-original-title", data.content.Controllers[item].init);
+                                        ctrl_tab.text(data.content.Controllers[item].NetworkID + " - " + data.content.Controllers[item].HomeID);
+                                        updateBtSavedConf(data.content.Controllers[item].NetworkID, data.content.Controllers[item].saved);
+                                    };
                                 };
                                 <!-- debug infos -->
-                                $("#debug-ctrl").text(JSON.stringify(data.content));
-                            };
-                            break;
-                        case "saveconf":
-                            if (data.content.result == "error") {
-                                new PNotify({
-                                    type: 'error',
-                                    title: 'Fail to save config file',
-                                    text: data.content.error,
-                                    delay: 6000
-                                });
-                            } else {
-                                new PNotify({
-                                    type: 'success',
-                                    title: 'Config file saved',
-                                    text: data.content.msg,
-                                    delay: 4000
-                                });
-                            };
-                            updateBtSavedConf(data.content.NetworkID, data.content.saved);
-                            break;
-                        case "saveconfchange":
-                            updateBtSavedConf(data.content.NetworkID, data.content.saved);
-                            if ( !data.content.saved ) {
-                                new PNotify({
-                                    type: 'info',
-                                    title: 'ZWave network '+ data.content.NetworkID +' config change',
-                                    text: 'Save config file to keep your change.',
-                                    delay: 6000
-                                });
-                            };
-                            break;                    };
-                };
-                if (msgId[1] == "lib") {
-                    if (msgId[2] == "state") {
-                        $("#ozw-status").removeClass().addClass("label status-" + data.content.status);
-                        $("#ozw-version").text(data.content.PYOZWLibVers);
-                        $("#ozw-config").text(data.content.ConfigPath);
-                        $("#ozw-user").text(data.content.UserPath);
-                        var options = '';
-                        for (option in data.content.Options) {
-                            if ((option != "UserPath") && (option != "ConfigPath")) {;
-                                options = options + '<tr> <td><b>' + option +'</b></td> <td>' + data.content.Options[option]['value'] + '</td> <td>' +  data.content.Options[option]['doc'] + '</td> </tr>'
-                            };
+                                $("#debug-manager").text(JSON.stringify(data.content));
+                                break;
+                            case "refreshdeviceslist" :
+                                if (data.content.error == '') {
+                                    $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                                    new PNotify({
+                                        type: 'success',
+                                        title: 'Refresh domogik device list',
+                                        text: 'Refresh done.',
+                                        delay: 4000
+                                    });
+                                } else {
+                                    $("#refrechdevList-ic").removeClass().addClass("fa fa-exclamation-triangle");
+                                    new PNotify({
+                                        type: 'error',
+                                        title: 'Refresh domogik device list',
+                                        text: 'Refresh failed : ' + data.content.error,
+                                        delay: 4000
+                                    });
+                                };
+                                break;
                         };
-                        $("#ozw-options").html(options);
-                        <!-- debug infos -->
-                        $("#debug-ozw").text(JSON.stringify(data.content));
-                    };
-                };
-                if (msgId[1] == "manager") {
-                    if (msgId[2] == "state") {
-                        $("#manager-status").removeClass().addClass("label status-" + data.content.status);
-                        $("#manager-init").text(data.content.init);
-                        var tabNew = "";
-                        var saveSt = "";
-                        var saveIc = "";
-                       for (item in data.content.Controllers) {
-                            if (data.content.Controllers[item].saved) {saveSt = "btn-info"; saveIc = "glyphicon-floppy-saved";
-                            } else {saveSt = "btn-warning"; saveIc = "glyphicon-floppy-save";};
-                            if ($("#ctrl-tab_" + data.content.Controllers[item].NetworkID).length == 0) {
-                                 tabNew = "<li> <a data-toggle='tab' href='#" + data.content.Controllers[item].NetworkID +"' onclick=" +
-                                        "'selectActiveNetwork(" + '"' + data.content.Controllers[item].NetworkID + '"' + ");return true;'" +
-                                        "'> <h4 style='margin-top: 0px; margin-bottom: 0px;'> <span id='ctrl-tab_" + data.content.Controllers[item].NetworkID +
-                                        "' class='label status-" + data.content.Controllers[item].state + "' data-toggle='tooltip' data-placement='bottom' title='" + data.content.Controllers[item].init + "'>" +
-                                        data.content.Controllers[item].NetworkID + " - " + data.content.Controllers[item].HomeID + "</span>"+
-                                        "<span id='saveconf_" + data.content.Controllers[item].NetworkID+"' class='btn btn-xs pull-right " + saveSt
-                                 if (data.content.Controllers[item].HomeID == null) {tabNew += " hide" };
-                                   tabNew += "' data-toggle='tooltip' data-placement='bottom' title='Save openzwave network config'>" +
-                                        "<span id='icsaveconf_" + data.content.Controllers[item].NetworkID+"' class='glyphicon "+ saveIc +"'></span> </span>" +
-                                        "</h4> </a> </li>";
-                                 $(tabNew).insertBefore("#debug-tab");
-                                 tabNew = "<div class='tab-pane' id='" + data.content.Controllers[item].NetworkID + "'></div>";
-                                 $(tabNew).insertBefore("#debug-pane");
-                                 $('#ozwave-navbar a[href="#'+data.content.Controllers[item].NetworkID+'"]').tab('show');
-                                 $("#ctrl-tab_" + data.content.Controllers[item].NetworkID).tooltip();
-                                 $("#saveconf_" + data.content.Controllers[item].NetworkID).tooltip();
-                                 selectActiveNetwork(data.content.Controllers[item].NetworkID);
-                            };
-                        };
-                        <!-- debug infos -->
-                        $("#debug-manager").text(JSON.stringify(data.content));
-                    } else if (msgId[2] == "refreshdeviceslist"){
-                        if (data.content.error == '') {
-                            $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
-                            new PNotify({
-                                type: 'success',
-                                title: 'Refresh domogik device list',
-                                text: 'Refresh done.',
-                                delay: 4000
-                            });
-                        } else {
-                            $("#refrechdevList-ic").removeClass().addClass("fa fa-exclamation-triangle");
-                            new PNotify({
-                                type: 'error',
-                                title: 'Refresh domogik device list',
-                                text: 'Refresh failed : ' + data.content.error,
-                                delay: 4000
-                            });
-                        };
+                        break;
                     };
                 };
             };

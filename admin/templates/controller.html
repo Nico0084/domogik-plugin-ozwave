@@ -4,7 +4,7 @@
     <h3>{% trans %}Zwave Controller administration{% endtrans %}
         <div class="pull-right">
             <h4>
-                <span id="ctrl-status" class="label status-{{ network_state.state }}">
+                <span id="ctrl-status" class="label status-{{ network_state.status }}">
                 {{ network_state['init'] }}
             </h4>
         </div>
@@ -78,7 +78,7 @@
                 </div>
                 <div class='panel-body'>
                     <div class="col-xs-3 col-md-3">
-                        {% if network_state.state == 'alive' or  network_state.state == 'starting' %}
+                        {% if network_state.status == 'alive' or  network_state.status == 'starting' %}
                             {% set runIc = 'stop' %}
                             {% set runColor = 'red' %}
                             {% set runText = 'Stop controller' %}

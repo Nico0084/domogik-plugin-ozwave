@@ -88,7 +88,7 @@ class OZwave(Plugin):
         self.add_mq_sub('device.update')
         # Start thread for starting ozwave sercices
         self.myzwave.starter.start()
-        self.log.info('****** Init OZWave xPL manager completed ******')
+        self.log.info('****** Init OZWave plugin manager completed ******')
         self.ready()
 
     def getsize(self):

@@ -22,7 +22,7 @@
             if (result == "error" || data.result == "error") {
                 new PNotify({
                     type: 'error',
-                    title: 'Zwave controlleur {{ network_active }} error',
+                    title: 'Zwave controller {{ network_active }} error',
                     text: data.content.error,
                     delay: 6000
                 });
@@ -37,7 +37,7 @@
             if (result == "error" || data.result == "error") {
                 new PNotify({
                     type: 'error',
-                    title: 'Controller  {{ network_active }} , list nodes fail.'  ,
+                    title: 'Controller  {{ network_active }}, list nodes fail.'  ,
                     text: data.content.error,
                     delay: 6000
                 });
@@ -51,7 +51,7 @@
             if (result == "error") {
                 new PNotify({
                     type: 'error',
-                    title: 'Controller  {{ network_active }} , get action state. fail.'  ,
+                    title: 'Controller  {{ network_active }}, get action state. fail.'  ,
                     text: data.content.error + " " + data.content.usermsg,
                     delay: 6000
                 });
@@ -63,39 +63,55 @@
             ws_onmessage_ctrl(e);
             data = JSON.parse(e.data);
             msgId = data.msgid.split(".");
-            if (msgId[0] == "ozwave" && msgId[1] == "ctrl") {
-//                console.log("Zwave controller receive :)", data.msgid);
-//                console.log(data.content);
-                if (msgId[2] == "state" && data.content.NetworkID == "{{ network_active }}") {
-                    if ((data.content.type == 'change') || (data.content.type == 'status')) {
-                        $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
-                        $("#ctrl-status").text(data.content.init);
-                        if (data.content.status == 'alive' || data.content.status =='starting') {
-                            var icon = 'stop';
-                            var text = ' Stop controller';
-                            var color = 'red';
-                        } else {
-                            var icon = 'play';
-                            var text = ' Start controller';
-                            var color = 'green';
-                        }
-                        $("#runctrl-text").text(text);
-                        $("#runctrl-ic").attr('style', "color:"+ color ).removeClass().addClass("fa fa-"+icon);
-                    };
-                } else if (msgId[2] == "command" && data.content.NetworkID == "{{ network_active }}") {
-                    renderStateAction(data.content.command, data.content.state, data.content.error + data.content.usermsg);
-                } else {
-                    if (data.content.type == 'node-state-changed') {
-                        if (data.content.data.state == "sleep") {
-                            renderBadgeCount("count_sleep", data.content["Node sleeping"]);
-                            $("#statistic_sleep").text(data.content["Node sleeping"]);
+            if (msgId[0] == "ozwave" && msgId[1] == "ctrl" && data.content.NetworkID == "{{ network_active }}") {
+                console.log("Zwave controller receive :)", data.msgid);
+                console.log(data.content);
+                switch (msgId[2]) {
+                    case "state" :
+                        if ((data.content.type == 'change') || (data.content.type == 'status')) {
+                            $("#ctrl-status").removeClass().addClass("label status-" + data.content.status);
+                            $("#ctrl-status").text(data.content.init);
+                            if (data.content.status == 'alive' || data.content.status =='starting') {
+                                var icon = 'stop';
+                                var text = ' Stop controller';
+                                var color = 'red';
+                            } else {
+                                var icon = 'play';
+                                var text = ' Start controller';
+                                var color = 'green';
+                            }
+                            $("#runctrl-text").text(text);
+                            $("#runctrl-ic").attr('style', "color:"+ color ).removeClass().addClass("fa fa-"+icon);
                         };
-                        if (data.content.data.state == "fail") {
-                            renderBadgeCount("count_fail", data.content["Node fail"]);
-                            $("#statistic_fail").text(data.content["Node fail"]);
+                        break;
+                    case "command" :
+                        renderStateAction(data.content.command, data.content.state, data.content.error + data.content.usermsg);
+                        break;
+                    case "report" :
+                        if (data.content.type == 'node-state-changed') {
+                            if (data.content.data.state == "sleep") {
+                                renderBadgeCount("count_sleep", data.content["Node sleeping"]);
+                                $("#statistic_sleep").text(data.content["Node sleeping"]);
+                            };
+                            if (data.content.data.state == "fail") {
+                                renderBadgeCount("count_fail", data.content["Node fail"]);
+                                $("#statistic_fail").text(data.content["Node fail"]);
+                            };
+                            if (data.content["Node count"] != undefined) {$('#count_node').text(data.content["Node count"]);};
                         };
-                        if (data.content["Node count"] != undefined) {$('#count_node').text(data.content["Node count"]);};
-                    };
+                        break;
+                    case "opening":
+                        $("#ctrl-status").removeClass().addClass("label status-starting");
+                        $("#ctrl-status").text("Opening driver");
+                        $("#runctrl-text").text(" Stop controller");
+                        $("#runctrl-ic").attr('style', "color: red").removeClass().addClass("fa fa-stop");
+                        break;
+                    case "closed":
+                        $("#ctrl-status").removeClass().addClass("label status-stopped");
+                        $("#ctrl-status").text("Driver stopped");
+                        $("#runctrl-text").text(" Start controller");
+                        $("#runctrl-ic").attr('style', "color: green").removeClass().addClass("fa fa-play");
+                        break;
                 };
             };
         };
