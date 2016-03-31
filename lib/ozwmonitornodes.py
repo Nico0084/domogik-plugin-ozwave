@@ -42,6 +42,7 @@ from collections import deque
 import pprint
 from tailer import Tailer
 import os
+import traceback
 
 class OZwaveMonitorNodeException(OZwaveException):
     """"Zwave monitor node manager exception  class"""
@@ -59,11 +60,13 @@ class ManageMonitorNodes(threading.Thread):
         self.name = "Manage_Monitor_Nodes"
         self._ozwManager = ozwManager
         self.nodesMonitor={}
-        self.__reports =deque([])
+        self.__reports = deque([])
         self._pluginLog = ozwManager._log
         self._stop = ozwManager._stop
         self._running = False
         self._pluginLog.info(u'Monitor node(s) manager is initialized.')
+
+    hasMonitored = property(lambda self: True if self.nodesMonitor != {} else False)
 
     def refNode(self, homeId, nodeId):
         return self._ozwManager.refNode(homeId, nodeId)
@@ -77,20 +80,23 @@ class ManageMonitorNodes(threading.Thread):
             if not os.path.isfile(ozwfile) :
                 self._pluginLog.info(u"No existing openzwave log file : '{0}'. Monitor Nodes don't monitor openzwave lib.".format(ozwfile))
             else :
-                rOZW = MonitorOZW(self.logOZW_report,  ozwfile, self._stop,  self._pluginLog)
-                rOZW.start()
+                try:
+                    rOZW = MonitorOZW(self.logOZW_report, ozwfile, self._stop, self._pluginLog)
+                    rOZW.start()
+                except :
+                    self._pluginLog.warning(u"MonitorOZW init error: {0}".format(traceback.format_exc()))
         else : self._pluginLog.info(u"No log activate for openzwave. Monitor Nodes don't monitor openzwave lib.")
         self._pluginLog.info(u'Monitor node(s) manager is started.')
         while not self._stop.isSet() and self._running :
             if self.__reports :
                 report = self.__reports.popleft()
                 idNetwork = 0
-                if 'homeId' in report : idNetwork =  report['homeId']
-                elif 'networkId' in report : idNetwork =  report['networkId']
+                if 'homeId' in report : idNetwork = report['homeId']
+                elif 'networkId' in report : idNetwork = report['networkId']
                 try :
                     self.logNode(report['date'], report['type'], idNetwork, report['nodeId'], report['datas'])
-                except:
-                    self._pluginLog.warning(u"Monitor node bad report : {0}".format(report))
+                except :
+                    self._pluginLog.warning(u"Monitor node bad report : {0}, {1}".format(traceback.format_exc(), report))
             else : self._stop.wait(0.01)
         # flush and close list nodes
         for node in self.nodesMonitor :
@@ -104,67 +110,68 @@ class ManageMonitorNodes(threading.Thread):
         self._running = False
 
     def openzwave_report(self, args):
-        """Callback from  python-openzwave librairy
+        """Callback from python-openzwave librairy
         """
         if self.isMonitored(args['homeId'], args['nodeId']) :
             self.__reports.append({'date': datetime.now(),'type': "Openzwave Notification : " + args['notificationType'], 'homeId': args['homeId'], 'nodeId': args['nodeId'], 'datas': args})
 
     def mq_report(self, device, dmgId):
         """Callback from MQ message"""
-        if device is not None :
-            homeId = self._ozwManager.getHomeID(device['networkid'])
-            if 'node' in device :
-                if self.isMonitored(homeId, device['node']) :
-                    if 'instance' in device :
-                        self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                                'homeId': homeId,
-                                'nodeId': device['node'],
-                                'instance': device['instance'],
-                                'domogik DB' : str(dmgId)})
-                    else:
-                        self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                                'homeId': homeId,
-                                'nodeId': device['node'],
-                                'domogik DB' : str(dmgId)})
+        if self.hasMonitored :
+            if device is not None :
+                homeId = self._ozwManager.getHomeID(device['networkid'])
+                if 'node' in device :
+                    if self.isMonitored(homeId, device['node']) :
+                        if 'instance' in device :
+                            self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
+                                    'homeId': homeId,
+                                    'nodeId': device['node'],
+                                    'instance': device['instance'],
+                                    'datas' : str(dmgId)})
+                        else:
+                            self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
+                                    'homeId': homeId,
+                                    'nodeId': device['node'],
+                                    'datas' : str(dmgId)})
             else :
-                self.__reports.append({'date': datetime.now(),'type': "MQ report : ",
-                    'homeId': homeId,
-                    'domogik DB' : str(dmgId)})
-        else :
-            self._pluginLog.warning(u"Can't do MQ report, domogik device controler of networkid unknown : {0} ".format(device))
+                self._pluginLog.warning(u"Can't do MQ report, domogik device controler of networkId unknown : {0} ".format(device))
 
     def nodeChange_report(self, homeId, nodeId, msg):
         """Callback from node himself."""
-        if self.isMonitored(homeId, nodeId) :
-            if msg.has_key('header') : del msg['header']
-            if msg.has_key('node') : del msg['node']
-            if msg.has_key('ctrldevice') : del msg['ctrldevice']
-            self.__reports.append({'date': datetime.now(),'type': "Node change report : ", 'nodeId': nodeId, 'datas': msg})
+        if self.hasMonitored :
+            if self.isMonitored(homeId, nodeId) :
+                if msg.has_key('header') : del msg['header']
+                if msg.has_key('node') : del msg['node']
+                if msg.has_key('ctrldevice') : del msg['ctrldevice']
+                self.__reports.append({'date': datetime.now(),'type': "Node change report : ", 'homeId': homeId, 'nodeId': nodeId, 'datas': msg})
 
-    def nodeCompletMsg_report(self,  homeId,  nodeId,  msg):
+    def nodeCompletMsg_report(self, homeId, nodeId, msg):
         """Callback from node himself."""
-        if self.isMonitored(homeId,  nodeId) :
-            if msg.has_key('header') : del msg['header']
-            if msg.has_key('node') : del msg['node']
-            if msg.has_key('ctrldevice') : del msg['ctrldevice']
-            self.__reports.append({'date': datetime.now(),'type': "Node receive completed message : ", 'homeid': homeId, 'nodeId': nodeId, 'datas': msg})
+        if self.hasMonitored :
+            if self.isMonitored(homeId, nodeId) :
+                if msg.has_key('header') : del msg['header']
+                if msg.has_key('node') : del msg['node']
+                if msg.has_key('ctrldevice') : del msg['ctrldevice']
+                self.__reports.append({'date': datetime.now(),'type': "Node receive completed message : ", 'homeId': homeId, 'nodeId': nodeId, 'datas': msg})
 
     def logOZW_report(self, line):
         """Callback from watch of openzwave log"""
-        idx = line.find('Node')
-        if  idx != -1 :
-            try :
-                nodeId = int(line[idx+4:idx+7])
-                # TODO: Boucle necessaire parceque le log openzwave ne renvoi pas le homeID, Donc tous les nodeId de tous le controleurs sont logger. A modifier quand lib OK.
-                homeId = 0
-                for node in self.nodesMonitor.itervalues():
-                    if node.nodeId == nodeId :
-                        homeId = node.homeId
-                        break
-                if self.isMonitored(homeId,  nodeId) :
-                    self.__reports.append({'date': datetime.now(),'type': "openzwave lib", 'homeid': homeId, 'nodeId': nodeId, 'datas': line})
-            except :
-                pass
+        if self.hasMonitored :
+            idx = line.find('Node')
+            if  idx != -1 :
+                try :
+                    nodeId = int(line[idx+4:idx+7])
+                    # TODO: Necessary loop due to openzwave log not send homeID, so all nodeId of all controllers are logged. To be updated when lib OK.
+                    homeId = 0
+                    for refNode, file in self.nodesMonitor.iteritems():
+                        node = refNode.split('.')
+                        if int(node[1]) == nodeId :
+                            homeId = node[0]
+                            break
+                    if self.isMonitored(homeId,  nodeId) :
+                        self.__reports.append({'date': datetime.now(),'type': "openzwave lib", 'homeId': homeId, 'nodeId': nodeId, 'datas': line})
+                except :
+                    pass
 
     def isMonitored(self, homeId, nodeId):
         """Return True if watch node."""
@@ -176,7 +183,7 @@ class ManageMonitorNodes(threading.Thread):
     def getFileName(self, homeId, nodeId):
         """Return expected log name file."""
         node = self._ozwManager.getNetworkID(homeId)  + '_%03d' % nodeId
-        return self._ozwManager._userPath + "lognode"  + node +".log"
+        return self._ozwManager._userPath + node +".log"
 
     def startMonitorNode(self, homeId, nodeId):
         """Start node watch in log file."""
@@ -225,21 +232,22 @@ class ManageMonitorNodes(threading.Thread):
         return retval
 
     def logNode(self, date,  type, homeId, nodeId, args):
-        """log node informations in file lognodeXXX.log, stored in data/ozwave"""
+        """log node informations in file NetworkID_NodeID.log, stored in data/ozwave"""
         fLog = self.nodesMonitor[self.refNode(homeId, nodeId)]
         if type == 'openzwave lib':
             fLog.write('{0}\n'.format(args))
         else :
             fLog.write("{0} - {1}\n".format(date,  type))
-            if isinstance(args,  str) : fLog.write(args)
+            if isinstance(args,  str) :
+                fLog.write(args + "\n")
             else :
                 pprint.pprint(args, stream=fLog)
-                fLog.write("-----------------------------------------------------------\n")
+            fLog.write("-----------------------------------------------------------\n")
 
 class MonitorOZW(threading.Thread):
     """Class for monitor openzwave log"""
 
-    def __init__(self,  cb_logNode,  ozwlogfile,  stop,  pluginLog):
+    def __init__(self, cb_logNode, ozwlogfile, stop, pluginLog):
         """Create watch instance for openzwave log"""
         threading.Thread.__init__(self)
         self.name = "Manage_Monitor_Log Openzwave"
@@ -254,7 +262,7 @@ class MonitorOZW(threading.Thread):
         """Start thread of watching openzwave log."""
         self._pluginLog.info(u'Monitor openzwave manager is started.')
         self.running = True
-        ozwTail = Tailer(open(self.ozwlogfile,  'rb'))
+        ozwTail = Tailer(open(self.ozwlogfile, 'rb'))
         for line in ozwTail.follow(delay=0.01):
             if line : self.cb_logNode(line)
             if self._stop.isSet() or not self.running : break
