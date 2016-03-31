@@ -27,87 +27,6 @@ Implements
 ==========
 
 -Zwave
-------------------------------------------
-Pour une commande provenant du xPL :
-
-    xpl-cmnd
-    {
-    ...
-    }
-    ozwave.basic
-    {
-    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
-    node =  The node number
-    instance = The instance number
-    command = The Label openzwave (property : ZWaveValueNode.labelDomogik)
-    value = new value of command
-    }
-------------------------------------------
-Pour un capteur ou ack de commande à envoyer par xPL (peux également être reçue) :
-
-    xpl-trig
-    {
-    ...
-    }
-    sensor.basic
-    {
-    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
-    node =  The node number
-    instance = The instance number
-    type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
-    current = new current value of sensor
-    }
-------------------------------------------
-Pour un capteur type alarm à envoyer par xPL (peux également être reçue) :
-
-    xpl-trig
-    {
-    ...
-    }
-    alarm.basic
-    {
-    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
-    node =  The node number
-    instance = The instance number
-    type = The Label openzwave (property : ZWaveValueNode.labelDomogik)
-    state = new state of alarm 'high' or 'low'
-    }
-------------------------------------------
-    xpl-trig
-    {
-    ...
-    }
-    ozwctrl.basic
-    {
-    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
-    type :  <status, nodemsg> The type of message
-    <status case>
-          [status] : <started, init..., ok, locked, no-Ctrl, fail> State of controller
-          [usermsg] : A message to final user, that can display in UI
-          [data] : Some extra data json string {'state':'wsserver_started', 'wsport': self._wsPort}
-    <nodemsg case>
-          [node]: The node who is concerned,
-          [usermsg] : A message to final user, that can display in UI
-          [data] : Some extra data json string {'state':'wsserver_started', 'wsport': self._wsPort}
-    }
-------------------------------------------
-    xpl-trig
-    {
-    ...
-    }
-    ozwnode.basic
-    {
-    network-id = The network ID of primary controller node, should be in association with HomeID (Could be directly HomeID)
-    node =  The node number
-    type :  <status, nodemsg> The type of message
-    <status case>
-          [status] : <initialized, undiscovered, completed, initializing, linked, receiver, out-of-order, receiver-unlink>
-          [usermsg] : A message to final user, that can display in UI
-          [data] : Some extra data json string {}
-          <nodemsg case>
-          [usermsg] : A message to final user, that can display in UI
-          [data] : Some extra data json string {}
-    }
 
 @author: Nico <nico84dev@gmail.com>
 @copyright: (C) 2007-2015 Domogik project
@@ -155,7 +74,7 @@ CmdsClassAvailable = [ 'COMMAND_CLASS_SWITCH_BINARY', 'COMMAND_CLASS_SENSOR_BINA
 # List off all recognized Label as device domogik (label openzwave) - List loaded directly from json sensors and commands
 DomogikLabelAvailable = []
 
-# Notifications reportés sur le hub xPL pour l'UI
+# Notifications reported to MQ for Admin
 UICtrlReportType = ['plugin-state', 'driver-ready', 'driver-remove', 'init-process', 'ctrl-error', 'ctrl-action',
                             'node-state-changed', 'value-changed', 'polling']
 

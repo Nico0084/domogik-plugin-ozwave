@@ -73,14 +73,14 @@ class OZWavemanager():
     """
 
     def __init__(self, plugin, cb_send_sensor, stop, log, configPath, userPath, ozwlog = False):
-        """ Ouverture du manager py-openzwave
-            @ param config : configuration du plugin pour accès aux valeurs paramètrées"
-            @ param cb_send_trig : callback pour trig xpl
-            @ param stop : flag d'arrêt du plugin
-            @ param log : log instance domogik
-            @ param configPath : chemin d'accès au répertoire de configuration pour la librairie openszwave (déf = "./../plugins/configPath/")
-            @ param userPath : chemin d'accès au répertoire de sauvegarde de la config openzwave et du log."
-            @ param ozwlog (optionnel) : Activation du log d'openzawe, fichier OZW_Log.txt dans le répertoire user (déf = "--logging false")
+        """ Open Plugin manager
+            @ param plugin : Plugin domogik object"
+            @ param cb_send_sensor : callback for sending sensor value to MQ
+            @ param stop : Stop event plugin
+            @ param log : instance domogik log
+            @ param configPath : Access directory to openszwave library configuration (default = "./../plugins/configPath/")
+            @ param userPath : Access directory to save openzwave config and log."
+            @ param ozwlog (optionnal) : enable openzawe log, file OZW_Log.txt in user directory (default = "--logging false")
         """
         self._plugin = plugin
         self._device = None
@@ -110,7 +110,6 @@ class OZWavemanager():
         # Define config path for openzwave lib
         if autoPath :
             self._configPath = libopenzwave.configPath()
-            print "----",  self._configPath
             if self._configPath is None :
                 self._log.warning(u"libopenzwave can't autoconfigure path to config, try python path.")
                 self._configPath = os.path.abspath(libopenzwave.__file__) + "/config"
@@ -118,7 +117,6 @@ class OZWavemanager():
                     self._log.warning(u"Python can't autoconfigure path to config, try user config : {0}".format(configPath))
                     self._configPath = configPath
         self._configPath = str(self._configPath)# force str type for python openzwave lib
-        print self._configPath, " : ", os.path.exists(self._configPath)
         if not os.path.exists(self._configPath) :
             self._log.error(u"Directory openzwave config not exist : %s" , self._configPath)
             self._plugin.force_leave()
@@ -171,7 +169,6 @@ class OZWavemanager():
         result = mq_client.request('manager', msg.get(), timeout=10)
         if result :
             self._dataTypes = result.get_data()['datatypes']
-            print self._dataTypes
             self._log.info(u"data_types list loaded.")
         else :
             self._log.warning(u"Error on retreive data_types list from MQ.")
@@ -318,7 +315,7 @@ class OZWavemanager():
         print "Retrieve sensor name : {0}".format(name)
         for sensor in self._plugin.json_data['sensors']:
             if self._plugin.json_data['sensors'][sensor]['name'].lower() == name :
-                print "    Find sensor : {0}".format(self._plugin.json_data['sensors'][sensor])
+#                print "    Find sensor : {0}".format(self._plugin.json_data['sensors'][sensor])
                 sensors[sensor] = self._plugin.json_data['sensors'][sensor]
         return sensors
 
@@ -330,7 +327,7 @@ class OZWavemanager():
         for cmd in self._plugin.json_data['commands']:
             for param in self._plugin.json_data['commands'][cmd]['parameters']:
                 if param['key'].lower() == name :
-                    print "    Find command : {0}".format(self._plugin.json_data['commands'][cmd])
+#                    print "    Find command : {0}".format(self._plugin.json_data['commands'][cmd])
                     cmds[cmd] = self._plugin.json_data['commands'][cmd]
         return cmds
 
@@ -388,11 +385,6 @@ class OZWavemanager():
                             "key" : "instance",
                             "value": u"{0}".format(refDev[2])
                         }]
-    #            for id, dev_type in self._plugin.json_data['device_types'].items():
-    #                if id == likelyDevices[refDev] :
-    #                    if "battery_level" in dev_type['sensors'] :
-    #                        globalP.append({"key": "batterycheck", "value": False})
-    #                    break
                 self._plugin.device_detected({
                     "device_type" : devType,
                     "reference" : "",
@@ -598,7 +590,6 @@ class OZWavemanager():
                 self._manager.removeWatcher(self.cb_openzwave)
             self._log.info(u"Remove driver from openzwave : {0}".format(ctrl.driver))
             if self._manager.removeDriver(ctrl.driver) :
-                print "**************" + ctrl.driver + " closed"
                 ctrl.setClosed()
                 self._plugin.publishMsg('ozwave.ctrl.closed', {"NetworkID": ctrl.networkID, 'Driver': ctrl.driver, 'type': 'driver-remove', 'usermsg' : 'Driver removed.', 'data': False})
             else :
@@ -743,18 +734,6 @@ class OZWavemanager():
     def _IsNodeId(self, nodeId):
         """Verifie le si le format de nodeId est valide"""
         return True if (type(nodeId) == type(0) and (nodeId >0 and nodeId < 255)) else False
-
-    def _validateDmgDevice(self, refXpl, refComp):
-        """Check if Xpl ref addr is exactly the same of the dmg device (with refComp formated as refXpl)
-           return True/False"""
-        if refXpl and refComp :
-            for k in refXpl :
-                if k not in refComp or refXpl[k] != refComp[k] : return False
-            for k in refComp :
-                if k not in refXpl or refComp[k] != refXpl[k] :  return False
-            return True
-        else :
-            return False
 
     def _getNode(self, homeId, nodeId):
         """ Renvoi l'objet node correspondant"""
@@ -1039,8 +1018,6 @@ class OZWavemanager():
     def _handleMarkSomeNodesDead(self,  args):
         """Un ou plusieurs node(s) ont été identifié comme mort"""
         self._log.info("Some nodes ares dead : " , args)
-        print "**************************************"
-        print ("Some nodes ares dead : " , args)
         self._handleInitializationComplete(args)
         # TODO: nouvelle notification à identifier et gérer le fonctionnement
 
@@ -1057,37 +1034,29 @@ class OZWavemanager():
         """
         node = self._getNode(args['homeId'], args['nodeId'])
         nCode = libopenzwave.PyNotificationCodes[args['notificationCode']]
-        print nCode,  nCode.doc
         if not node:
             self._log.debug("Notification for node who doesn't exist : {0}".format(args))
         else :
             if nCode == 'MsgComplete':     #      Code_MsgComplete = 0,                                   /**< Completed messages */
-                print 'MsgComplete notification code :', args
                 self._log.debug('MsgComplete notification code for Node {0}.'.format(node.refName))
                 node.receivesCompletMsg(args)
             elif nCode == 'Timeout':         #      Code_Timeout,                                              /**< Messages that timeout will send a Notification with this code. */
-                print 'Timeout notification on node :',  args['nodeId']
                 self._log.info('Timeout notification code for Node {0}.'.format(args['nodeId']))
             elif nCode == 'NoOperation':  #       Code_NoOperation,                                       /**< Report on NoOperation message sent completion  */
-                print 'NoOperation notification code :', args
                 self._log.info('Z-Wave Device Node {0} successful receipt testing message.'.format(node.refName))
                 node.receivesNoOperation(args,  self.lastTest)
             elif nCode == 'Awake':            #      Code_Awake,                                                /**< Report when a sleeping node wakes up */
                 node.setSleeping(False)
-                print ('Z-Wave sleeping device Node {0} wakes up.'.format(node.refName))
                 self._log.info('Z-Wave sleeping device Node {0} wakes up.'.format(node.refName))
             elif nCode == 'Sleep':            #      Code_Sleep,                                                /**< Report when a node goes to sleep */
                 node.setSleeping(True)
                 node.receiveSleepState(args)
-                print ('Z-Wave Device Node {0} goes to sleep.'.format(node.refName))
                 self._log.info('Z-Wave Device Node {0} goes to sleep.'.format(node.refName))
             elif nCode == 'Dead':             #       Code_Dead                                               /**< Report when a node is presumed dead */
                 node.markAsFailed()
-                print ('Z-Wave Device Node {0} marked as dead.'.format(node.refName))
                 self._log.info('Z-Wave Device Node {0} marked as dead.'.format(node.refName))
             elif nCode == 'Alive':             #       Code_Alive						/**< Report when a node is revived */
                 node.markAsOK()
-                print ('Z-Wave Device Node {0} marked as alive.'.format(node.refName))
                 self._log.info('Z-Wave Device Node {0} marked as alive.'.format(node.refName))
             else :
                 self._log.error('Error notification code unknown : ', args)
@@ -1216,8 +1185,6 @@ class OZWavemanager():
 
     def handle_ControllerAction(self,  networkId,  action):
         """Transmet une action controleur a un controleur primaire."""
-        print ('********************** handle_ControllerAction ***********')
-        print 'Action : ',  action
         ctrl = self.getCtrlOfNetwork(networkId)
         if self.isReady and ctrl :
             retval = ctrl.node.handle_Action(action)
@@ -1325,12 +1292,9 @@ class OZWavemanager():
             @param : id, id of sensor or command in DB
             @param : type, type of storage in DB, cmd (default) or sensor"""
         retval = {}
-#        logLine = u"--- Search ZWRef From DB, device_id : {0}, type :{1}, sensor/cmd id : {2}".format(deviceID, type, id)
         for dmgDevice in self._plugin.devices :
-#            logLine += u"        - in dmg device : {0}".format(dmgDevice)
             if dmgDevice['id'] == deviceID :
                 if type == 'cmd' :
-#                    logLine += ""
                     for cmd in dmgDevice['commands'] :
                         if dmgDevice['commands'][cmd]['id'] == id :
                             retval = {'networkid': dmgDevice['parameters']['networkid']['value'],
@@ -1340,18 +1304,8 @@ class OZWavemanager():
                             node = self._getNode(self.getHomeID(retval['networkid']), retval['node'])
                             self._log.debug(u"--- ZWRef Command Find : {0}, {1}".format(retval, node))
                             return retval
-#            dmgDevice['parameters']['device']['value']
-#        if "networkid" in xplParams :
-#            retval['homeId'] = self.getHomeID(xplParams["networkid"])
-#        if "node" in xplParams :
-#            retval['nodeId'] = int(xplParams['node'])
-#        if "instance" in xplParams :
-#            retval['instance'] = int(xplParams['instance'])
-#        if not retval or retval['homeId'] is None :
-#            self._log.warning(u"xPL message doesn't refer a node : {0}".format(xplParams))
-#            retval = None
-#        logLine += u"\n    --- ZWRef NOT find"
-#        self._log.debug(logLine)
+                else :
+                    self._log.warning(u"getZWRefFromDB not handle type: {0}, deviceID: {1}, id: {2} ".format(type, deviceID, id))
         return retval
 
     def getDmgDevRefFromZW(self, device):
@@ -1646,7 +1600,6 @@ class OZWavemanager():
     def processRequest(self, request, data):
         """Callback come from MQ (request with reply)"""
         report = {}
-        print "WS - Requete MQ : ", request, data
         try :
             reqRef = request.split('.')
             if reqRef[0] not in ['openzwave','manager'] :
@@ -1725,13 +1678,11 @@ class OZWavemanager():
                     self.openDeviceCtrl(ctrl)
                     report = {'error':'',  'running': True}
                 else : report = {'error':'Driver already running. For restart stop it before',  'running': True}
-                print(u'Start Driver : {0}'.format(report))
             elif request == 'ctrl.stop':
                 if ctrl.status =='open' :
                     self.removeDeviceCtrl(ctrl)
                     report = {'error':'',  'running': False}
                 else : report = {'error':'No Driver knows.',  'running': False}
-                print 'Stop Driver : ',  report
             elif request == 'ctrl.healnetwork' :
                 report = self.healNetwork(data['networkId'], data['forceroute'])
             elif request == 'ctrl.softreset' :
@@ -1770,7 +1721,6 @@ class OZWavemanager():
                     data['ngrps'] = json.loads(data['ngrps'])  # MQ Array in json string format.
                     report = self.setMembersGrps(data['homeId'], data['nodeId'], data['ngrps'])
                 else : report = {'error':  'Invalide nodeId format.'}
-                print 'Set Groups association : ',  report
             else :
                 report['error'] ='Request {0} unknown key to set, data : {1}'.format(request,  data)
         elif request == 'node.get':
@@ -1799,7 +1749,6 @@ class OZWavemanager():
                 if self._IsNodeId(data['nodeId']):
                     report = self.refreshNodeState(data['homeId'], data['nodeId'])
                 else : report = {'error':  'Invalide nodeId format.'}
-                print "Refresh node :", report
             elif data['action'] == 'HealNode' :
                 if self._IsNodeId(data['nodeId']):
                     data['forceroute'] = True #Not in optionfor the momment
@@ -1883,7 +1832,6 @@ class OZWavemanager():
         if ctrlmsg['error_msg'] != 'None.' : report['err_msg'] = ctrlmsg['error_msg']
         else : report['err_msg'] = 'no'
         report['update'] = ctrlmsg['update']
-        print 'reportCtrlMsg', ctrlmsg
         if ctrlmsg['state'] == libopenzwave.PyControllerState[8] : # Failed
             node = self._getNode(networkId, ctrlmsg['nodeid'])
             if node : node.markAsFailed();

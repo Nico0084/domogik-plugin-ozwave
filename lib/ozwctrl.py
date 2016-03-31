@@ -97,7 +97,7 @@ Callbacks :
         @param homeid: ID du réseaux home/controleur
         @param nodeid: ID du node
         @param isPrimaryCtrl: Identifie si le controlleur est le primaire d'un réseaux
-        @param networkId: Nom optionel d'un controleur primaire, est utile pour remplacer le Home ID dans les message xPL
+        @param networkId: Nom optionel d'un controleur primaire, est utile pour remplacer le Home ID dans les message MQ
         '''
         if nodeId is None:
             nodeId = 1
@@ -140,9 +140,7 @@ Callbacks :
         msg["Node count"] = self.getNetworkCtrl.getNodeCount()
         msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
         msg["Node fail"] = self.getNetworkCtrl.getFailedNodeCount()
-        print 'Send report to MQ: '
         self._ozwmanager._plugin.publishMsg('ozwave.ctrl.report', msg)
-        print '**************************************'
 
     def stats(self):
         """

@@ -250,14 +250,12 @@ class ZWaveNode:
                 ctrlNode = self._ozwmanager.getCtrlOfNode(self)
                 if ctrlNode is not None and ctrlNode.node is not None :
                     msg['NodeID'] = self.nodeId
-                    print (u'******** Node Object report vers UI ******** ')
                     ctrlNode.node.reportChangeToUI(msg)
-                    print (u'******** Node Object report vers monitorNodes ******** ')
                     self._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, msg)
                 else :
                     self.log.warning(u"No Controller Node registered, can't report message to UI :{0}.".format(msg))
             except :
-                print(u"Error while reporting to UI : {0}".format(traceback.format_exc()))
+                self.log.warning(u"Error while reporting to UI : {0}".format(traceback.format_exc()))
 
     def _getProductName(self):
         """Retourne le nom du produit ou son id ou Undefined"""
@@ -1275,7 +1273,7 @@ class ZWaveNode:
     #                  Handle Thermostat setpoint type 'setpoint' to :
     #                          'unused 0', 'heating 1', 'cooling 1', 'unused 3', 'unused 4', 'unused 5', 'unused 6', 'furnace',
     #                          'dry air', 'moist air', 'auto changeover', 'heating econ', 'cooling econ','away heating'
-    #                  TODO: must be check if multi setpoint use same instance, i case type of xpl command must be modified or a key added
+    #                  TODO: must be check if multi setpoint use same instance, i case type of command must be modified or a key added
                         if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
                                             self.checkAvailableLabel(self.values[value].labelDomogik, command) :
                             retval = self.values[value].setValue(newValue)

@@ -38,7 +38,6 @@ Implements
 # A debugging code checking import error
 try:
     from domogik.common.plugin import Plugin
-    from domogik.xpl.common.xplconnector import XplTimer
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
@@ -108,40 +107,29 @@ class OZwave(Plugin):
 
     def on_mdp_request(self, msg):
         # display the req message
-        print(msg)
         Plugin.on_mdp_request(self, msg)
         # call a function to reply to the message depending on the header
         action = msg.get_action().split(".")
         handled = False
-        print action
         if action[0] == 'ozwave' :
             self.log.debug(u"Handle MQ request action <{0}>.".format(action))
             if action[1] in ["openzwave", "manager", "ctrl", "node", "value"] :# "ozwave.networks.get":
                 handled = True
                 data = msg.get_data()
                 report = self.myzwave.processRequest("{0}.{1}".format(action[1], action[2]),  msg.get_data())
-                print "*** Report : ", report
                 # send the reply
                 reply_msg = MQMessage()
                 reply_msg.set_action("{0}.{1}.{2}".format(action[0], action[1], action[2]))
-                print "*** Action {0}".format(reply_msg.get_action())
                 for k, item in report.items():
                     reply_msg.add_data(k, item)
-                    print "               Item {0}, {1}".format(k, item)
-                print "********* message formated ********"
-                print "*** Full reply_msg : {0}".format(reply_msg.get())
-                print "********* reply to message ********"
                 self.reply(reply_msg.get())
                 if "ack" in  data and data['ack'] == "pub":
-                    print "*** Report publish : ",  report
                     self.publishMsg("{0}.{1}.{2}".format(action[0], action[1], action[2]), report)
             if not handled :
                 self.log.warning(u"MQ request unknown action <{0}>.".format(action))
         elif action[0] == "client" and action[1] == "cmd" :
             # action on dmg device
             data = msg.get_data()
-            print (u"****** Command From MQ recevied : {0} ****".format(action))
-            print data
             cmd =""
             for k in data.keys():
                 if k not in ['device_id', 'command_id'] :
@@ -163,6 +151,8 @@ class OZwave(Plugin):
                 self.log.warning(u"Abording command, no extra key in command MQ: {0}".format(data))
                 reply_msg.add_data('status', False)
                 reply_msg.add_data('reason', u"Abording command, no extra key in MQ command: {0}".format(data))
+
+            self.log.debug(u"Reply to MQ: {0}".format(reply_msg.get()))
             self.reply(reply_msg.get())
 
     def send_sensor(self, device, sensor_id, dt_type, value):

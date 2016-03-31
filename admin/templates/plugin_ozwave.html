@@ -10,7 +10,7 @@
 {% if openzwaveInfo.status in ['dead','stopped'] %}
     {% if client_detail.status in ['starting','alive'] %}
         <h2 id='ozw-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM, Plugin should have error.<br>
-            Check xplplugin_ozwave.log in domogik log directory {% endtrans %}<br>
+            Check plugin_ozwave.log in domogik log directory {% endtrans %}<br>
             {% trans %}Error{% endtrans %} : {{ openzwaveInfo.error }}
         </h2>
     {% else %}
@@ -25,7 +25,7 @@
 {% elif openzwaveInfo.status == 'alive' %}
     <h2 id='ozw-info'><i class='fa fa-smile-o icon-success'></i> {% trans %}Openzwave Library ready{% endtrans %}</h2>
     {% if managerState.status == 'dead' %}
-        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}HUMMM Plugin manager seem have unknown error, check xplplugin_ozwave.log in domogik log directory.{% endtrans %}</h2>
+        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}HUMMM Plugin manager seem have unknown error, check plugin_ozwave.log in domogik log directory.{% endtrans %}</h2>
         <h2 id='ctrl-info'></h2>
     {% elif openzwaveInfo.status == 'starting' %}
         <h2 id='manager-info'><i class='fa fa-smile-o icon-info'></i> {% trans %}Plugin manager starting, Zwave controller should discover soon.{% endtrans %}</h2>
@@ -38,7 +38,7 @@
             <h2 id='ctrl-info'><i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}There is no controller detected on domogik devices{% endtrans %}.</h2>
         {% endif %}
     {% else %}
-        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM Plugin manager is in unknown state {% endtrans %}({{ managerState.status }}), {% trans %}check xplplugin_ozwave.log in domogik log directory{% endtrans %}.<br>{% trans %}Error{% endtrans %} : {{ managerState.error }}</h2>
+        <h2 id='manager-info'><i class='fa fa-exclamation-circle icon-danger'></i> {% trans %}HUMMM Plugin manager is in unknown state {% endtrans %}({{ managerState.status }}), {% trans %}check plugin_ozwave.log in domogik log directory{% endtrans %}.<br>{% trans %}Error{% endtrans %} : {{ managerState.error }}</h2>
         <h2 id='ctrl-info'></h2>
     {% endif %}
 {% else %}
@@ -104,7 +104,7 @@
                         switch (data.content.status) {
                             case 'dead' :
                                 $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
-                                    "{% trans %}OUPS Plugin manager fail, check xplplugin_ozwave.log in domogik log directory.{% endtrans %}<br>" + data.content.error);
+                                    "{% trans %}OUPS Plugin manager fail, check plugin_ozwave.log in domogik log directory.{% endtrans %}<br>" + data.content.error);
                                 $("#ctrl-info").html("");
                                 break;
                             case 'starting' :
@@ -124,7 +124,7 @@
                              default :
                                 $("#manager-info").html("<i class='fa fa-exclamation-circle icon-danger'></i> " +
                                     "{% trans %}HUMMM Plugin manager is in unknown state {% endtrans %} (" + data.content.status + ")" +
-                                    "{% trans %}check xplplugin_ozwave.log in domogik log directory{% endtrans %}." +
+                                    "{% trans %}check plugin_ozwave.log in domogik log directory{% endtrans %}." +
                                     "<br>{% trans %}Error{% endtrans %} : " + data.content.error );
                        };
                     };
