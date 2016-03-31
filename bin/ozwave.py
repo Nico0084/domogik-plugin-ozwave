@@ -38,9 +38,11 @@ Implements
 # A debugging code checking import error
 try:
     from domogik.common.plugin import Plugin
+    from domogik.xpl.common.xplconnector import XplTimer
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
+    import threading
     import sys
     import traceback
 
@@ -88,6 +90,8 @@ class OZwave(Plugin):
         self.add_mq_sub('device.update')
         # Start thread for starting ozwave sercices
         self.myzwave.starter.start()
+        self._ctrlHBeat = Timer(60, self.myzwave.sendHbeatCtrlsState, self)
+        self._ctrlHBeat.start()
         self.log.info('****** Init OZWave plugin manager completed ******')
         self.ready()
 
@@ -166,11 +170,91 @@ class OZwave(Plugin):
         self.log.info(u"Sending MQ sensor id:{0}, dt type: {1}, value:{2}" .format(sensor_id, dt_type, value))
         self._pub.send_event('client.sensor',
                          {sensor_id : value})
-        if self.myzwave is not None : self.myzwave.monitorNodes.mq_report(device, {"sensorId": sensor_id, "dt_type": dt_type, "value": value})
+        if self.myzwave is not None and self.myzwave.monitorNodes is not None :
+            self.myzwave.monitorNodes.mq_report(device, {u"sensorId": sensor_id, u"dt_type": dt_type, u"value": value})
 
     def publishMsg(self, category, content):
         self._pub.send_event(category, content)
         self.log.debug(u"Publishing over MMQ <{0}>, data : {1}".format(category, content))
+
+class Timer():
+    """
+    Timer will call a callback function each n seconds
+    """
+#    _time = 0
+#    _callback = None
+#    _timer = None
+
+    def __init__(self, time, cb, plugin):
+        """
+        Constructor : create the internal timer
+        @param time : time of loop in second
+        @param cb : callback function which will be call eact 'time' seconds
+        """
+        self._stop = threading.Event()
+        self._timer = self.__InternalTimer(time, cb, self._stop, plugin.log)
+        self._plugin = plugin
+        self.log = plugin.log
+        plugin.register_timer(self)
+        plugin.register_thread(self._timer)
+        self.log.debug(u"New timer created : %s " % self)
+
+    def start(self):
+        """
+        Start the timer
+        """
+        self._timer.start()
+
+    def get_stop(self):
+        """ Returns the threading.Event instance used to stop the Timer
+        """
+        return self._stop
+
+    def get_timer(self):
+        """
+        Waits for the internal thread to finish
+        """
+        return self._timer
+
+    def __del__(self):
+        self.log.debug(u"__del__ TimerManager")
+        self.stop()
+
+    def stop(self):
+        """
+        Stop the timer
+        """
+        self.log.debug(u"Timer : stop, try to join() internal thread")
+        self._stop.set()
+        self._timer.join()
+        self.log.debug(u"Timer : stop, internal thread joined, unregister it")
+        self._plugin.unregister_timer(self._timer)
+
+    class __InternalTimer(threading.Thread):
+        '''
+        Internal timer class
+        '''
+        def __init__(self, time, cb, stop, log):
+            '''
+            @param time : interval between each callback call
+            @param cb : callback function
+            @param stop : Event to check for stop thread
+            '''
+            threading.Thread.__init__(self)
+            self._time = time
+            self._cb = cb
+            self._stop = stop
+            self.name = "internal-timer"
+            self.log = log
+
+        def run(self):
+            '''
+            Call the callback every X seconds
+            '''
+            while not self._stop.isSet():
+                self._cb()
+                self._stop.wait(self._time)
+
 
 if __name__ == "__main__":
     OZwave()

@@ -496,7 +496,7 @@ class OZWavemanager():
     def addDeviceCtrl(self, dmgDevice):
         if dmgDevice['device_type_id'] == 'ozwave.primary_controller' :
             driver = str(self._plugin.get_parameter(dmgDevice, 'driver')) # force str type for python openzwave lib
-            if not self.getDeviceCtrl('driver',  driver) :
+            if not self.getDeviceCtrl('driver', driver) :
                 networkID = self._plugin.get_parameter(dmgDevice, 'networkid')
                 self._devicesCtrl.append(PrimaryController(self, driver, networkID, None))
                 self._log.info(u"Domogik device primary controller registered : {0}".format(self._devicesCtrl[-1]))
@@ -513,6 +513,13 @@ class OZWavemanager():
         for device in self._devicesCtrl :
             if node == device.node : return device
         return None
+
+    def sendDmgCtrlStatus(self, ctrl, status):
+        for a_device in self._plugin.devices:
+            if a_device['device_type_id'] == 'ozwave.primary_controller' and ctrl.networkID == self._plugin.get_parameter(a_device, 'networkid'):
+                self._cb_send_sensor({'networkid': ctrl.networkID,  'node': ctrl.nodeId},
+                                                      a_device['sensors']['ctrl-status']['id'], a_device['sensors']['ctrl-status']['data_type'], status['status'])
+                break
 
     def matchHomeID(self, homeId):
         """Evalue si c'est bien un homeID, retourne le homeID ou None"""
@@ -602,21 +609,16 @@ class OZWavemanager():
         self._log.info(u"Stopping plugin, Remove driver(s) from openzwave")
         for ctrl in self._devicesCtrl : self.removeDeviceCtrl(ctrl)
         self.monitorNodes.stop()
-        if self._plugin._ctrlHBeat: self._plugin._ctrlHBeat.stop()
+        if self._plugin._ctrlsHBeat: self._plugin._ctrlsHBeat.stop()
         self._plugin.publishMsg('ozwave.manager.stopped',{'NetworkID': ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'driver-remove', 'usermsg' : 'Plugin stopped.', 'data': False})
 
-    def sendHbeatCtrlState(self):
+    def sendHbeatCtrlsState(self):
         """send hbeat zwave controllers state"""
-#        TODO: A implementer pour les device domogik
         for ctrl in self._devicesCtrl:
-            if ctrl.status == 'open':
-                if ctrl.node is None : st = 'opening...'
-                elif ctrl.ctrlActProgress and ctrl.ctrlActProgress.has_key('state') and ctrl.ctrlActProgress['state'] == libopenzwave.PyControllerState[4] : st ='locked' #Waiting
-                elif ctrl.ready : st= 'ok'
-                else : st = 'init...'
-                data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'status'}
-                data.update(ctrl.getStatus())
-                self._plugin.publishMsg('ozwave.ctrl.state', data)
+            status = ctrl.getStatus()
+            self.sendDmgCtrlStatus(ctrl, status)
+            status.update({'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId)})
+            self._plugin.publishMsg('ozwave.ctrl.state', status)
 
     def getManufacturers(self):
         """"Return list of all manufacturer and product known by openzwave lib."""
@@ -900,6 +902,7 @@ class OZWavemanager():
                            ctrl.nodeID, ctrl.libraryTypeName, ctrl.libraryVersion))
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
             data.update(ctrl.getStatus())
+            self.sendDmgCtrlStatus(ctrl, data)
             self._plugin.publishMsg('ozwave.ctrl.state', data)
 
     def _handleDriverReset(self, args):
@@ -915,6 +918,7 @@ class OZWavemanager():
             self._log.info(u"Driver {0}, homeId {1} is reset, all network nodes deleted".format(ctrl.driver, args))
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-reset', 'usermsg' : 'Driver reseted, All nodes must be recovered.'}
             data.update(ctrl.getStatus())
+            self.sendDmgCtrlStatus(ctrl, data)
             self._plugin.publishMsg('ozwave.ctrl.state', data)
         else :
             self._log.warning(u"A driver reset is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
@@ -935,6 +939,7 @@ class OZWavemanager():
             self._log.info(u"Driver {0}, homeId {1} is removed, all network nodes deleted".format(ctrl.driver, args))
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
             data.update(ctrl.getStatus())
+            self.sendDmgCtrlStatus(ctrl, data)
             self._plugin.publishMsg('ozwave.ctrl.state', data)
             self._devicesCtrl.pop(ctrl)
             del (ctrl)
@@ -954,6 +959,7 @@ class OZWavemanager():
         self._log.error(u"Openzwave fail to open driver {0}, ozw message : {1}".format(ctrl.driver, args))
         data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-failed', 'usermsg' : 'Openzwave opening driver {0} fail.'.format(ctrl.driver)}
         data.update(ctrl.getStatus())
+        self.sendDmgCtrlStatus(ctrl, data)
         self._plugin.publishMsg('ozwave.ctrl.state', data)
 
     def _handleInitializationComplete(self, args):
@@ -976,6 +982,7 @@ class OZWavemanager():
         ctrl.initFully = True
         data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-init', 'usermsg' :'Zwave network Initialized.'}
         data.update(ctrl.getStatus())
+        self.sendDmgCtrlStatus(ctrl, data)
         self._plugin.publishMsg('ozwave.ctrl.state', data)
         self._log.info("OpenZWave initialization completed for driver {0}. Found {1} Z-Wave Device Nodes ({2} sleeping, {3} Dead)".format(ctrl.driver, ctrl.getNodeCount(), ctrl.getSleepingNodeCount(), ctrl.getFailedNodeCount()))
 
@@ -1022,6 +1029,7 @@ class OZWavemanager():
                 ctrl.ready = True
                 data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-ready', 'usermsg' : 'Driver is ready.'}
                 data.update(ctrl.getStatus())
+                self.sendDmgCtrlStatus(ctrl, data)
                 self._plugin.publishMsg('ozwave.ctrl.state', data)
                 self._log.info('Z-Wave Controller Node {0} is ready, UI dialogue autorised.'.format(self.refNode(ctrl.homeId, node.nodeId)))
         else :
@@ -1303,11 +1311,6 @@ class OZWavemanager():
                 retval["ListNodeId"] = ctrl.getNodesId()
             else:
                 retval["Model"] = "Zwave network not ready, be patient..."
-#            if ctrl.initFully :
-#                retval["state"] = "alive"
-#            else :
-#                if retval["state"] == "stopped" : retval["state"] ;
-#                retval["state"] = "starting"
             retval["error"] = ""
             return retval
         else :
@@ -1860,9 +1863,8 @@ class OZWavemanager():
         return report
 
     def reportCtrlMsg(self, networkId, ctrlmsg):
-        """Un message de changement d'état a été recu, il est reporté au besoin sur le hub xPL pour l'UI
+        """A change state message is received, it's report on MQ for l'UI
         """
-
         report  = {}
         ctrl = self.getCtrlOfNetwork(networkId)
         if ctrl is None : return
@@ -2000,6 +2002,8 @@ class PrimaryController():
                 else :
                     retval["init"] = NodeStatusNW[3] # In progress - Devices initializing
                     retval["status"] = 'starting'
+            if self.ctrlActProgress and self.ctrlActProgress.has_key('state') and self.ctrlActProgress['state'] == libopenzwave.PyControllerState[4] :
+                status['status'] ='locked' #Waiting
         elif self.status == 'close' : retval["status"] = 'stopped'
         elif self.status == 'fail' :
             retval["status"] = 'dead'
