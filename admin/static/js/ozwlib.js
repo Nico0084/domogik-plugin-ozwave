@@ -701,7 +701,9 @@ function renderNodeStatusCol(data, type, full, meta) {
     var dmgDev = "";
     var knDev = "";
     var newDev = "";
+    var titleDev = "No domogik device type associate.";
     if (nodeData.DmgDevices.length != 0) {
+        titleDev = "There is already domogik device associated<br>you can also use one below.";
         devState = "fa-check-circle icon-success";
         devContent = '<div class="container-fluid">';
         for (nD in nodeData.DmgDevices) {
@@ -715,7 +717,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-check-circle icon-success extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-check-circle icon-success"></i><br>lock/unlock<br>display popup</span>'+
-                "<h4>Domogik device associated</h4></div>'" +
+                "<h4>Domogik device associated<br>with this node</h4></div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
@@ -750,7 +752,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             knDev = "<span id='knowndevicetypes"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
                     " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                    "<h4>No domogik device associate.<br>Create it with device-type :</h4></div>'" +
+                    "<h4>"+titleDev+"<br>Create it with device-type :</h4></div>'" +
                     " data-container='body' data-content='" + devContent + "'></span>";
         };
     };
@@ -763,14 +765,14 @@ function renderNodeStatusCol(data, type, full, meta) {
         newDev = "<span id='newdevicetypes"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                "<h4>No domogik device type associate.<br>Send a developper request to create it with :</h4></div>'" +
+                "<h4>"+titleDev+"<br>Send a developper request to create it with :</h4></div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (devContent == "") {
         devContent = "";
         if (initState !='completed') {devContent = "Wait for complet initialisation...";
         } else {devContent =
-            '<button class="btn btn-primary center-block" id="refrechDetectDev">'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'">' +
+            '<button class="btn btn-primary center-block" id="refrechDetectDev'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'">' +
                 '<i class="fa fa-refresh" id="refrechDetectDev-ic'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'"></i>' +
                 '<span> Restart detection ...</span>' +
             '</button>';};
