@@ -1761,6 +1761,12 @@ class OZWavemanager():
                     report['state'] = node.setBatteryCheck(True if data['state'] in [True, 'True', 'true'] else False)
                     report['error'] = ''
                 else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
+            elif data['action'] == 'RefrechDetectDev' :
+                node = self._getNode(data['homeId'], data['nodeId'])
+                if node :
+                    threading.Thread(None, node._checkDmgDeviceLink, "th_refreshDevices", (), {"force": True}).start()
+                    report['error'] = ''
+                else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
             else :
                 report['error'] ='Request {0} unknown action, data : {1}'.format(request, data)
             report['action'] = data['action']

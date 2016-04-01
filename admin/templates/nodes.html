@@ -173,6 +173,34 @@
                     console.log(err);
                 };
             });
+            $("[id^='refrechDetectDev_']").not("[isHandled]" ).each(function(rowN, nData) {
+                EnableButtonAction(this, function(obj) {
+                    var refId =  obj.id.split("_");
+                    var NetworkID = refId[1];
+                    var NodeID = refId[2];
+                    $("#refrechdevList-ic_"+refId[1]+"_"+refId[2]).removeClass().addClass("fa fa-refresh fa-spin");
+                    sendRequest("ozwave.node.action", {"action": "RefrechDetectDev", "networkId": refId[1], "nodeId": refId[2]}, function(data, result) {
+                        var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+                        $("#refrechdevList-ic"+data.content.NetworkID+"_"+data.content.NodeID).removeClass().addClass("fa fa-refresh");
+                        $("#refrechdevList"+data.content.NetworkID+"_"+data.content.NodeID).popover('hide');
+                        if (result == "error" || data.result == "error") {
+                            new PNotify({
+                                type: 'error',
+                                title: 'Action fail',
+                                text: 'Refreshing linked domogik device.',
+                                delay: 6000
+                            });
+                        } else {
+                            new PNotify({
+                                    type: 'success',
+                                    title: 'Action sended',
+                                    text: 'Wait for result of refreshing linked domogik device ...',
+                                    delay: 4000
+                            });
+                        };
+                    });
+                });
+            });
             $( "input[type='checkbox'][id^='batcheck']").not("[isHandled]" ).each(function(rowN, nData) {
                 $(this).attr("isHandled", true);
                 $(this).on('change', function (e) {

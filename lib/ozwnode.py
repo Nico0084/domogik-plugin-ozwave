@@ -169,10 +169,10 @@ class ZWaveNode:
         """Node retrieve NodeQueriesComplete notification, intialisation process completed."""
         self._ready = True
         self.reportToUI({'type': 'init-process', 'usermsg' : 'Node is now ready', 'data': self.GetNodeStateNW()})
-        self._checkDmgDeviceLink()
+        self._checkDmgDeviceLink(True)
 
-    def _checkDmgDeviceLink(self):
-        if not self._knownDeviceTypes and not  self._newDeviceTypes and self.isInitialized() :
+    def _checkDmgDeviceLink(self, force = False):
+        if (not self._knownDeviceTypes and not self._newDeviceTypes and self.isInitialized()) or force :
             try :
                 self.liklyDmgDevices()
                 if self._dmgDevices == [] : self.refreshAllDmgDevice()

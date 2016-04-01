@@ -713,7 +713,9 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         devContent += "</div>";
         dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-check-circle icon-success extbtn'" +
-                " data-toggle='popover' title='Domogik device associated'" +
+                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+                    '<i class="fa fa-check-circle icon-success"></i><br>lock/unlock<br>display popup</span>'+
+                "<h4>Domogik device associated</h4></div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
@@ -746,7 +748,9 @@ function renderNodeStatusCol(data, type, full, meta) {
         devContent += "</div>";
         if (find) {
             knDev = "<span id='knowndevicetypes"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
-                    " data-toggle='popover' title='<h4>No domogik device associate.<br>Create it with device-type :</h4>'" +
+                    " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+                    '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
+                    "<h4>No domogik device associate.<br>Create it with device-type :</h4></div>'" +
                     " data-container='body' data-content='" + devContent + "'></span>";
         };
     };
@@ -757,15 +761,23 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         devContent += "</div>";
         newDev = "<span id='newdevicetypes"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
-                " data-toggle='popover' title='<h4>No domogik device type associate.<br>Send a developper request to create it with :</h4>'" +
+                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+                    '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
+                "<h4>No domogik device type associate.<br>Send a developper request to create it with :</h4></div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (devContent == "") {
         devContent = "";
         if (initState !='completed') {devContent = "Wait for complet initialisation...";
-        } else {devContent = "Try to launch detection again...";};
+        } else {devContent =
+            '<button class="btn btn-primary center-block" id="refrechDetectDev">'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'">' +
+                '<i class="fa fa-refresh" id="refrechDetectDev-ic'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'"></i>' +
+                '<span> Restart detection ...</span>' +
+            '</button>';};
         dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
-               " data-toggle='popover' title='Neither domogik device type find !'" +
+               " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+                    '<i class="fa fa-exclamation-circle icon-danger"></i><br>lock / unlock<br>display popup</span>'+
+                "<h4>Neither domogik device type find !</h4></div>'" +
                " data-content='" + devContent + "'></span>";
     }
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
