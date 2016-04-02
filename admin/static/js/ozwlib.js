@@ -749,7 +749,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         devContent += "</div>";
         if (find) {
-            knDev = "<span id='knowndevicetypes"+ nodeData.NodeID + "' class='fa fa-asterisk icon-warning extbtn'" +
+            knDev = "<span id='knowndevicetypes"+ nodeRef + "' class='fa fa-asterisk icon-warning extbtn'" +
                     " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
                     "<h4>"+titleDev+"<br>Create it with device-type :</h4></div>'" +
@@ -762,7 +762,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             devContent += "<p><strong>"+ nD + " :</strong><pre>" + JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2) + "</pre></p>";
         };
         devContent += "</div>";
-        newDev = "<span id='newdevicetypes"+ nodeData.NodeID + "' class='fa fa-plus-square icon-warning extbtn'" +
+        newDev = "<span id='newdevicetypes"+ nodeRef + "' class='fa fa-plus-square icon-warning extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
                 "<h4>"+titleDev+"<br>Send a developper request to create it with :</h4></div>'" +
@@ -772,11 +772,11 @@ function renderNodeStatusCol(data, type, full, meta) {
         devContent = "";
         if (initState !='completed') {devContent = "Wait for complet initialisation...";
         } else {devContent =
-            '<button class="btn btn-primary center-block" id="refrechDetectDev'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'">' +
-                '<i class="fa fa-refresh" id="refrechDetectDev-ic'+ GetNodeRefId(nodeData.NetworkID, nodeData.NodeID)+'"></i>' +
+            '<button class="btn btn-primary center-block" id="refrechDetectDev'+ nodeRef +'">' +
+                '<i class="fa fa-refresh" id="refrechDetectDev-ic'+ nodeRef +'"></i>' +
                 '<span> Restart detection ...</span>' +
             '</button>';};
-        dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
+        dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-exclamation-circle icon-danger"></i><br>lock / unlock<br>display popup</span>'+
                 "<h4>Neither domogik device type find !</h4></div>'" +
