@@ -714,7 +714,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             devContent += "<p><strong>"+ header + " :</strong><pre>"  + JSON.stringify(nodeData.DmgDevices[nD], null, 2) + "</pre></p>";
         };
         devContent += "</div>";
-        dmgDev = "<span id='nodedmgdevices"+ nodeData.NodeID + "' class='fa fa-check-circle icon-success extbtn'" +
+        dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-check-circle icon-success extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-check-circle icon-success"></i><br>lock/unlock<br>display popup</span>'+
                 "<h4>Domogik device associated<br>with this node</h4></div>'" +
@@ -725,25 +725,35 @@ function renderNodeStatusCol(data, type, full, meta) {
         var find = false;
         for (nD in nodeData.KnownDeviceTypes) {
             var insert = true;
-            if (dmgDev != ""){
-                dRef = nD.split(".");
-                var compRS = dRef[1]; // Node ID compare
-                var compRD = "node";
-                if (dRef.length == 3) {
-                    compRS = dRef[2]; // Instance compare
-                    compRD = "instance";
-                };
-                for (nDT in nodeData.DmgDevices) {
+            var instanceParam = "";
+            var dRef = nD.split(".");
+            var compRS = dRef[1]; // Node ID compare
+            var compRD = "node";
+            if (dRef.length == 3) {
+                compRS = dRef[2]; // Instance compare
+                compRD = "instance";
+                instanceParam = '&instance='+ compRS
+            };
+            if (dmgDev != ""){ // Don't insert devices already created
+                for (var nDT in nodeData.DmgDevices) {
                     if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined &&
                          nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD] &&
                          compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
-                    insert = false;
-                    break;
+                        insert = false;
+                        break;
                     };
                 };
             };
             if (insert) {
-                devContent += "<p><strong>"+ nD + " :</strong> " + JSON.stringify(nodeData.KnownDeviceTypes[nD], null, 2) + "</p>";
+                devContent += "<p><strong>"+ nD + " :</strong> " +
+                        ' <a href="/client/'+clientID+'/dmg_devices/new/type/'+nodeData.KnownDeviceTypes[nD]+
+                        '?networkid='+nodeData.NetworkID+'&node='+nodeData.NodeID+instanceParam+
+                        '&Reference='+nodeData.Model+'" '+
+                        'class="btn btn-info" id="createDev'+ nodeRef +'" target="_blank">' +
+                        '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'+
+                        '  ' + nodeData.KnownDeviceTypes[nD]+
+                        '</a>'
+                    "</p>";
                 find = true;
             };
         };
