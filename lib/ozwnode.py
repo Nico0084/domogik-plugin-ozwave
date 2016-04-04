@@ -177,7 +177,7 @@ class ZWaveNode:
                 self.liklyDmgDevices()
                 if self._dmgDevices == [] : self.refreshAllDmgDevice()
             except :
-                print(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
+                self.log.warning(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
 
     def setNamed(self):
         """Le node a reçu la notification NodeNaming, le device à été identifié dans la librairie openzwave (config/xml)"."""
@@ -1054,79 +1054,81 @@ class ZWaveNode:
     def liklyDmgDevices(self):
         """Return list of all likely domogik device from all valueNodes"""
         devices = {}
-        for k, value in self._values.items():
-            newD = value.getDmgDeviceParam()
-            if newD is not None :
-                refDev = (newD['networkid'], newD['node'], newD['instance'])
-                try :
-                    len(devices[refDev])
-                except :
-                    devices[refDev] = {'listSensors': {}, 'listCmds': {}}
-                dataTypes = value.getDataTypesFromZW(newD['label'])
-#                print devices[refDev]
-#                print "        Possible datatypes for label {0} / {1}".format(newD['label'], dataTypes)
-                # value set as sensor
-                sensors = self._ozwmanager.getSensorByName(newD['label'])
-                added = []
-                for s in sensors :
-#                    print "        Check sensor {0} : {1}".format(s, sensors[s])
-                    if sensors[s]['data_type'] in dataTypes : added.append(s)
-#                print "    Added sensors : {0}".format(added)
-                if added :
-                    if not devices[refDev]['listSensors'] :
-                        n = 1
-                        for s in added :
-                            devices[refDev]['listSensors'][n] = [s]
-                            n += 1
-                    else :
-                        numN2 = 1
-                        if len(added) > 1 :
-                            if len(devices[refDev]['listSensors']) == 1 :
-                                for n in range(2, len(added) + 1) :
-                                    devices[refDev]['listSensors'][n] = list(devices[refDev]['listSensors'][1])
-                            else : # must be multiplacte by len(added)
-                                numN2 = len(devices[refDev]['listSensors'])
-                                for n in range(1, len(added)) :
-                                    for n2 in range (1, numN2 + 1) :
-                                        devices[refDev]['listSensors'][(n*numN2) + n2] = list(devices[refDev]['listSensors'][n2])
-                            n = 0
-                            for s in added :
-#                                print "-------------------------------"
-                                for n2 in range(1, numN2 + 1) :
-                                    devices[refDev]['listSensors'][(n*numN2)+n2].append(s)
-#                                    print (n*numN2)+n2, devices[refDev]['listSensors']
-                                n += 1
-                        else :
-                            for s in added :
-                                for n in devices[refDev]['listSensors'] :
-                                    devices[refDev]['listSensors'][n].append(s)
-#                                    print n, devices[refDev]['listSensors']
-
-                if not value._valueData['readOnly'] : # value set as command
-                    cmds = self._ozwmanager.getCommandByName(newD['label'])
+        try :
+            for k, value in self._values.items():
+                newD = value.getDmgDeviceParam()
+                if newD is not None :
+                    refDev = (newD['networkid'], newD['node'], newD['instance'])
+                    try :
+                        len(devices[refDev])
+                    except :
+                        devices[refDev] = {'listSensors': {}, 'listCmds': {}}
+                    dataTypes = value.getDataTypesFromZW(newD['label'])
+    #                print devices[refDev]
+    #                print "        Possible datatypes for label {0} / {1}".format(newD['label'], dataTypes)
+                    # value set as sensor
+                    sensors = self._ozwmanager.getSensorByName(newD['label'])
                     added = []
-                    for c in cmds :
-#                        print "        Check cmd {0} : {1}".format(c, cmds[c])
-                        for param in cmds[c]['parameters'] :
-#                            print "            Check label {0} for param {1}".format(newD['label'], param)
-                            if newD['label'] == param['key'].lower() and param['data_type'] in dataTypes :
-                                added.append(c)
-#                    print "    Added commands : {0}".format(added)
+                    for s in sensors :
+    #                    print "        Check sensor {0} : {1}".format(s, sensors[s])
+                        if sensors[s]['data_type'] in dataTypes : added.append(s)
+    #                print "    Added sensors : {0}".format(added)
                     if added :
-                        if not devices[refDev]['listCmds'] :
+                        if not devices[refDev]['listSensors'] :
                             n = 1
-                            for c in added :
-                                devices[refDev]['listCmds'][n] = [c]
+                            for s in added :
+                                devices[refDev]['listSensors'][n] = [s]
                                 n += 1
                         else :
-                            if len(added) > len(devices[refDev]['listCmds']) :
-                                for n in range(len(devices[refDev]['listCmds']) + 1, len(added) + 1) :
-                                    devices[refDev]['listCmds'][n] = list(devices[refDev]['listCmds'][1])
-                            for c in added :
-                                for n in devices[refDev]['listCmds'] :
-                                    devices[refDev]['listCmds'][n].append(c)
-#                                    print n, devices[refDev]['listCmds']
+                            numN2 = 1
+                            if len(added) > 1 :
+                                if len(devices[refDev]['listSensors']) == 1 :
+                                    for n in range(2, len(added) + 1) :
+                                        devices[refDev]['listSensors'][n] = list(devices[refDev]['listSensors'][1])
+                                else : # must be multiplacte by len(added)
+                                    numN2 = len(devices[refDev]['listSensors'])
+                                    for n in range(1, len(added)) :
+                                        for n2 in range (1, numN2 + 1) :
+                                            devices[refDev]['listSensors'][(n*numN2) + n2] = list(devices[refDev]['listSensors'][n2])
+                                n = 0
+                                for s in added :
+    #                                print "-------------------------------"
+                                    for n2 in range(1, numN2 + 1) :
+                                        devices[refDev]['listSensors'][(n*numN2)+n2].append(s)
+    #                                    print (n*numN2)+n2, devices[refDev]['listSensors']
+                                    n += 1
+                            else :
+                                for s in added :
+                                    for n in devices[refDev]['listSensors'] :
+                                        devices[refDev]['listSensors'][n].append(s)
+    #                                    print n, devices[refDev]['listSensors']
 
+                    if not value._valueData['readOnly'] : # value set as command
+                        cmds = self._ozwmanager.getCommandByName(newD['label'])
+                        added = []
+                        for c in cmds :
+    #                        print "        Check cmd {0} : {1}".format(c, cmds[c])
+                            for param in cmds[c]['parameters'] :
+    #                            print "            Check label {0} for param {1}".format(newD['label'], param)
+                                if newD['label'] == param['key'].lower() and param['data_type'] in dataTypes :
+                                    added.append(c)
+    #                    print "    Added commands : {0}".format(added)
+                        if added :
+                            if not devices[refDev]['listCmds'] :
+                                n = 1
+                                for c in added :
+                                    devices[refDev]['listCmds'][n] = [c]
+                                    n += 1
+                            else :
+                                if len(added) > len(devices[refDev]['listCmds']) :
+                                    for n in range(len(devices[refDev]['listCmds']) + 1, len(added) + 1) :
+                                        devices[refDev]['listCmds'][n] = list(devices[refDev]['listCmds'][1])
+                                for c in added :
+                                    for n in devices[refDev]['listCmds'] :
+                                        devices[refDev]['listCmds'][n].append(c)
+    #                                    print n, devices[refDev]['listCmds']
+        except:
+            self.log.warning(u"Error liklyDmgDevices : {0}".format(traceback.format_exc()))
         print (u"***************** likly domogik devices for node ****************")
         print (devices)
         self._knownDeviceTypes = self._ozwmanager.findDeviceTypes(devices)
