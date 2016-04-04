@@ -185,7 +185,7 @@
                             sendRequest("ozwave.node.action", {"action": "RefrechDetectDev", "networkId": refId[1], "nodeId": refId[2]}, function(data, result) {
                                 var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
                                 $("#refrechDetectDev-ic"+nodeRefId).removeClass().addClass("fa fa-refresh");
-                                $("#refrechDetectDev"+nodeRefId).parent().popover('hide');
+                                $("#refrechDetectDev"+nodeRefId).parent('.popover').hide();
                                 if (result == "error" || data.result == "error") {
                                     new PNotify({
                                         type: 'error',
