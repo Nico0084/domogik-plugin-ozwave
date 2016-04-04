@@ -65,7 +65,7 @@ class OZwave(Plugin):
         if not self.check_configured():
             return
         self.myzwave = None
-        self._ctrlHBeat = None
+        self._ctrlsHBeat = None
         # Get some config value
         ozwlogConf = self.get_config('ozwlog')
         pathUser = str(self.get_data_files_directory())  # force str type for python openzwave lib
@@ -89,8 +89,8 @@ class OZwave(Plugin):
         self.add_mq_sub('device.update')
         # Start thread for starting ozwave sercices
         self.myzwave.starter.start()
-        self._ctrlHBeat = Timer(60, self.myzwave.sendHbeatCtrlsState, self)
-        self._ctrlHBeat.start()
+        self._ctrlsHBeat = Timer(60, self.myzwave.sendHbeatCtrlsState, self)
+        self._ctrlsHBeat.start()
         self.log.info('****** Init OZWave plugin manager completed ******')
         self.ready()
 
