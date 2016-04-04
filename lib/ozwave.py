@@ -163,15 +163,7 @@ class OZWavemanager():
         self.getManufacturers()
         self._plugin.add_stop_cb(self.stop)
         # get the data_types
-        mq_client  = MQSyncReq(self._plugin.zmq)
-        msg = MQMessage()
-        msg.set_action('datatype.get')
-        result = mq_client.request('manager', msg.get(), timeout=10)
-        if result :
-            self._dataTypes = result.get_data()['datatypes']
-            self._log.info(u"data_types list loaded.")
-        else :
-            self._log.warning(u"Error on retreive data_types list from MQ.")
+        self._loadDataType()
         # create DomogikLabelAvailable list from json
         self.InitDomogikLabelAvailable()
         # get the devices list
@@ -271,8 +263,20 @@ class OZWavemanager():
             self.openDeviceCtrl(device)
         self._plugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
 
+    def _loadDataType(self):
+        mq_client  = MQSyncReq(self._plugin.zmq)
+        msg = MQMessage()
+        msg.set_action('datatype.get')
+        result = mq_client.request('manager', msg.get(), timeout=10)
+        if result :
+            self._dataTypes = result.get_data()['datatypes']
+            self._log.info(u"data_types list loaded.")
+        else :
+            self._log.warning(u"Error on retreive data_types list from MQ.")
+
     def getDataType(self, name):
         """Return Datatype dict corresponding to name """
+        if self._dataTypes == [] : self._loadDataType()
         for dT in self._dataTypes :
             if dT == name : return self._dataTypes[dT]
         return {}

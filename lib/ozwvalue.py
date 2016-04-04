@@ -297,8 +297,8 @@ class ZWaveValueNode:
     def _getDmgUnitFromZW(self):
         """Return unit string convert to domogik DT_Type used"""
         if self._valueData['units'].lower() == "seconds" : return u"s"
-        elif self._valueData['units'].lower() == "c" : return u"°C"
-        elif self._valueData['units'].lower() == "f" : return u"°F"
+        elif self._valueData['units'].lower() == "c" : return u"\xb0C"
+        elif self._valueData['units'].lower() == "f" : return u"\xb0F"
         return u"{0}".format(self._valueData['units'])
 
     def _getLabelDomogik(self):
@@ -328,7 +328,7 @@ class ZWaveValueNode:
                             dType = self._node._ozwmanager.getDataType(param['data_type'])
                             if unit != "" :
                                 if 'unit' in dType :
-                                    print (u"    Compare unit cmd {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
+#                                    self.log.debug(u"    Compare unit cmd {0} <{1}> to {2} <{3}>".format(unit, type(unit), dType['unit'], type(dType['unit'])))
                                     if dType['unit'] == unit :
                                         types.append(param['data_type'])
                             else :
