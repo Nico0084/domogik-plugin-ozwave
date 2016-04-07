@@ -95,6 +95,9 @@ function buildValuesTab (data) {
             "drawCallback": function(settings) {
                 var api = this.api();
                 var data = api.rows({page:'current'}).data()
+                $('[data-toggle="tooltip"]').tooltip({
+                    html:true
+                });
                 // activate poll checkbox
                 $( "[id^='poll_']").not("[isHandled]" ).each(function(rowN, nData) {
                     var refId =  this.id.split("_");
@@ -178,10 +181,10 @@ function buildValuesTab (data) {
                                             valueData.pollintensity = data.content.intensity;
                                             if (data.content.action == "EnablePoll") {
                                                 valueData.polled = true;
-                                                $('#poll'+valueRef).attr('title',"Value is polled with intensity : " + valueData.pollintensity).prop('checked', true);
+                                                $('#poll'+valueRef).attr('data-original-title',"Value is polled with intensity : " + valueData.pollintensity).prop('checked', true);
                                             } else {
                                                 valueData.polled = false;
-                                                $('#poll'+valueRef).attr('title', "Check to poll this value").prop('checked', false) ;
+                                                $('#poll'+valueRef).attr('data-original-title', "Check to poll this value").prop('checked', false) ;
                                             };
                                             RefreshValueNodeData(data.content.NetworkID, data.content.NodeID, valueData);
                                             var cell = GetValueCell(table, GetValueRefId(data.content.NetworkID, data.content.NodeID, data.content.ValueID), 0);
@@ -299,10 +302,10 @@ function renderCmdClssStatus(data, type, full, meta) {
                 st += "<i class='fa fa-upload icon-warning'></i><i class='fa fa-download icon-warning'></i>";
             };
         };
-        var rw = " <span id='st"+valueRef +"' class='extbtn' title='" + textRW + "'>" + st +"</span>";
+        var rw = " <span id='st"+valueRef +"' class='extbtn' data-toggle='tooltip' data-placement='right' title='" + textRW + "'>" + st +"</span>";
         var extra ="";
         if (valueData.help!="") {
-            extra = "  <span id='hn"+valueRef +"' class='fa fa-info-circle fa-lg extbtn icon-info' title='" + valueData.help + "'></span>";
+            extra = "  <span id='hn"+valueRef +"' class='fa fa-info-circle fa-lg extbtn icon-info' data-toggle='tooltip' data-placement='right' title='" + valueData.help + "'></span>";
         };
         var textstatus = "Not available for domogik device";
         var st = 'fa-ban icon-warning';
@@ -317,12 +320,12 @@ function renderCmdClssStatus(data, type, full, meta) {
         if (!valueData.writeOnly) {
             var poll = "<input type='checkbox' class='medium' id='poll" + valueRef + "' name='isPolled'";
             if (valueData.polled) {
-                poll += " checked title='Value is polled with intensity : " + valueData.pollintensity + "' />";
+                poll += " checked data-toggle='tooltip' data-placement='right' title='Value is polled with intensity : " + valueData.pollintensity + "' />";
             } else {
-                poll += " title='Check to poll this value.'/>";
+                poll += " data-toggle='tooltip' data-placement='right' title='Check to poll this value.'/>";
             };
         } else { var poll = "";};
-        return  "<span id='value"+valueRef +"'class='fa extbtn " + st + "' title='" + textstatus +
+        return  "<span id='value"+valueRef +"'class='fa extbtn " + st + "' data-toggle='tooltip' data-placement='right' title='" + textstatus +
                 "'></span>" + rw + extra + poll;
     } else {
         return "No data :(";
@@ -345,13 +348,15 @@ function renderCmdClssValue(data, type, full, meta) {
                     var stText = "Not recovered"
                     valueData.realvalue = valueData.value;
                 };
-                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value not confirmed by node."> '+stText+'</i></span>';
+                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +
+                    '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+stText+'</i></span>';
         } else if (valueData.realvalue != valueData.value) {
-            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
+            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +
+                '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
         };
         var ret = valueData.value;
-        if (valueData.readOnly==true) {
-            ret = "<span id='" + id +"' title=''>" +  valueData.value+ "</span>";
+        if (valueData.readOnly) {
+            ret = "<span id='" + id +"' data-toggle='tooltip' data-placement='right' title=''>" +  valueData.value+ "</span>";
         } else {
             switch (valueData.type) {
                 case 'Bool' :
@@ -370,7 +375,7 @@ function renderCmdClssValue(data, type, full, meta) {
                             opt = "<option value=true>true</option>" +
                                      "<option selected value=" + valueData.value +">" + valueData.value + "</option>" ;
                         }
-                        ret ="<select id='" + id + "' name='CmdClssValue' class='listes ccvalue' style='width:7em' title=''>" + opt + "</select>";
+                        ret ="<select id='" + id + "' name='CmdClssValue' class='listes ccvalue' style='width:7em' data-toggle='tooltip' data-placement='right' title=''>" + opt + "</select>";
                     };
                     break;
                 case 'Byte' :
@@ -378,9 +383,11 @@ function renderCmdClssValue(data, type, full, meta) {
                 case 'Int' :
                 case 'Decimal' :
                     ret = "<div class='input-group'><span class='input-group-addon label-warning hidden' id='stch"+ valueRef +
-                            "' title='Value is actually "+valueData.realvalue+". You must validate your change by enter key.'><i class='fa fa-recycle'></i></span>";
+                            "' data-toggle='tooltip' data-placement='bottom' title='Value is actually "+valueData.realvalue+
+                            ". You must validate your change by enter key.'><i class='fa fa-recycle'></i></span>";
                     ret +="<input id='" + id + "' name='CmdClssValue' class='form-control input-sm' type='number' aria-describedby='stch"+ valueRef + "' min='" +
-                            valueData.min  +" ' max='"+ valueData.max  +"' value='"+ valueData.value +"' title='range "+valueData.min+" to "+valueData.max+"'></input>" +
+                            valueData.min  +" ' max='"+ valueData.max  +"' value='"+ valueData.value +
+                            "' data-toggle='tooltip' data-placement='bottom' title='range "+valueData.min+" to "+valueData.max+"'></input>" +
                             modify + "</div>";
                     break;
                 case 'Raw' :
@@ -388,7 +395,8 @@ function renderCmdClssValue(data, type, full, meta) {
                     ret = renderInputText( id, "valueN", "value", valueData.value, "");
                     break;
                 case 'Schedule' :
-                    ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue' type='date' value='"+ valueData.value +"' title=''></input>";
+                    ret ="<input id='" + id + "' name='CmdClssValue' class='ccvalue' type='date' value='"+ valueData.value +
+                         "' data-toggle='tooltip' data-placement='bottom' title=''></input>";
                     break;
                 case 'List' :
                     ret = "<div class='input-group'>";
@@ -403,7 +411,8 @@ function renderCmdClssValue(data, type, full, meta) {
                     ret +="</select>" + modify + "</div>";
                     break;
                 case 'Button' :
-                    ret ="<button id='" + id + "' name='CmdClssValue' class='btn btn-default btn-xs' type='button' value='" + valueData.label +"' title=''>"+ valueData.label +"</v>";
+                    ret ="<button id='" + id + "' name='CmdClssValue' class='btn btn-default btn-xs' type='button' value='" + valueData.label +
+                         "' data-toggle='tooltip' data-placement='bottom' title=''>"+ valueData.label +"</v>";
                     break;
                 default :
                     ret = "No data :(";
@@ -420,7 +429,8 @@ function renderCmdClssName(data, type, full, meta) {
     var valueData = GetValueZWNode(refId[0],refId[1],refId[2]);
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
-        return   "<span id='hc"+valueRef +"'title='" + valueData.help + "'>" + valueData.commandClass + "</span>";
+        return "<span id='hc"+valueRef +"'data-toggle='tooltip' data-placement='bottom' title='" + valueData.help +
+               "'>" + valueData.commandClass + "</span>";
     } else {
         return "No data :(";
     };
