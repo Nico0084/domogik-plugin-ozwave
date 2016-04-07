@@ -124,7 +124,7 @@ function buildValuesTab (data) {
                             message: "<div class='row'>" +
                                             "<p>" + valueData.commandClass + "</p>" +
                                             "<p>Set if value must be polled and his instensity.</p>" +
-                                            "<h4>Global pool parameters :</h4><ul>"  +
+                                            "<h4>Global poll parameters :</h4><ul>"  +
                                                 "<li class='text-left' title='"+ ozwInfo.Options.PollInterval.doc +"'>Interval : " + ozwInfo.Options.PollInterval.value + " msec</li>" +
                                                 "<li class='text-left' title='"+ ozwInfo.Options.IntervalBetweenPolls.doc +"'>Interval Between Polls: " + ozwInfo.Options.IntervalBetweenPolls.value + "</li></ul>" +
                                             "<h5 class='alert-info'>Save openzwave network configuration to keep change.</h5>" +
@@ -280,11 +280,24 @@ function renderCmdClssStatus(data, type, full, meta) {
     var valueData = GetValueZWNode(refId[0],refId[1],refId[2]);
     var valueRef = GetValueRefId(refId[0],refId[1],refId[2]);
     if (valueData) {
-        var st = "<i class='fa fa-upload icon-success'></i>";
-        var textRW = "Read only";
-        if (valueData.readOnly == false) {
-            textRW = "Read and Write";
-            st += "<i class='fa fa-download'></i>";
+        var st = "";
+        var textRW = "";
+        if (!valueData.readOnly) {
+            if (!valueData.writeOnly) {
+                textRW = "Read and Write";
+                st += "<i class='fa fa-upload icon-success'></i><i class='fa fa-download'></i>";
+            } else {
+                textRW = "Write only";
+                st += "<i class='fa fa-download'></i>";
+            };
+        } else {
+            if (!valueData.writeOnly) {
+                textRW = "Read only";
+                st += "<i class='fa fa-upload icon-success'></i>";
+            } else {
+                textRW = "Read ? Write ? confilct !";
+                st += "<i class='fa fa-upload icon-warning'></i><i class='fa fa-download icon-warning'></i>";
+            };
         };
         var rw = " <span id='st"+valueRef +"' class='extbtn' title='" + textRW + "'>" + st +"</span>";
         var extra ="";
@@ -301,16 +314,16 @@ function renderCmdClssStatus(data, type, full, meta) {
                          "  dmg label: " + valueData.domogikdevice.label;
             st = 'fa-star icon-success';
         };
-        var poll ="";
-        var tpoll =  "Check to poll this value.";
-        if (valueData.polled) {
-            poll = " checked";
-            tpoll = "Value is polled with intensity : " + valueData.pollintensity;
-        };
-
+        if (!valueData.writeOnly) {
+            var poll = "<input type='checkbox' class='medium' id='poll" + valueRef + "' name='isPolled'";
+            if (valueData.polled) {
+                poll += " checked title='Value is polled with intensity : " + valueData.pollintensity + "' />";
+            } else {
+                poll += " title='Check to poll this value.'/>";
+            };
+        } else { var poll = "";};
         return  "<span id='value"+valueRef +"'class='fa extbtn " + st + "' title='" + textstatus +
-                "'></span>" + rw + extra + "<input type='checkbox' class='medium' id='poll" + valueRef + "'" + poll + " name='isPolled'" +
-                "title='"+ tpoll + "' />";
+                "'></span>" + rw + extra + poll;
     } else {
         return "No data :(";
     };
@@ -326,8 +339,13 @@ function renderCmdClssValue(data, type, full, meta) {
         var id = "valCC" + valueRef;
         var modify = "";
         if (valueData.realvalue == undefined) {
-                valueData.realvalue = valueData.value;
-                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value not confirmed by node."> Not recovered</i></span>';
+                if (valueData.writeOnly) {
+                    var stText = "Write only, can't recover real value"
+                } else {
+                    var stText = "Not recovered"
+                    valueData.realvalue = valueData.value;
+                };
+                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value not confirmed by node."> '+stText+'</i></span>';
         } else if (valueData.realvalue != valueData.value) {
             modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +'" class="fa fa-warning" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
         };

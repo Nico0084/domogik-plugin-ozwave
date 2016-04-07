@@ -83,6 +83,7 @@ class ZWaveValueNode:
                     'label' : str,      # Nom de la value OZW
                     'units' : str,      # unité
                     'readOnly': manager.IsValueReadOnly(v),  # Type d'accès lecture/ecriture
+                    'writeOnly': manager.isValueWriteOnly(v),  # Type d'accès lecture/ecriture
                     'min' :  uint   # the minimum that this value may contain.
                     'max' :  uint   # the maximum that this value may contain.
                     }
@@ -94,6 +95,7 @@ class ZWaveValueNode:
         self._tempConv = True # Conversion forcée de F en °C, a mettre en option.
         self._valueData['min'] = self._node._manager.getValueMin(self._valueData['id'])
         self._valueData['max'] = self._node._manager.getValueMax(self._valueData['id'])
+        self._valueData['writeOnly'] = self._node._manager.isValueWriteOnly(self._valueData['id'])
 
     # On accède aux attributs uniquement depuis les property
     log = property(lambda self: self._node._ozwmanager._log)
