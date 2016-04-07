@@ -463,7 +463,14 @@ function DialBoxRequestRefreshNode(nodeData) {
 function HighlightCell(oCell, timeUpDate) {
     if (timeUpDate) {
         var t = 'Update at ' + Date(timeUpDate);
-        oCell.title = t;
+        var tooltip = $(oCell).attr('data-toggle');
+        if (tooltip == "tooltip") {
+            $(oCell).attr('data-original-title', t)
+        } else {
+            $(oCell).attr('data-toggle', 'tooltip').attr('data-placement', 'bottom').attr("data-container", "body").attr('title', t).tooltip({
+                    html:true
+                });
+        };
     };
     if (oCell.tagName == 'TD') {
         var elem = oCell;
@@ -606,10 +613,10 @@ function updateBtSavedConf(NetworkID, saved) {
 function updateBtMonitored(nodeData) {
     var nodeRef = GetNodeRefId(nodeData.NetworkID, nodeData.NodeID);
     if (nodeData.Monitored != '') {
-        $("#monitornode" + nodeRef).attr('title', "Node monitoring file : " + nodeData.Monitored + "&#10;Click to stop monitoring.");
+        $("#monitornode" + nodeRef).attr('data-original-title', "Node monitoring file : " + nodeData.Monitored + "&#10;Click to stop monitoring.");
         $("#monitornodeic" + nodeRef).removeClass("fa-play").addClass("fa-refresh fa-spin icon-danger");
     } else {
-        $("#monitornode" + nodeRef).attr('title', "Start Monitor Node and log it.");
+        $("#monitornode" + nodeRef).attr('data-original-title', "Start Monitor Node and log it.");
         $("#monitornodeic" + nodeRef).removeClass("fa-refresh fa-spin icon-danger").addClass("fa-play");
     };
 };
@@ -701,9 +708,9 @@ function renderNodeStatusCol(data, type, full, meta) {
     var dmgDev = "";
     var knDev = "";
     var newDev = "";
-    var titleDev = "No domogik device type associate.";
+    var titleDev = "No domogik device existing for node "+nodeData.NodeID+".";
     if (nodeData.DmgDevices.length != 0) {
-        titleDev = "There is already domogik device associated<br>you can also use one below.";
+        titleDev = "There is already domogik device created for node "+nodeData.NodeID+".<br>You can also use one below.";
         devState = "fa-check-circle icon-success";
         devContent = '<div class="container-fluid">';
         for (nD in nodeData.DmgDevices) {
@@ -717,7 +724,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-check-circle icon-success extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-check-circle icon-success"></i><br>lock/unlock<br>display popup</span>'+
-                "<h4>Domogik device associated<br>with this node</h4></div>'" +
+                '<h4>Domogik device existing<br>for node '+nodeData.NodeID+"</h4></div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
@@ -729,6 +736,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             var dRef = nD.split(".");
             var compRS = dRef[1]; // Node ID compare
             var compRD = "node";
+            var extra ="";
             if (dRef.length == 3) {
                 compRS = dRef[2]; // Instance compare
                 compRD = "instance";
@@ -736,16 +744,20 @@ function renderNodeStatusCol(data, type, full, meta) {
             };
             if (dmgDev != ""){ // Don't insert devices already created
                 for (var nDT in nodeData.DmgDevices) {
-                    if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined &&
-                         nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD] &&
-                         compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
-                        insert = false;
-                        break;
+                    if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined && compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
+                        if (nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD])  {
+                            insert = false;
+                            break;
+                        } else {
+                            var extra ='<span>(Existing device : <span class="bg-info"><strong>'+
+                                nodeData.DmgDevices[nDT].device_type_id+'</strong></span>)</span>'
+                            break;
+                        };
                     };
                 };
             };
             if (insert) {
-                devContent += "<p><strong>"+ nD + " :</strong> " +
+                devContent += '<p><strong>'+ nD + ' :</strong> ' + extra +
                         ' <a href="/client/'+clientID+'/dmg_devices/new/type/'+nodeData.KnownDeviceTypes[nD]+
                         '?networkid='+nodeData.NetworkID+'&node='+nodeData.NodeID+instanceParam+
                         '&Reference='+nodeData.Model+'" '+
@@ -762,8 +774,12 @@ function renderNodeStatusCol(data, type, full, meta) {
             knDev = "<span id='knowndevicetypes"+ nodeRef + "' class='fa fa-asterisk icon-warning extbtn'" +
                     " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                    "<h4>"+titleDev+"<br>Create it with device-type :</h4></div>'" +
+                    "<h4>"+titleDev+'<br><span class="text-nowrap">Use button to create it.'+"</span></h4></div>'" +
                     " data-container='body' data-content='" + devContent + "'></span>";
+
+            titleDev = "Some device type are already created for node "+nodeData.NodeID+".<br>Some other can be added with one below.";
+        } else {
+            titleDev = "No domogik device type existing for node "+nodeData.NodeID+".";
         };
     };
     if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
@@ -772,10 +788,16 @@ function renderNodeStatusCol(data, type, full, meta) {
             devContent += "<p><strong>"+ nD + " :</strong><pre>" + JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2) + "</pre></p>";
         };
         devContent += "</div>";
+        var refNode = nodeData.NetworkID+'.'+nodeData.NodeID;
         newDev = "<span id='newdevicetypes"+ nodeRef + "' class='fa fa-plus-square icon-warning extbtn'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                "<h4>"+titleDev+"<br>Send a developper request to create it with :</h4></div>'" +
+                "<h4>"+titleDev+"</h4>" +
+                '<button class="btn btn-info" onclick="sendNewDevice_Type(this)" refNode='+refNode+'>'+
+                    '<i class="fa fa-circle-o-notch" id="sendNewDeviceT-ic'+ nodeRef +'"></i>' +
+                    '<span> Create request on GitHub for integrate new device type</span>' +
+                '</button>' +
+                "</div>'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (devContent == "") {
@@ -977,4 +999,105 @@ function updateNodeTableCell(cell, colName, nodeData, date) {
     };
     HighlightCell(cell.node(), date);
     return true;
+};
+
+// GitHub tools
+
+function sendNewDevice_Type(obj) {
+    var refNode = obj.attributes.refNode.nodeValue.split('.');
+    var nodeRefId = GetNodeRefId(refNode[0], refNode[1]);
+    $("#sendNewDeviceT-ic"+nodeRefId).addClass("fa-spin");
+    sendRequest("ozwave.node.get", {"key": "values", "networkId": refNode[0], "nodeId": refNode[1]}, function(data, result) {
+        var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+        $("#sendNewDeviceT-ic"+nodeRefId).removeClass("fa-spin");
+        $("#newdevicetypes"+nodeRefId).popover("hide");
+        if (result == "error" || data.result == "error") {
+            new PNotify({
+                type: 'error',
+                title: 'Get list of command class value fail.',
+                text: data.content.error,
+                delay: 6000
+            });
+        } else {
+            RefreshValuesNodeData(data.content.NetworkID, data.content.NodeID, data.content.Values);
+            var nodeData = GetZWNode(data.content.NetworkID, data.content.NodeID);
+            var formDT = '<div class="row"><ul class="list-group">',
+                   n = 0;
+            for (var devType in nodeData.NewDeviceTypes) {
+                formDT += '<li class="list-group-item">'+
+                                        '<h5>'+devType+'</h5>'+
+                                        '<div class="input-group">'+
+                                            '<span class="input-group-addon" id="name-addon_'+n+'">Name</span>'+
+                                        '<input type="text" class="form-control" id="name_'+n+'" aria-describedby="name-addon_'+n+
+                                            '" placeholder="'+nodeData.NewDeviceTypes[devType].name+'">'+
+                                        '</div>'+
+                                        '<div class="input-group">'+
+                                            '<span class="input-group-addon" id="desc-addon_'+n+'">Description</span>'+
+                                            '<input type="text" class="form-control" id="desc_'+n+'" aria-describedby="desc-addon_'+n+
+                                                '" placeholder="'+nodeData.NewDeviceTypes[devType].description+'">'+
+                                        '</div>'+
+                                    '</li>';
+                n += 1;
+            };
+            formDT += '</ul></div>';
+            var bdiag = bootbox.dialog({
+                show: false,
+                className: '',
+                title: 'Open a request on github repo to create new domogik device type<br> for node <b>'+nodeData.NetworkID+'.'+nodeData.NodeID+'  '+nodeData.Model+'<b>',
+                message: '<div class="row">  ' +
+                               "<div class='col-md-12'> " +
+                                    '<p><i class="fa fa-2x fa-info-circle icon-info"></i>  Next step will open an create issue github page on a new tab with prefilled form.</p>' +
+                                    '<p>You can create the query as is, but editing some details information will help integration.</p>' +
+                                "</div>"+
+                            "</div>"+
+                            formDT,
+                data: nodeData,
+                buttons: [{
+                    id: 'btn-send',
+                    label: 'Open in GitHub',
+                    className: 'btn-primary',
+                    autospin: false,
+                    callback: function(dialogRef){
+                        if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
+                            var body = "**Zwave Details :**\n"+
+                                    "- Model : "+nodeData.Model+"\n"+
+                                    "- Capabilities : "+nodeData.Capabilities+"\n"+
+                                    "- Domogik device(s) :\n"
+
+                            for (value in nodeData.Values) {
+                                if (nodeData.Values[value].domogikdevice) {
+                                    body += "  - "+nodeData.Values[value].commandClass+" -- "+nodeData.Values[value].label+"\n"+
+                                            "    - instance : "+nodeData.Values[value].domogikdevice.instance+"\n"+
+                                            "    - label : "+nodeData.Values[value].domogikdevice.label+"\n"+
+                                            "    - type : "+nodeData.Values[value].type+"\n"+
+                                            "    - units : "+nodeData.Values[value].units+"\n"
+                                };
+                            };
+                            body += "\n";
+                            var name, desc, n=0;
+                            for (var devType in nodeData.NewDeviceTypes) {
+                                name = $('#name_'+n).val();
+                                desc = $('#desc_'+n).val();
+                                if (name) {nodeData.NewDeviceTypes[devType].name = name};
+                                if (desc) {nodeData.NewDeviceTypes[devType].description = desc};
+                                body += "**"+devType+"**\n>"+JSON.stringify(nodeData.NewDeviceTypes[devType])+"\n\n";
+                                n += 1;
+                            };
+                            var param = "title=New device type : " +encodeURIComponent(nodeData.Model)+ "&body=" + encodeURIComponent(body);
+                            window.open("https://github.com/Nico0084/domogik-plugin-ozwave/issues/new?"+param);
+                        };
+                    }
+                },{
+                    id: 'btn-cancel',
+                    label: 'Cancel',
+                    className: 'btn-danger',
+                    autospin: false,
+                    callback: function(dialogRef){
+        //                                            console.log("Cancel request new device type : " + nodeData.NetworkID+ "." + nodeData.NodeID);
+                    }
+                }]
+            });
+            bdiag.modal('show');
+        };
+    });
 };
