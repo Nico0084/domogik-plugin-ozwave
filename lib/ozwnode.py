@@ -1085,7 +1085,7 @@ class ZWaveNode:
                                 if len(devices[refDev]['listSensors']) == 1 :
                                     for n in range(2, len(added) + 1) :
                                         devices[refDev]['listSensors'][n] = list(devices[refDev]['listSensors'][1])
-                                else : # must be multiplacte by len(added)
+                                else : # must be multipilacte by len(added)
                                     numN2 = len(devices[refDev]['listSensors'])
                                     for n in range(1, len(added)) :
                                         for n2 in range (1, numN2 + 1) :
@@ -1094,13 +1094,15 @@ class ZWaveNode:
                                 for s in added :
     #                                print "-------------------------------"
                                     for n2 in range(1, numN2 + 1) :
-                                        devices[refDev]['listSensors'][(n*numN2)+n2].append(s)
+                                        if n2 not in devices[refDev]['listSensors'][(n*numN2)+n2] : # not duplicate sensor
+                                            devices[refDev]['listSensors'][(n*numN2)+n2].append(s)
     #                                    print (n*numN2)+n2, devices[refDev]['listSensors']
                                     n += 1
                             else :
                                 for s in added :
                                     for n in devices[refDev]['listSensors'] :
-                                        devices[refDev]['listSensors'][n].append(s)
+                                        if s not in devices[refDev]['listSensors'][n] : # not duplicate sensor
+                                            devices[refDev]['listSensors'][n].append(s)
     #                                    print n, devices[refDev]['listSensors']
 
                     if not value._valueData['readOnly'] : # value set as command
@@ -1125,7 +1127,8 @@ class ZWaveNode:
                                         devices[refDev]['listCmds'][n] = list(devices[refDev]['listCmds'][1])
                                 for c in added :
                                     for n in devices[refDev]['listCmds'] :
-                                        devices[refDev]['listCmds'][n].append(c)
+                                        if c not in devices[refDev]['listCmds'][n] : # not duplicate command
+                                            devices[refDev]['listCmds'][n].append(c)
     #                                    print n, devices[refDev]['listCmds']
         except:
             self.log.warning(u"Error liklyDmgDevices : {0}".format(traceback.format_exc()))
