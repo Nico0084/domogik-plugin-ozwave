@@ -103,7 +103,7 @@ class ZWaveValueNode:
     homeId = property(lambda self: self._node._homeId)
     nodeId = property(lambda self: self._node._nodeId)
     instance = property(lambda self: self._valueData['instance'])
-    dmgDevice = property(lambda self: self._getDmgDevice())
+    dmgDevice = property(lambda self: self._node._ozwmanager._getDmgDevice(self))
     lastUpdate = property(lambda self: self._lastUpdate)
     valueData = property(lambda self: self._valueData)
     labelDomogik = property(lambda self: self._getLabelDomogik())
@@ -290,12 +290,6 @@ class ZWaveValueNode:
         if self._realValue is not None and self._realValue == self._valueData['value'] : return True
         else : return False
 
-    def _getDmgDevice(self):
-        """Filter self._node._ozwmanager._getDmgDevice for return only dmg device of value"""
-        dmgDevices = self._node._ozwmanager._getDmgDevice(self)
-        if dmgDevices is not None : return dmgDevices[0]
-        return None
-
     def _getDmgUnitFromZW(self):
         """Return unit string convert to domogik DT_Type used"""
         if self._valueData['units'].lower() == "seconds" : return u"s"
@@ -339,9 +333,9 @@ class ZWaveValueNode:
                                 else : types.append(param['data_type']) # force adding data_type if unit is not defined in zwave value
             # value set as sensor
             sensors = self._node._ozwmanager.getSensorByName(labelDomogik)
-            print (u"   Sensor for label {0} : {1}".format(labelDomogik, sensors))
+            self.log.debug (u"   Sensor for label {0} : {1}".format(labelDomogik, sensors))
             if sensors :
-                print (u"")
+#                print (u"")
                 for sensor in sensors :
                     dType = self._node._ozwmanager.getDataType(sensors[sensor]['data_type'])
 #                    print (u"{0}, {1}".format(dType, unit))
@@ -364,28 +358,28 @@ class ZWaveValueNode:
 #        logLine = u"*** DomogikLabelAvailable : {0}".format(DomogikLabelAvailable)
 #        logLine += u"\n                 *** CmdsClassAvailable :{0}".format(CmdsClassAvailable)
         if self._valueData['commandClass'] in CmdsClassAvailable :
+#            logLine += u"         *** CmdClass {0} in CmdsClassAvailable".format(self._valueData['commandClass'])
             if labelDomogik in DomogikLabelAvailable :
                 retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
                 retval['label'] = labelDomogik
-                logLine = u"*** Dmg device Available : {0}".format(retval)
+                logLine = u"*** Dmg device Available for {0}.{1}: {2}".format(self.networkID, self.nodeId, retval)
             else :
                 for p, linksLabel in self._node._ozwmanager.linkedLabels.iteritems()  :
                     if labelDomogik in linksLabel :
                         retval = self._node._ozwmanager.getDmgDevRefFromZW(self)
                         retval['label'] = p
-                        logLine = u"*** Dmg device Available {0} by link : {1}".format(labelDomogik, retval)
+                        logLine = u"*** Dmg device Available by link for {0} {0}.{2}: {3}".format(labelDomogik, self.networkID, self.nodeId, retval)
                         break
-        if retval is None :
-#            logLine += u"\n         *** Dmg device NOT available"
-            logLine = u"*** Dmg device NOT available : {0} - {1}".format(self._valueData['commandClass'], labelDomogik)
-        self.log.debug(logLine)
+#        if retval is None :
+#            logLine = u"*** Dmg device NOT available : {0} - {1}".format(self._valueData['commandClass'], labelDomogik)
+        if retval is not None :
+            self.log.debug(logLine)
         return retval
 
     def getDmgSensor(self, labelDomogik):
         """Return Sensor of domogik device corresponding to value"""
-        dmgDevice = self.dmgDevice
         retval = {}
-        if dmgDevice is not None :
+        for dmgDevice in self.dmgDevice:
             logLine = u"+++ Search dmg sensor {0} in dmgDevice {1}".format(labelDomogik, dmgDevice)
             for sensor in dmgDevice['sensors']:
                 logLine = u"\n         +++ Compare sensor : {0} with {1}".format(sensor, labelDomogik)
@@ -414,10 +408,9 @@ class ZWaveValueNode:
 
     def getDmgCommand(self):
         """Return Command of domogik device corresponding to value"""
-        dmgDevice = self.dmgDevice
         labelDomogik = self.labelDomogik
         cmds = {}
-        if dmgDevice is not None :
+        for dmgDevice in self.dmgDevice :
             for cmd in dmgDevice['commands']:
                 for param in dmgDevice['commands'][cmd] :
                     if param['key'].lower() == labelDomogik :

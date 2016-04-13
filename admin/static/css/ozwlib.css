@@ -63,6 +63,12 @@
     max-width: 600px;
 }
 
+.popover-title .close{
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
 .tooltip-inner {
   color: #000;
   background: #FAFAFA;

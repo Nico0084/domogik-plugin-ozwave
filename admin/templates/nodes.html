@@ -76,6 +76,9 @@
             $('[data-toggle="tooltip"]').tooltip({
                                 html:true
                             });
+            $(document).on("click", ".popover .close" , function(){
+                $(this).parents(".popover").popover('hide');
+            });
             $( "input[type='text'][datatype='node']").not("[isHandled]" ).each(function(rowN, nData) {
                 try {
                     var cell = api.cell(rowN, 0);

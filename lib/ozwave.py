@@ -1333,7 +1333,7 @@ class OZWavemanager():
             return the device for network (list)
             return list of devices for node
             return the device for value (instance) (list)"""
-#        logLine = u"--- Search dmg device for : {0}".format(device)
+        logLine = u"--- Search dmg device for : {0}".format(device)
         dmgDevices = []
         for dmgDevice in self._plugin.devices :
 #            logLine += u"\n        - in dmg device : {0}".format(dmgDevice)
@@ -1343,7 +1343,9 @@ class OZWavemanager():
                         if int(dmgDevice['parameters']['instance']['value']) == device.instance and \
                            int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
                            dmgDevice['parameters']['networkid']['value'] == device.networkID :
-                            return [dmgDevice]
+                            dmgDevices.append(dmgDevice)
+#                            logLine += u"\n            --- add device from value : {0}".format(dmgDevice)
+#                            logLine += u"\n            --- {0}".format(dmgDevices)
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'node' in dmgDevice['parameters']: # Node level
@@ -1352,19 +1354,22 @@ class OZWavemanager():
                         if int(dmgDevice['parameters']['node']['value']) == device.nodeId and \
                            dmgDevice['parameters']['networkid']['value'] == device.networkID :
                             dmgDevices.append(dmgDevice)
+#                            logLine += u"\n            --- add device from node: {0}".format(dmgDevice)
                     except :
                         self._log.error(u"Domogik device ({0}) bad format address : {1}".format(dmgDevice['name'], dmgDevice['parameters']))
             elif 'networkid' in dmgDevice['parameters']: # primary controller level
                 if isinstance(device, ZWaveController):
                     if dmgDevice['parameters']['networkid']['value'] == device.networkID :
-                        self._log.debug(u"--- Dmg device find : {0}".format(dmgDevice))
-                        return [dmgDevice]
+                        dmgDevices.append(dmgDevice)
+#                        logLine += u"\n            --- add device from ctrl: {0}".format(dmgDevice)
 #            else :
 #                logLine += u"\n    --- no key find"
-#        logLine += u"\n    --- Dmg device NOT find"
+#        if not dmgDevices : logLine += u"\n    --- Dmg device NOT find"
 #        self._log.debug(logLine)
-        if dmgDevices : return dmgDevices
-        return None
+        if dmgDevices :
+            self._log.debug(u"--- devices :{0}".format(dmgDevices))
+            return dmgDevices
+        return []
 
     def sendCmdToZW(self, device, command, cmdValue):
         """Message come from MQ. Send command to wave network

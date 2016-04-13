@@ -207,15 +207,14 @@ class ZWaveNode:
         values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
         if values :
             for value in values:
-                dmgDevice = value.dmgDevice
-                if dmgDevice :
-                    print (dmgDevice)
+                for dmgDevice in value.dmgDevice :
+#                    print (dmgDevice)
                     if 'batterycheck' in dmgDevice['parameters']:
                         oldCheck = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
                         self._ozwmanager.udpate_device_param(dmgDevice['parameters']['batterycheck']['id'], 'batterycheck', 'y' if check else 'n')
-                        print (u"Set the db for batteryCheck parameter : {0} , {1}".format(oldCheck, check))
-                    else : print (u"Domogik device exist but without batterycheck parameters, using memory value : {0}".format(check))
-                else : print (u"No domogik device created with batterycheck parameters, using memory value : {0}".format(check))
+#                        print (u"Set the db for batteryCheck parameter : {0} , {1}".format(oldCheck, check))
+#                    else : print (u"Domogik device exist but without batterycheck parameters, using memory value : {0}".format(check))
+#                else : print (u"No domogik device created with batterycheck parameters, using memory value : {0}".format(check))
         return self._batteryCheck
 
     def getBatteryCheck(self):
@@ -223,11 +222,12 @@ class ZWaveNode:
         values = self._getValuesForCommandClass(0x80)  # COMMAND_CLASS_BATTERY
         if values :
             for value in values:
-                dmgDevice = value.dmgDevice
-                if dmgDevice :
-                    check = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
-                    if check is not None : self._batteryCheck = True if check == 'y' else False
-                    else : self.log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {1}".format(self.refName, self._batteryCheck))
+                dmgDevices = value.dmgDevice
+                if dmgDevices != []:
+                    for dmgDevice in dmgDevices:
+                        check = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
+                        if check is not None : self._batteryCheck = True if check == 'y' else False
+                        else : self.log.debug("Node {0}. No batterycheck parameters on the domogik device, using memory value : {1}".format(self.refName, self._batteryCheck))
                 else : self.log.debug("Node {0}. No domogik device created with batterycheck parameters, using memory value : {1}".format(self.refName, self._batteryCheck))
         return self._batteryCheck
 
@@ -1155,26 +1155,25 @@ class ZWaveNode:
     def refreshAllDmgDevice(self):
         """Search all domogik devices corresponding to all node values"""
         if self.isInitialized() :
-            print(u"refreshAllDmgDevice node {0}".format(self.nodeId))
-            dmgDevice = self.dmgDevice
-            if dmgDevice is not None : devices = dmgDevice
-            else : devices = []
+            dmgDevices = self.dmgDevice
+#            print(u"refreshAllDmgDevice node {0} starting : ".format(self.nodeId), dmgDevices)
             try : # Exception can arrive due to dict modify could be during init node (value Added)
                 for id in self._values :
-                    if self._values[id].getDmgDeviceParam is not None :
-                        dmgDevice = self._values[id].dmgDevice
-                        if dmgDevice is not None and dmgDevice not in devices :
-                            devices.append(dmgDevice)
+                    if self._values[id].getDmgDeviceParam() is not None :
+#                        print(u"refreshAllDmgDevice node {0} search in value {1}".format(self.nodeId, self._values[id]))
+                        for dmgD in self._values[id].dmgDevice:
+                            if dmgD not in dmgDevices : dmgDevices.append(dmgD)
+#                        print(u"refreshAllDmgDevice node {0} nb devices {1}".format(self.nodeId, len(dmgDevices)))
             except :
-                print (u"exception on refreshAllDmgDevice node {0}".format(self.nodeId))
-            if self._dmgDevices != devices :
+              self.log.warning (u"exception on refreshAllDmgDevice node {0}".format(self.nodeId))
+            if self._dmgDevices != dmgDevices :
                 self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Domogik device linked.',
-                      'data': {'state': 'DmgDevices', 'DmgDevices': devices}})
-            self._dmgDevices = devices
-            print (u"Domogik devices : {0}".format(self._dmgDevices))
-            return devices
-        else :
-            print(u"Not inititalized in refreshAllDmgDevice node {0}".format(self.nodeId))
+                      'data': {'state': 'DmgDevices', 'DmgDevices': dmgDevices}})
+                self._dmgDevices = dmgDevices
+#            print (u"Domogik devices : {0}".format(self._dmgDevices))
+            return dmgDevices
+#        else :
+#            print(u"Not inititalized in refreshAllDmgDevice node {0}".format(self.nodeId))
         return []
 
     def sendCmdBasic(self, device, command, newValue):

@@ -663,6 +663,7 @@ function renderNodeStatusCol(data, type, full, meta) {
     var refId = cell.data().split(".");
     var nodeRef = GetNodeRefId(refId[0], refId[1]);
     var nodeData = GetZWNode(refId[0], refId[1]);
+    var popoverClose = '<a href="#" class="close" data-dismiss="alert">×</a>';
     var status = 'status-unknown';
     try {
         var initState = nodeData.InitState.toLowerCase();
@@ -713,18 +714,42 @@ function renderNodeStatusCol(data, type, full, meta) {
         titleDev = "There is already domogik device created for node "+nodeData.NodeID+".<br>You can also use one below.";
         devState = "fa-check-circle icon-success";
         devContent = '<div class="container-fluid">';
-        for (nD in nodeData.DmgDevices) {
-            var header = nodeData.DmgDevices[nD].name
+        var duplicate = "";
+        var duplicateIc = 'icon-success';
+        for (var nD in nodeData.DmgDevices) {
+            var header = nodeData.DmgDevices[nD].name;
+            var refDmg = header.replace(/\s+/g, '-');
             if (nodeData.DmgDevices[nD].parameters.instance != undefined) {
                 header += ", instance " + nodeData.DmgDevices[nD].parameters.instance.value;
+                duplicate = ""
+                for (var nD2 in nodeData.DmgDevices) {
+                    if (nD != nD2 && nodeData.DmgDevices[nD].parameters.instance.value == nodeData.DmgDevices[nD2].parameters.instance.value) {
+                        duplicate = '<i class="fa fa-exclamation-triangle icon-warning" data-toggle="tooltip" data-placement="top" '+
+                                            'title="Domogik device with same instance not handle, delete one."> duplicate </i>';
+                        duplicateIc = 'icon-danger';
+                    };
+                };
             };
-            devContent += "<p><strong>"+ header + " :</strong><pre>"  + JSON.stringify(nodeData.DmgDevices[nD], null, 2) + "</pre></p>";
+            devContent += '<div class="panel panel-default">'+
+                                        '<div class="panel-heading\">'+
+                                            '<a class="bg-info" href="#" onclick="togglePanelCollapse(this);return false;" body="dmgDev_'+refDmg+'"' + ' toggle="toggledmgDev_'+refDmg+'">'+
+                                                '<h5>' + duplicate +
+                                                    '<span class="glyphicon glyphicon-chevron-down pull-left" id="toggledmgDev_'+refDmg+'" aria-hidden="true" data-target="dmgDev_'+refDmg+'"></span>' +
+                                                    '<span>  '+header+' :'+'</span>'+
+                                                '</h5>'+
+                                                '<span>'+nodeData.DmgDevices[nD].device_type_id+'</span>'+
+                                            '</a>'+
+                                        '</div>'+
+                                        '<div class="panel-body" id="dmgDev_'+refDmg+'" style="width: 95%; display: none;" hidden>'+
+                                            '<pre>' +JSON.stringify(nodeData.DmgDevices[nD], null, 2)+'</pre>'+
+                                        '</div>'+
+                                      '</div>';
         };
-        devContent += "</div>";
-        dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-check-circle icon-success extbtn'" +
+        devContent += '</div>';
+        dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-check-circle extbtn "+duplicateIc+"'" +
                 " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
-                    '<i class="fa fa-check-circle icon-success"></i><br>lock/unlock<br>display popup</span>'+
-                '<h4>Domogik device existing<br>for node '+nodeData.NodeID+"</h4></div>'" +
+                    '<i class="fa fa-check-circle '+duplicateIc+'"></i><br>lock/unlock<br>display popup</span>'+
+                '<h4>Domogik device existing<br>for node '+nodeData.NodeID+"</h4></div>"+popoverClose+"'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
@@ -736,7 +761,7 @@ function renderNodeStatusCol(data, type, full, meta) {
             var dRef = nD.split(".");
             var compRS = dRef[1]; // Node ID compare
             var compRD = "node";
-            var extra ="";
+            var existD =[];
             if (dRef.length == 3) {
                 compRS = dRef[2]; // Instance compare
                 compRD = "instance";
@@ -749,14 +774,19 @@ function renderNodeStatusCol(data, type, full, meta) {
                             insert = false;
                             break;
                         } else {
-                            var extra ='<span>(Existing device : <span class="bg-info"><strong>'+
-                                nodeData.DmgDevices[nDT].device_type_id+'</strong></span>)</span>'
-                            break;
+                            existD.push(nodeData.DmgDevices[nDT].device_type_id);
                         };
                     };
                 };
             };
             if (insert) {
+                if (existD.length != 0) {
+                    var extra = '<span>Existing device :<ul>';
+                    for (var d=0 ; d < existD.length ; d++) {
+                        extra +='<li><span class="bg-info"><strong>'+ existD[d]+'</strong></span></li>';
+                    };
+                    extra += '</ul></span>';
+                } else {var extra = "";};
                 devContent += '<p><strong>'+ nD + ' :</strong> ' + extra +
                         ' <a href="/client/'+clientID+'/dmg_devices/new/type/'+nodeData.KnownDeviceTypes[nD]+
                         '?networkid='+nodeData.NetworkID+'&node='+nodeData.NodeID+instanceParam+
@@ -774,18 +804,38 @@ function renderNodeStatusCol(data, type, full, meta) {
             knDev = "<span id='knowndevicetypes"+ nodeRef + "' class='fa fa-asterisk icon-warning extbtn'" +
                     " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                    "<h4>"+titleDev+'<br><span class="text-nowrap">Use button to create it.'+"</span></h4></div>'" +
+                    "<h4>"+titleDev+'<br><span class="text-nowrap">Use button to create it.'+"</span></h4></div>"+popoverClose+"'" +
                     " data-container='body' data-content='" + devContent + "'></span>";
-
             titleDev = "Some device type are already created for node "+nodeData.NodeID+".<br>Some other can be added with one below.";
         } else {
             titleDev = "No domogik device type existing for node "+nodeData.NodeID+".";
         };
     };
+    if (dmgDev != "" && knDev == ""){
+            titleDev = "Some device type are already used for node "+nodeData.NodeID+".<br>Some other can be added with one below.";
+        } else {
+            titleDev = "No domogik device type existing for node "+nodeData.NodeID+".";
+        };
     if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
         devContent = '<div class="container-fluid">';
-        for (nD in nodeData.NewDeviceTypes) {
-            devContent += "<p><strong>"+ nD + " :</strong><pre>" + JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2) + "</pre></p>";
+        for (var nD in nodeData.NewDeviceTypes) {
+            var header = nodeData.NewDeviceTypes[nD].id;
+            var refDmg = header.replace(/\s+/g, '-');
+
+//            devContent += "<p><strong>"+ nD + " :</strong><pre>" + JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2) + "</pre></p>";
+            devContent += '<div class="panel panel-default">'+
+                                        '<div class="panel-heading\">'+
+                                            '<a class="bg-info" href="#" onclick="togglePanelCollapse(this);return false;" body="dmgNewDev_'+refDmg+'"' + ' toggle="toggleNewdmgDev_'+refDmg+'">'+
+                                                '<h5>'+
+                                                    '<span class="glyphicon glyphicon-chevron-down pull-left" id="toggleNewdmgDev_'+refDmg+'" aria-hidden="true" data-target="dmgNewDev_'+refDmg+'"></span>' +
+                                                    '<span>'+nodeData.NewDeviceTypes[nD].id+'</span>'+
+                                                '</h5>'+
+                                            '</a>'+
+                                        '</div>'+
+                                        '<div class="panel-body" id="dmgNewDev_'+refDmg+'" style="width: 95%; display: none;" hidden>'+
+                                            '<pre>' +JSON.stringify(nodeData.NewDeviceTypes[nD], null, 2)+'</pre>'+
+                                        '</div>'+
+                                      '</div>';
         };
         devContent += "</div>";
         var refNode = nodeData.NetworkID+'.'+nodeData.NodeID;
@@ -797,7 +847,7 @@ function renderNodeStatusCol(data, type, full, meta) {
                     '<i class="fa fa-circle-o-notch" id="sendNewDeviceT-ic'+ nodeRef +'"></i>' +
                     '<span> Create request on GitHub for integrate new device type</span>' +
                 '</button>' +
-                "</div>'" +
+                "</div>"+popoverClose+"'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (devContent == "") {
@@ -811,7 +861,7 @@ function renderNodeStatusCol(data, type, full, meta) {
         dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
                     '<i class="fa fa-exclamation-circle icon-danger"></i><br>lock / unlock<br>display popup</span>'+
-                "<h4>Neither domogik device type find !</h4></div>'" +
+                "<h4>Neither domogik device find !</h4></div>'" +
                " data-content='" + devContent + "'></span>";
     }
     return  str + "<span id='nodestate" + nodeData.NodeID + "' class='fa extbtn " + status +
@@ -1100,4 +1150,8 @@ function sendNewDevice_Type(obj) {
             bdiag.modal('show');
         };
     });
+};
+
+function togglePanelCollapse(obj) {
+    toggleVisible(obj.attributes.body.nodeValue, obj.attributes.toggle.nodeValue);
 };
