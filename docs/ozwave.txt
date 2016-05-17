@@ -22,7 +22,7 @@ Purpose
     Please notice that this plugin is **still in development**!
 
     If you find any issue, please create a ticket on the Gihub repository : https://github.com/Nico0084/domogik-plugin-ozwave/issues
-    
+
     In the same way, if something is not clear or wrong in this documentation, feel free to open a ticket!
 
 Z-Wave is a wireless ecosystem that lets all your home electronics talk to each other, and to you, via remote control. This plugin allows to control zwave devices.
@@ -69,7 +69,10 @@ Zwave Controller and devices Compatibility List
 The following controller interfaces are supported and verified with Domogik:
 
 * Aeon Labs Z-Stick Series 2
-* RaZberry (using rule with /dev/ttyAMA0 instead of /dev/ttyUSBx)
+* RaZberry
+  * using rule with /dev/ttyAMA0 instead of /dev/ttyUSBx)
+  * user domogik must have write permission, you can add it in dialout group. ::
+    $ sudo usermod -a -G dialout domogik
 
 Other controllers are also supported by openzwave, `you can check here <https://github.com/OpenZWave/open-zwave/wiki/Controller-Compatibility-List>`_
 
@@ -141,7 +144,7 @@ Key               Type     Description
 ================= ======== =======================================================================================
 autoconfpath      boolean  If checked, the plugin will try to automatically find the Openzwave library path.
 
-                           If not checked, you will have to manually set the Openzwave library path with the 
+                           If not checked, you will have to manually set the Openzwave library path with the
                            parameter **configpath**.
 
 configpath        string   If **autoconfpath** is not checked, set up the Openzwave library path. Example : ::
@@ -150,19 +153,19 @@ configpath        string   If **autoconfpath** is not checked, set up the Openzw
 
                            In this folder you will find all the Openzwave xml files.
 
-cpltmsg           boolean  Notifications  is reported.    
+cpltmsg           boolean  Notifications  is reported.
 
-                           .. warning ::                                                                        
-                           
-                                A bug can happen with the openzwave library, if so, set this option false or modify file       
-                                openzwavecpp/src/Manager.cpp at line 320, in Driver* Manager::GetDriver         
-                                function, comment assert(0) function : // assert(0);                           
-                                                                                                              
-                                You must compile and reinstall python-openzwave.                               
-                                                                                                             
-                                This modification is not recommended if you don't control svn repposit,     
-                                                                                                           
-                                the next update of openzwave revision could require manual intervention.  
+                           .. warning ::
+
+                                A bug can happen with the openzwave library, if so, set this option false or modify file
+                                openzwavecpp/src/Manager.cpp at line 320, in Driver* Manager::GetDriver
+                                function, comment assert(0) function : // assert(0);
+
+                                You must compile and reinstall python-openzwave.
+
+                                This modification is not recommended if you don't control svn repposit,
+
+                                the next update of openzwave revision could require manual intervention.
 
 ozwlog            boolean  If checked, activate the Openzwave logger.
 
@@ -176,7 +179,7 @@ Now, you will need to create a device for your Zwave controller...
 Create a device for the primary Zwave controller
 ------------------------------------------------
 
-In clients page of admin UI, go to the **Domogik devices** page. 
+In clients page of admin UI, go to the **Domogik devices** page.
 
 To create a device, click on **Create a new Domogik device**
 
@@ -199,20 +202,20 @@ You can create as many **Zwave Controler** you have primary controllers.
 Main parameters :
 
 ==================== =================== ===============================================================
- Key                 Example             Description                                                
+ Key                 Example             Description
 ==================== =================== ===============================================================
-Device Name          MyController        The display name for this device.                         
-Description          What you want       A short descriptionn for this device.                    
+Device Name          MyController        The display name for this device.
+Description          What you want       A short descriptionn for this device.
 Reference            Z-Stick 2           A reference for this device, eg.: manufacturer reference.
 ==================== =================== ===============================================================
 
 Global parameters :
 
 ==================== =================== ===============================================================
-Key                  Example             Description                                                 
+Key                  Example             Description
 ==================== =================== ===============================================================
-driver               /dev/zwave          Z-wave device that you have define in UDEV rule           
-networkid            MyHomeNetwork       Home ID name for association with domogik devices          
+driver               /dev/zwave          Z-wave device that you have define in UDEV rule
+networkid            MyHomeNetwork       Home ID name for association with domogik devices
 ==================== =================== ===============================================================
 
 
@@ -230,11 +233,11 @@ Create a device for a Zwave device
 Main parameters :
 
 ==================== =================== ===============================================================
-Key                  Example             Description                                                                  
+Key                  Example             Description
 ==================== =================== ===============================================================
-Device Name          MyController        The display name for this device.                                            
-Description          What you want       A short descriptionn for this device.                                        
-Reference            FGWPE Wall Plug     A reference for this device, eg.: manufacturer reference.                    
+Device Name          MyController        The display name for this device.
+Description          What you want       A short descriptionn for this device.
+Reference            FGWPE Wall Plug     A reference for this device, eg.: manufacturer reference.
 ==================== =================== ===============================================================
 
 Global parameters :
@@ -242,21 +245,21 @@ Global parameters :
 |example_device2|
 
 ==================== =================== ===============================================================
-Key                  Example             Description                                                                  
+Key                  Example             Description
 ==================== =================== ===============================================================
-networkid            MyHomeNetwork       Home ID name for association with domogik devices                            
-node                 14                  Z-wave node id that you can find in the                                      
-                                         `nodes table <nodes_tools.html#Manage devices Commands Class>`_              
-instance             1                   Zwave node instance id that you can find in the                              
-                                         `Commands Class table <nodes_tools.html#Manage devices Commands Class>`_     
+networkid            MyHomeNetwork       Home ID name for association with domogik devices
+node                 14                  Z-wave node id that you can find in the
+                                         `nodes table <nodes_tools.html#Manage devices Commands Class>`_
+instance             1                   Zwave node instance id that you can find in the
+                                         `Commands Class table <nodes_tools.html#Manage devices Commands Class>`_
 ==================== =================== ===============================================================
 
 Extra parameters for some particular zwave device :
 
 ==================== =================== ===============================================================
- Key                    Example          Description                                                                  
+ Key                    Example          Description
 ==================== =================== ===============================================================
- batterycheck           True             HCheck battery level at zwave device wakeup.                                 
+ batterycheck           True             HCheck battery level at zwave device wakeup.
 ==================== =================== ===============================================================
 
 Start the plugin
