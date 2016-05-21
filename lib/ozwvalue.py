@@ -496,7 +496,6 @@ class ZWaveValueNode:
             :type id: int
             :return: A integer containing the poll intensity
             :rtype: int"""
-        #TODO: A réactiver dans la libopenzwave.pyx
         return self._node._manager.getPollIntensity(self._valueData['id'])
 
     def setPollIntensity(self, intensity):

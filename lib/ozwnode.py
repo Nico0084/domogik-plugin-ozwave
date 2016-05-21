@@ -102,6 +102,7 @@ class ZWaveNode:
         self._dmgDevices = []
         self._alarmSteps = []
         self._alarmRunning = False
+        self._multiInstanceAssoc = None
 
 
     # On accède aux attributs uniquement depuis les property
@@ -143,6 +144,7 @@ class ZWaveNode:
     security = property(lambda self: self._nodeInfos.security if self._nodeInfos else None)
     version = property(lambda self: self._nodeInfos.version if self._nodeInfos else None)
     isPolled = property(lambda self: self._hasValuesPolled())
+    isMultiInstanceAssoc = property(lambda self: self._getMultiInstanceAssoc())
 
     def isInitialized(self):
         """Check if all process on initialization are ok.
@@ -324,6 +326,14 @@ class ZWaveNode:
         for v in self._values :
             size += self._values[v].getMemoryUsage()
         return size
+
+    def _getMultiInstanceAssoc(self):
+        """Return True if node as CommandClass MultiInstanceAssoc"""
+        if self._multiInstanceAssoc is None :
+            if self.isInitialized():
+                self._multiInstanceAssoc = True if self._manager.getNodeClassInformation(self.homeId, self.nodeId, 0x8E) else False # COMMAND_CLASS_MULTI_INSTANCE_ASSOCIATION
+            else : return True if self._manager.getNodeClassInformation(self.homeId, self.nodeId, 0x8E) else False
+        return self._multiInstanceAssoc
 
     def requestNodeDynamic(self)  :
         """Force un rafraichissement des informations du node depuis le reseaux zwave"""
@@ -544,10 +554,10 @@ class ZWaveNode:
             group = {'index': groupIdx, 'label': "", 'maxAssociations' : 1, 'members': []}
             self._groups.append(group)
             self.log.debug(u'Node {0} Create new group index {0}'.format(groupIdx))
-        mbrs = self._manager.getAssociations(self._homeId, self._nodeId, groupIdx)
+        mbrs = self._manager.getAssociationsInstances(self._homeId, self._nodeId, groupIdx)
         dmembers = [];
         for m in mbrs :
-            dmembers.append({'id': m, 'status': MemberGrpStatus[1]})
+            dmembers.append({'node': m[0], 'instance': m[1], 'status': MemberGrpStatus[1]})
         print(u"Update group before : {0}".format(group))
         group['label'] = self._manager.getGroupLabel(self._homeId, self._nodeId, groupIdx)
         group['maxAssociations'] = self._manager.getMaxAssociations(self._homeId, self._nodeId, groupIdx)
@@ -561,10 +571,10 @@ class ZWaveNode:
         """Update all group/association informations of node."""
         groups = list()
         for i in range(1, self._manager.getNumGroups(self._homeId, self._nodeId) + 1):
-            mbrs = self._manager.getAssociations(self._homeId, self._nodeId, i)
+            mbrs = self._manager.getAssociationsInstances(self._homeId, self._nodeId, i)
             dmembers = [];
             for m in mbrs :
-                dmembers.append({'id': m, 'status': MemberGrpStatus[1]})
+                dmembers.append({'node': m[0], 'instance': m[1], 'status': MemberGrpStatus[1]})
             groups.append({
                 'index': i,
                 'label': self._manager.getGroupLabel(self._homeId, self._nodeId, i),
@@ -787,6 +797,8 @@ class ZWaveNode:
         retval["Polled"] = self.isPolled
         retval["ComQuality"] = self.getComQuality()
         retval["BatteryLevel"] = self._getBatteryLevel()
+        retval["MultiInstanceAssoc"] = self.isMultiInstanceAssoc
+        retval["Instances"] = self.getInstances()
         retval["BatteryChecked"] = self.isbatteryChecked
         retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.homeId,  self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.homeId,  self.nodeId) else ''
         retval["DmgDevices"] = self.getDmgDevices()
@@ -937,15 +949,19 @@ class ZWaveNode:
         self._manager.refreshNodeInfo(self.homeId, self.nodeId)
         self.log.debug('Requesting refresh for node {0}'.format(self.refName))
 
-    def addAssociation(self, groupIndex,  targetNodeId):
-        """Ajout l'association du targetNode au groupe du node"""
-        self._manager.addAssociation(self.homeId, self.nodeId, groupIndex,  targetNodeId)
-        self.log.debug('Requesting for node {0} addAssociation node {1} in group index {2}  '.format(self.refName,  targetNodeId, groupIndex))
+    def addAssociation(self, groupIndex, targetNodeId, instance=0):
+        """Add association targetNode in group of node"""
+        if not self.isMultiInstanceAssoc :
+            instance = 0
+        self._manager.addAssociation(self.homeId, self.nodeId, groupIndex, targetNodeId, instance)
+        self.log.debug('Requesting for node {0} addAssociation node {1}.{2} in group index {3}'.format(self.refName, targetNodeId, instance, groupIndex))
 
-    def removeAssociation(self, groupIndex,  targetNodeId):
-        """supprime l'association du targetNode au groupe du node"""
-        self._manager.removeAssociation(self.homeId, self.nodeId, groupIndex,  targetNodeId)
-        self.log.debug('Requesting for node {0} removeAssociation node {1} in group index {2}  '.format(self.refName,  targetNodeId, groupIndex))
+    def removeAssociation(self, groupIndex, targetNodeId, instance=0):
+        """remove association targetNode in group node"""
+        if not self.isMultiInstanceAssoc :
+            instance = 0
+        self._manager.removeAssociation(self.homeId, self.nodeId, groupIndex, targetNodeId, instance)
+        self.log.debug('Requesting for node {0} removeAssociation node {1}.{2} in group index {3}'.format(self.refName, targetNodeId, instance, groupIndex))
 
     def setOn(self):
         """Set node on pour commandclass basic"""
@@ -999,10 +1015,21 @@ class ZWaveNode:
             raise OZwaveNodeException('Value get received before creation (homeId %.8x, nodeId %d, valueid %d)' % (self.homeId, self.nodeId,  valueId))
         return retval
 
+    def getInstances(self):
+        """Return instance(s) of nodes"""
+        instances = {}
+        for id, value in self._values.iteritems():
+            if value.instance not in instances :
+                instances[value.instance] = []
+            if value.valueData['label'] not in instances[value.instance] and not value.valueData['readOnly'] and value.valueData['genre'] == 'User':
+                instances[value.instance].append(value.valueData['label'])
+        return instances
+
     def setMembersGrps(self, newGroups):
         """Envoie les changement des associations de nodes dans les groups d'association."""
         print (u'set members association : {0}'.format(newGroups))
         print (u'Groups actuel : {0}'.format(self._groups))
+        actions = []
         for gn in newGroups :
             print(u"handle Adding newgroup : {0}".format(gn))
             for grp in self._groups :
@@ -1011,12 +1038,13 @@ class ZWaveNode:
                     for mn in gn['mbs']:
                         toAdd = True
                         for m in grp['members']:
-                            if mn['id'] == m['id'] :
+                            if mn['node'] == m['node'] and mn['instance'] == m['instance']:
                                 mn['status'] = m['status']
                                 toAdd = False
                                 break
-                        if toAdd : #TODO: vérifier que le status est bien to update
-                            self.addAssociation(grp['index'], mn['id'])
+                        if toAdd :
+                            actions.append({'action': 'add', 'grpIndex': grp['index'], 'node': mn['node'], 'instance': mn['instance']})
+#                            self.addAssociation(grp['index'], mn['node'], mn['instance'])
                             mn['status'] = MemberGrpStatus[2]
                             grp['members'].append(mn)
                             print(u"       Adding : {0}".format(mn))
@@ -1030,17 +1058,32 @@ class ZWaveNode:
                     for m in grp['members']:
                         toRemove = True
                         for mn in gn['mbs']:
-                            if m['id'] == mn['id']:
+                            if m['node'] == mn['node']and mn['instance'] == m['instance']:
                                 toRemove = False
                                 print (u"members not remove: ".format(m))
                                 break
-                        if toRemove : #TODO: vérifier que le status est bien to update
-                            self.removeAssociation(grp['index'], m['id'])
+                        if toRemove :
+                            actions.append({'action': 'remove', 'grpIndex': grp['index'], 'node': mn['node'], 'instance': mn['instance']})
+#                            self.removeAssociation(grp['index'], m['node'], mn['instance'])
                             removeM.append(m)
                             print (u'members remove : {0}'.format(m))
                     for m in removeM : grp['members'].remove(m)
         print (u'set members association remove members result : {0}'.format(newGroups))
-        return newGroups
+        threading.Thread(None, self._sendAssociationUpdate, "th_sendAssociationUpdate", (actions,)).start()
+        return self._groups
+
+    def _sendAssociationUpdate(self, actions):
+        """Send update group members association action to zwvae ctrl"""
+        self.log.debug(u"Node {0}, send to ctrl groups association update : {1}".format(self.refName, actions))
+        print actions
+        for action in actions :
+            print action
+            if action['action'] == 'add' :
+                self.addAssociation(action['grpIndex'], action['node'], action['instance'])
+            elif action['action'] == 'remove' :
+                self.removeAssociation(action['grpIndex'], action['node'], action['instance'])
+            else :
+                self.log.warning(u"Node {0}, bad groups association action, abord : {1}".format(self.refName, action))
 
     def checkAvailableLabel(self, valueLabel, label):
 #        print u"checkAvailableLabel {0} to {1}".format(valueLabel, label)

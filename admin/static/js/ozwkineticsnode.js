@@ -192,7 +192,11 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
             if (this.attrs.ktcNode.nodeZW.Groups[i].members.length !==0) {
                 t = t+ '\n associate with node : ';
                 for (var ii=0; ii<this.attrs.ktcNode.nodeZW.Groups[i].members.length; ii++) {
-                    t= t  + this.attrs.ktcNode.nodeZW.Groups[i].members[ii].id+ ',';
+                    t += this.attrs.ktcNode.nodeZW.Groups[i].members[ii].node;
+                    if (this.attrs.ktcNode.nodeZW.Groups[i].members[ii].instance != 0) {
+                        t += '(' + this.attrs.ktcNode.nodeZW.Groups[i].members[ii].instance + ')';
+                    };
+                    t += ', ';
                 };
             } else {
              t = t+ '\n no association ';
@@ -351,7 +355,9 @@ KtcNode.prototype.size = function() {
 
 // Basic Kinetics objet for group association
 
-KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
+KtcNodeGrp = function  (x, y, r, node, instanceAssoc, layer, grpAssociation) {
+    this.nodeObj = node;
+    this.instanceAssoc = instanceAssoc;
     this.pictNodeGrp = new Kinetic.Group({
           x: x,
           y: y,
@@ -359,13 +365,15 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
           name : "nodegrp",
           nodeP : this
         });
+    var textI = "";
     if (typeof(grpAssociation)=='undefined'){
         this.grpAss = layer;
         f = nodeStateColor.inCarou; //'yellow';
-        } else {
+    } else {
         this.grpAss = grpAssociation;
         f = nodeStateColor.inGrp; //'pink';
-        };
+        textI = this.getTextInstance();
+    };
     this.pictureImg = new Kinetic.Circle({
         x: 0,
         y: 0,
@@ -392,6 +400,16 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
         fontFamily: "Calibri",
         fill: "black",
         align : "center"
+    });
+    this.textInstance = new Kinetic.Text({
+        x: -5,
+        y: r - 10,
+        width: r,
+        text: textI,
+        fontSize: 12,
+        fontFamily: "Calibri",
+        fill: "white",
+        align : "right"
     });
     this.tooltip = new Kinetic.Label({
         x: 0, // x,
@@ -424,6 +442,7 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     this.state = 'unknown';
     this.pictNodeGrp.add(this.pictureImg);
     this.pictNodeGrp.add(this.text);
+    this.pictNodeGrp.add(this.textInstance);
     this.pictNodeGrp.add(this.tooltip);
     var grp = this.pictNodeGrp;
     this.imgstate.onload = function() {
@@ -445,7 +464,6 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     this.xOrg = x;
     this.yOrg = y;
     this.rOrg = r;
-    this.nodeObj = node;
     this.layer = layer;
     this.state = 'unknown';
     this.moveInGrp = undefined;
@@ -453,7 +471,7 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     setTimeout(function () {
             if (self.grpAss == grpAssociation) {
             for (var i = 0; i<self.grpAss.grpAss.members.length; i++){
-                 if (self.nodeObj.NodeID == self.grpAss.grpAss.members[i].id){
+                 if (self.nodeObj.NodeID == self.grpAss.grpAss.members[i].node){
                     self.setimgstate(self.grpAss.grpAss.members[i].status);
                     break;
                  };
@@ -500,8 +518,8 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
         var newstate = 'unallowable';
         if (!this.attrs.nodeP.isMember()) {
             this.attrs.nodeP.duplicateIt()
-            newstate = this.state;};
-        this.attrs.nodeP.setState(newstate);
+            this.attrs.nodeP.setState(newstate);
+        };
         if (this.attrs.nodeP.grpAss.layer) {this.parent.moveToTop();
         } else {this.moveToTop();}
     });
@@ -525,7 +543,12 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
             };
         } else {
              if (inGrp && inGrp.attrs.grpAssP == this.attrs.nodeP.grpAss){
-                this.attrs.nodeP.setState('to update', inGrp.attrs.grpAssP);
+                var isAMember = inGrp.attrs.grpAssP.isAMember(this.attrs.nodeP.nodeObj, inGrp.attrs.grpAssP.nodeOwner.MultiInstanceAssoc, this.attrs.nodeP.instanceAssoc);
+                if (isAMember) {
+                    this.attrs.nodeP.setState(isAMember.status, inGrp.attrs.grpAssP);
+                } else {
+                    this.attrs.nodeP.setState('to update', inGrp.attrs.grpAssP);
+                };
             } else {
                 this.attrs.nodeP.setState('del');
             };
@@ -545,17 +568,15 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
                 delete(this);
             }else {
 //                console.log('dans un groupe, ajouter au groupe si pas doublon.');
-                if (inGrp.attrs.grpAssP.addNode(this.attrs.nodeP)) {
-                    this.attrs.nodeP.grpAss =inGrp.attrs.grpAssP;
-                    this.attrs.nodeP.setState('to update');
-                    inGrp.attrs.grpAssP.nodeArea.add(this);
+                if (!inGrp.attrs.grpAssP.isAMember(this.attrs.nodeP.nodeObj, inGrp.attrs.grpAssP.nodeOwner.MultiInstanceAssoc, this.attrs.nodeP.instanceAssoc)) {
+                    addInGrpAssoc(inGrp.attrs.grpAssP, this.attrs.nodeP)
                 } else {
 //                    console.log('En doublons, suppression de la copie');
                     this.removeChildren();
                     delete(this.attrs.nodeP);
                     delete(this);
+                    inGrp.attrs.grpAssP.fondImg.stroke('black');
                 };
-                inGrp.attrs.grpAssP.fondImg.stroke('black');
             };
         } else {
             if ((inGrp==null) || (inGrp.attrs.grpAssP != this.attrs.nodeP.grpAss)){
@@ -571,10 +592,6 @@ KtcNodeGrp = function  (x, y, r, node, layer, grpAssociation) {
     });
 
     this.pictNodeGrp.on("mousedown", function(e) {
-//        console.log("mousedown node :" + this.attrs.nodeP.nodeObj.NodeID);
-        if (this.attrs.nodeP.isMember()) {
-//            console.log("move node outside to exclude it");
-        };
         this.moveToTop();
     });
 
@@ -606,8 +623,22 @@ KtcNodeGrp.prototype.inGroup = function() {
 
 KtcNodeGrp.prototype.duplicateIt = function() {
     var stage = this.pictNodeGrp.getStage();
-    var n = new KtcNodeGrp(this.xOrg, this.yOrg, this.rOrg, this.nodeObj ,stage.elemsLayer);
+    var n = new KtcNodeGrp(this.xOrg, this.yOrg, this.rOrg, this.nodeObj, this.instanceAssoc, stage.elemsLayer);
     stage.draw();
+};
+
+KtcNodeGrp.prototype.getTextInstance = function() {
+    var textI = "";
+    for (var i = 0; i<this.grpAss.grpAss.members.length; i++){
+        if (this.nodeObj.NodeID == this.grpAss.grpAss.members[i].node && this.instanceAssoc == this.grpAss.grpAss.members[i].instance){
+            stOrg  = true;
+            if (this.grpAss.grpAss.members[i].instance != 0) {
+                textI = ""+this.grpAss.grpAss.members[i].instance;
+            };
+            break;
+        };
+    };
+    return textI;
 };
 
 KtcNodeGrp.prototype.setimgstate = function(state) {
@@ -620,7 +651,13 @@ KtcNodeGrp.prototype.setimgstate = function(state) {
                 break;
             case mbrGrpSt[1] : // 'confirmed'
                 this.imgstate.src = '/plugin_ozwave/static/images/status/check_32.png';
-                if (this.kImg) {this.kImg.hide();};
+                if (this.kImg) {
+                    if (this.pictNodeGrp.scale().x == 0.8) {
+                        this.kImg.show();
+                    } else {
+                        this.kImg.hide();
+                    };
+               };
                 break;
             case mbrGrpSt[2] : //'to confirm'
                 this.imgstate.src =  '/plugin_ozwave/static/images/status/unknown_green_32.png';
@@ -648,21 +685,16 @@ KtcNodeGrp.prototype.setimgstate = function(state) {
 };
 
 KtcNodeGrp.prototype.setState = function(state, inGrpAss) {
-     var img = this.kImg;
-     if (img) { // le node detruit genère quand même un move event après sa destruction;
-         var zstate = state, stOrg = false;
+    var img = this.kImg;
+    if (img) { // le node detruit genère quand même un move event après sa destruction;
          var isMember = (this.grpAss != this.layer);
          if (isMember) {
-             for (var i = 0; i<this.grpAss.grpAss.members.length; i++){
-                 if (this.nodeObj.NodeID == this.grpAss.grpAss.members[i].id){
-                    zstate = this.grpAss.grpAss.members[i].status;
-                    stOrg  = true;
-                    break;
-                 };
-             };
+            this.textInstance.text(this.getTextInstance());
          };
          var isAMember = null;
-         if (inGrpAss) {isAMember = inGrpAss.isAMember(this.nodeObj);};
+         if (inGrpAss) {
+             isAMember = inGrpAss.isAMember(this.nodeObj, inGrpAss.nodeOwner.MultiInstanceAssoc, 0); // TODO: Gérer l'instance
+        };
          switch (state) {
             case 'add':
                 if (isAMember || (inGrpAss.members.length >= inGrpAss.grpAss.maxAssociations)) {
@@ -670,22 +702,18 @@ KtcNodeGrp.prototype.setState = function(state, inGrpAss) {
                 }else {this.setimgstate('add');};
                 break;
             case 'del':
-                this.setimgstate('del');
-                break;
             case 'unallowable':
-                this.setimgstate('unallowable');
-                break;
             case 'to update':
-                if (isAMember || stOrg) {this.setimgstate(zstate);
-                } else {this.setimgstate('to update');};
+                this.setimgstate(state);
                 break;
-       };
-    } else {
-//         console.log("setState sur node persistant") ;
+            default:
+                this.setimgstate(state);
+        };
     };
 };
 
 KtcGrpAss = function (x,y,w, maxLi, nodeData, grp,stage) {
+    this.nodeOwner = nodeData;
     var nbCol = 4, hHead = 50, r = 16;
     this.nbLi = Math.ceil(grp.maxAssociations / nbCol);
     if (this.nbLi > maxLi) {this.dispLi = maxLi; var scrolled = true;  var sColor = "#90C633";
@@ -724,11 +752,6 @@ KtcGrpAss = function (x,y,w, maxLi, nodeData, grp,stage) {
         strokeWidth: 3,
         name:"fondGrp"
         });
-    var strmembers = '', sp='';
-    for (var i in grp.members) {
-        strmembers += sp + grp.members[i].id ;
-        sp=', ';
-    };
     this.infos = new Kinetic.Label({
         x: 3,
         y: 3,
@@ -736,7 +759,7 @@ KtcGrpAss = function (x,y,w, maxLi, nodeData, grp,stage) {
     });
     this.infos.add(new Kinetic.Text({
         height: w,
-        text: "Group " + grp.index + ", " + grp.label + "\n Max members : "+grp.maxAssociations + "\n Members : " + strmembers,
+        text: "", // "Group " + grp.index + ", " + grp.label + "\n Max members* : "+grp.maxAssociations + "\n Members : " + strmembers,
         fontSize: 12,
         fontFamily: "Calibri",
         fill: "black",
@@ -841,7 +864,7 @@ KtcGrpAss = function (x,y,w, maxLi, nodeData, grp,stage) {
     var m;
     for (i=0; i < grp.members.length; i++){
         posm = getFreePosGrp(this.tabN);
-        m = new KtcNodeGrp(this.tabN[posm].x,this.tabN[posm].y,r,GetZWNode(nodeData.NetworkID, grp.members[i].id),stage.grpsLayer,this);
+        m = new KtcNodeGrp(this.tabN[posm].x, this.tabN[posm].y, r, GetZWNode(nodeData.NetworkID, grp.members[i].node), grp.members[i].instance, stage.grpsLayer,this);
         this.tabN[posm].kN = m;
         this.members.push(grp.members[i]);
         this.nodeArea.add(m.pictNodeGrp);
@@ -882,7 +905,10 @@ KtcGrpAss.prototype.showAll = function() {
 KtcGrpAss.prototype.refreshText = function (){
     var strmembers = '', sp='';
     for (var i in this.members) {
-        strmembers += sp + this.members[i].id ;
+        strmembers += sp + this.members[i].node;
+        if (this.members[i].instance != 0 ) {
+            strmembers += '('+this.members[i].instance +')';
+        };
         sp=', ';
     };
     this.infos.getText().text("Group " + this.grpAss.index + ", " + this.grpAss.label + "\n Max members : "+ this.grpAss.maxAssociations + "\n Members : " + strmembers);
@@ -898,28 +924,22 @@ KtcGrpAss.prototype.getDim = function (){
     return retval;
 };
 
-KtcGrpAss.prototype.isAMember = function (nodeObj) {
+KtcGrpAss.prototype.isAMember = function (nodeObj, multi, instance) {
     var retval = null;
     for (var i=0; i<this.members.length; i++) {
-        if (this.members[i].id == nodeObj.NodeID) {
+        if (this.members[i].node == nodeObj.NodeID && (!multi || this.members[i].instance == instance)) {
             retval = this.members[i];
             break;
-            };
+        };
     };
     return retval
 };
 
-KtcGrpAss.prototype.addNode = function (kNode) {
-    if (!this.isAMember(kNode.nodeObj)) {
+KtcGrpAss.prototype.addNode = function (kNode, instance) {
+    if (!this.isAMember(kNode.nodeObj, this.nodeOwner.MultiInstanceAssoc, instance)) {
         if (this.members.length<this.grpAss.maxAssociations) {
-            var state = 'to update';
-            for (var i = 0; i<this.grpAss.members.length; i++){
-                if (kNode.nodeObj.NodeID == this.grpAss.members[i].id){
-                state = this.grpAss.members[i].status;
-                break;
-                };
-            };
-            this.members.push({id:kNode.nodeObj.NodeID, status: state});
+            kNode.instanceAssoc = instance;
+            this.members.push({node:kNode.nodeObj.NodeID, instance: instance, status: 'to update'});
             var posm = getFreePosGrp(this.tabN);
             if (posm!=-1) {
                 this.tabN[posm].kN = kNode;
@@ -942,7 +962,7 @@ KtcGrpAss.prototype.delNode = function (kNode) {
     var idx =-1;
     if (kNode.nodeObj) {
         for (var i =0; i< this.members.length; i++) {
-            if (this.members[i].id == kNode.nodeObj.NodeID) {
+            if (this.members[i].node == kNode.nodeObj.NodeID) {
                 idx = i;
                 break;
             };
@@ -966,7 +986,7 @@ KtcGrpAss.prototype.delNode = function (kNode) {
             };
         };
         for (var i =0; i< this.members.length; i++) { // check if node() exist and delete it from member list.
-            if (GetZWNode(kNode.nodeObj.NetworkID, this.members[i].id) == false) {
+            if (GetZWNode(kNode.nodeObj.NetworkID, this.members[i].node) == false) {
                 this.members.splice(i, 1);
             };
         };
@@ -1159,7 +1179,7 @@ function CreateGroups(stage, nodeData, idDiv) {
         if (nodesData[ni].NodeID != nodeData.NodeID) {
             x = (ccol * (wn+spw)) + r + 4;
             y = r + 5,
-            new KtcNodeGrp(x,y,r,nodesData[ni] ,stage.elemsLayer);
+            new KtcNodeGrp(x,y,r,nodesData[ni], 0, stage.elemsLayer);
             ccol++;
         };
     };
@@ -1234,7 +1254,6 @@ function initGoAction (go) {
     });
     go.on('click', function() {
         var stage = this.getStage();
-       // var x = stage.elemsLayer.getX();
         this.attrs.anim.stop();
         stage.carouLayer.speed = 1;
         this.opacity(1);
@@ -1292,14 +1311,15 @@ function RefreshGroups(stage, newGroups) {
     var groups = stage.get('.ngroupass');
     for (var grp= 0; grp < groups.length; grp++) {
         for (var gn in newGroups) {
-            if (groups[grp].attrs.grpAssP.grpAss.index == newGroups[gn].idx) {
+            if (groups[grp].attrs.grpAssP.grpAss.index == newGroups[gn].index) {
+                groups[grp].attrs.grpAssP.members = newGroups[gn].members;
                 for (var m in  groups[grp].attrs.grpAssP.tabN) {
                     if (groups[grp].attrs.grpAssP.tabN[m].kN) {
-                        for (var mn =0; mn< newGroups[gn].mbs.length; mn++){
-                           if (groups[grp].attrs.grpAssP.tabN[m].kN.nodeObj.NodeID == newGroups[gn].mbs[mn].id) {
-                               var img = groups[grp].attrs.grpAssP.tabN[m].kN.kImg;
-                               groups[grp].attrs.grpAssP.tabN[m].kN.setimgstate(newGroups[gn].mbs[mn].status, img);
-                               break;
+                        for (var mn =0; mn< newGroups[gn].members.length; mn++){
+                           if (groups[grp].attrs.grpAssP.tabN[m].kN.nodeObj.NodeID == newGroups[gn].members[mn].node &&
+                                groups[grp].attrs.grpAssP.tabN[m].kN.instanceAssoc == newGroups[gn].members[mn].instance) {
+                                    groups[grp].attrs.grpAssP.tabN[m].kN.setState(newGroups[gn].members[mn].status);
+                                    break;
                            };
                         };
                     };
@@ -2178,7 +2198,6 @@ function openDialogAssoc(nodeData) {
                 for (var i=0; i<newgrps.length; i++){
                     grps.push({'idx': newgrps[i].index, 'mbs': newgrps[i].members});
                 };
-//                                            console.log("Send association modification : " + JSON.stringify(grps));
                 document.body.style.cursor = "wait";
                 $('#btn-cancel').addClass('disabled');
                 sendRequest("ozwave.node.set", {"key": "groups", "networkId": nodeData.NetworkID, "nodeId": nodeData.NodeID, 'ngrps': JSON.stringify(grps)}, function(data, result) {
@@ -2207,7 +2226,6 @@ function openDialogAssoc(nodeData) {
             }
         }],
         onEscape: function() {
-//                                       console.log("Exit by escape.");
             ws.onmessage = ws_onmessage_diaggrp;
         },
     });
@@ -2223,7 +2241,6 @@ function openDialogAssoc(nodeData) {
         if (data.msgid == "ozwave.ctrl.report" && data.content.type == "node-state-changed" && data.content.data.state == "GrpsAssociation") {
             nodeData = RefreshGroupsNodeData(nodeData.NetworkID, nodeData.NodeID, data.content.data.Groups);
             RefreshGroups(bdiag.stageGrps, data.content.data.Groups);
-//                                        console.log('Yes capture msg :=)')
             new PNotify({
                             type: 'success',
                             title: 'Set group association',
@@ -2234,3 +2251,81 @@ function openDialogAssoc(nodeData) {
     };
     bdiag.modal('show');
 }
+
+function addInGrpAssoc(grpAssP, kNode) {
+    if (grpAssP.nodeOwner.MultiInstanceAssoc && Object.keys(kNode.nodeObj.Instances).length > 1) {
+        if (grpAssP.members.length < grpAssP.grpAss.maxAssociations) {
+            var listI = '<li><a instance="0" type="instance" href="#"><i class="fa fa-caret-right"></i> 0 : for use default instance</a></li>';
+            for (i in kNode.nodeObj.Instances) {
+                listI += '<li><a instance="'+i+'" type="instance" href="#"><i class="fa fa-caret-right"></i> '+
+                            i+' for : '+kNode.nodeObj.Instances[i]+'</a></li>';
+            };
+            var bdiag = bootbox.dialog({
+                show: false,
+                size: 'small',
+                className: 'text-center',
+                title: 'Select instance of node <b>'+ kNode.nodeObj.NetworkID + '.' + kNode.nodeObj.NodeID + '</b> to associate it',
+                message: '<div class="row">  ' +
+                               "<div class='col-md-12'> " +
+                                    "<div class='dropdown'> "+
+                                        '<button class="btn btn-default dropdown-toggle" type="button" id="selectinstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">' +
+                                            'Select an instance' +
+                                            '<span class="caret"></span>' +
+                                        ' </button>' +
+                                        '<ul class="dropdown-menu" aria-labelledby="typerefresh">' +
+                                            listI +
+                                        '</ul' +
+                                    '</div> ' +
+                                "</div>"+
+                            "</div>",
+                data: {grpAssP: grpAssP, kNode: kNode},
+                buttons: [{
+                    id: 'btn-cancel',
+                    label: 'Cancel',
+                    className: 'btn-danger',
+                    autospin: false,
+                    callback: function(dialogRef){
+                        kNode.pictNodeGrp.removeChildren();
+                        delete(kNode.pictNodeGrp.attrs.nodeP);
+                        delete(kNode.pictNodeGrp);
+                        grpAssP.fondImg.stroke('black');
+                        grpAssP.layer.getStage().draw();
+                    }
+                }]
+            });
+            bdiag.on("shown.bs.modal", function() {
+                $("[type='instance']").click(function() {
+//                    console.log("set Instance Asssoc : " + kNode.nodeObj.NetworkID+ "." + kNode.nodeObj.NodeID);
+                    var instance = parseInt($(this).attr("instance"));
+                    bdiag.modal('hide');
+                    if (grpAssP.addNode(kNode, instance)) {
+                        kNode.pictNodeGrp.attrs.nodeP.grpAss = grpAssP;
+                        kNode.pictNodeGrp.attrs.nodeP.setState('to update', grpAssP);
+                        grpAssP.nodeArea.add(kNode.pictNodeGrp);
+                    } else {
+//                        console.log('En doublons, suppression de la copie');
+                        kNode.pictNodeGrp.removeChildren();
+                        delete(kNode.pictNodeGrp.attrs.nodeP);
+                        delete(kNode.pictNodeGrp);
+                    };
+                    grpAssP.fondImg.stroke('black');
+                    grpAssP.layer.getStage().draw();
+                });
+            });
+            bdiag.modal('show');
+        };
+    } else {
+        if (grpAssP.addNode(kNode, 0)) {
+            kNode.pictNodeGrp.attrs.nodeP.grpAss = grpAssP;
+            kNode.pictNodeGrp.attrs.nodeP.setState('to update', grpAssP);
+            grpAssP.nodeArea.add(kNode.pictNodeGrp);
+        } else {
+//            console.log('En doublons, suppression de la copie');
+            kNode.pictNodeGrp.removeChildren();
+            delete(kNode.pictNodeGrp.attrs.nodeP);
+            delete(kNode.pictNodeGrp);
+        };
+        grpAssP.fondImg.stroke('black');
+        grpAssP.layer.getStage().draw();
+    };
+};

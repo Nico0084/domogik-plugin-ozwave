@@ -757,7 +757,6 @@ class OZWavemanager():
                 ctrl = self.getCtrlOfNetwork(homeId)
                 if ctrl is None :
                     self._log.warning(u"A Node is added but no device primary controller created for home ID :{0}, Create it in domogik.".format(homeId))
-                    # TODO : voir coté device_detected ce qu'il est possible de faire
                     ctrlNodeID = 0
                 else : ctrlNodeID = ctrl.nodeID
                 if nodeId == ctrlNodeID :
@@ -1589,7 +1588,7 @@ class OZWavemanager():
             else : return {"error" : "Unknown Node : %d" % nodeId}
         else : return {"value": newValue, "error" : "Zwave network not ready, can't find value %d" %valId}
 
-    def setMembersGrps(self,  homeId, nodeId,  newGroups):
+    def setMembersGrps(self,  homeId, nodeId, newGroups):
         """Envoie les changement des associations de nodes dans les groups d'association."""
         retval = {}
         ctrl = self.getCtrlOfNetwork(homeId)

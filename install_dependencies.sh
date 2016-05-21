@@ -97,7 +97,7 @@ echo "Done"
 # python-openzwave
 #####################################################################
 
-export PYOZW=python-openzwave-0.3.0b8
+export PYOZW=python-openzwave-0.3.0
 export DEP_DIR=./dependencies
 export TMP_DIR=/tmp
 

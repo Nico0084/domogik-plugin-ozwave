@@ -2,13 +2,19 @@
 Change log
 ==========
 
-0.5.0 : (11-05-2016)
+0.5.1 : (22-05-2016)
 --------------------
 * Compatibily library : OpenZwave >= 1.4.248, python_openzwave >= 0.3.0 (final)
+* You must compile and install python_openzwave
+- Change log :
+    - Handle Group Association instance
+
+0.5.0 : (11-05-2016)
+--------------------
+* Compatibily library : OpenZwave >= 1.4, python_openzwave >= 0.3.0b8
 * Compatibility with Domogik 0.5+ and non xpl devices
 * Domogik devices must be recreate.( All device type are renamed)
 - Change log :
-    - Handle Group Association instance
     - Auto refresh device list (From MQ publish).
     - info.json file, renamed device_type, sensors and commands.
         - sensors and commands rule "type-detail" space replaced by "-".
