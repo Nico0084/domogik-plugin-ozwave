@@ -31,8 +31,8 @@
             "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
             "type": "ozwave.energy_energy-k_power"
         }, {
-            "name" : "Home Energy Meter 2 phases",
-            "id" : "HEM_2p",
+            "name" : "Home Energy Meter 1 phases",
+            "id" : "HEM_1p",
             "documentation" : "http://aeotec.com/z-wave-home-energy-measure",
             "type": "ozwave.energy_energy-k_power"
         }, {
