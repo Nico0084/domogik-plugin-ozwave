@@ -234,15 +234,15 @@
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',
-                                    title: 'Fail hard reset controller  {{ network_active }} command',
+                                    title: 'Fail hard reset of controller '+data.content.NetworkID,
                                     text: data.content.error,
                                     delay: 6000
                                 });
                             } else {
                                 new PNotify({
                                     type: 'success',
-                                    title: 'Hard reset controller  {{ network_active }} command',
-                                    text: 'Command '+ act + ' sended.',
+                                    title: 'Hard reset of controller '+data.content.NetworkID,
+                                    text: 'Command to '+ data.content.Driver + ' sended. Wait for driver restart with new home id.',
                                     delay: 4000
                                 });
                             };

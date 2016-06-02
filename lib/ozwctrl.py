@@ -89,7 +89,7 @@ Callbacks :
 
     '''
 
-    def __init__(self,  ozwmanager, homeId, nodeId,  isPrimaryCtrl=False,  networkId =""):
+    def __init__(self, ozwmanager, homeId, nodeId, isPrimaryCtrl=False, networkId =""):
         '''
         Innitialise un controlleur.
 
@@ -135,11 +135,12 @@ Callbacks :
         """Envois un report de changement/notification du réseau zwave en générant un evénement
             à destination de l'UI a travers la MQ.
         """
+        networkCtrl = self.getNetworkCtrl
         msg = report.copy()
         msg["NetworkID"] = self.networkID
-        msg["Node count"] = self.getNetworkCtrl.getNodeCount()
-        msg["Node sleeping"] = self.getNetworkCtrl.getSleepingNodeCount()
-        msg["Node fail"] = self.getNetworkCtrl.getFailedNodeCount()
+        msg["Node count"] = networkCtrl.getNodeCount()
+        msg["Node sleeping"] = networkCtrl.getSleepingNodeCount()
+        msg["Node fail"] = networkCtrl.getFailedNodeCount()
         self._ozwmanager._plugin.publishMsg('ozwave.ctrl.report', msg)
 
     def stats(self):
@@ -364,21 +365,6 @@ Callbacks :
                 break
         return retval
 
-    def hard_reset(self):
-        """
-        Hard Reset a PC Z-Wave Controller.
-        Resets a controller and erases its network configuration settings.  The
-        controller becomes a primary controller ready to add devices to a new network.
-        """
-        if self.isPrimaryCtrl :
-            self._manager.resetController(self.homeId)
-            print('************  Hard Reset du controlleur ***********')
-            self._ozwmanager._log.debug('Hard Reset of ZWave controller')
-            return True
-        else:
-            self._ozwmanager._log.debug('No Hard Reset on secondary controller')
-            return False
-
     def soft_reset(self):
         """
         Soft Reset a PC Z-Wave Controller.
@@ -386,8 +372,7 @@ Callbacks :
         """
         if self.isPrimaryCtrl :
             self._manager.softResetController(self.homeId)
-            print('************  Soft Reset du controlleur ***********')
-            self._ozwmanager._log.debug('Soft Reset of ZWave controller')
+            self._ozwmanager._log.debug('Soft Reset of ZWave controller driver : {0}'.format(self.getNetworkCtrl.driver))
             return True
         else:
             self._ozwmanager._log.debug('No Soft Reset on secondary controller')

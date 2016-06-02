@@ -155,7 +155,7 @@ class ZWaveNode:
 
     def _getNodeRefName(self):
         """Retourne le la ref du node pour les message<networkId.nodeId>"""
-        return "{0}.{1}".format(self.networkID,  self.nodeId)
+        return "{0}.{1}".format(self.networkID, self.nodeId)
 
     def setLinked(self):
         """Le node a reçu la notification NodeProtocolInfo , il est relié au controleur."""
@@ -1075,9 +1075,7 @@ class ZWaveNode:
     def _sendAssociationUpdate(self, actions):
         """Send update group members association action to zwvae ctrl"""
         self.log.debug(u"Node {0}, send to ctrl groups association update : {1}".format(self.refName, actions))
-        print actions
         for action in actions :
-            print action
             if action['action'] == 'add' :
                 self.addAssociation(action['grpIndex'], action['node'], action['instance'])
             elif action['action'] == 'remove' :

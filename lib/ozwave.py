@@ -761,7 +761,7 @@ class OZWavemanager():
                 else : ctrlNodeID = ctrl.nodeID
                 if nodeId == ctrlNodeID :
                     retval = ZWaveController(self,  homeId, nodeId,  True,  ctrl.networkID)
-                    self._log.info("Node %d is affected as primary controller)", nodeId)
+                    self._log.info(u"Node {0} is affected as primary controller".format(nodeId))
                     ctrl.node = retval
                     retval.reportChangeToUI({"NetworkID": ctrl.networkID, 'NodeID': nodeId, 'type': 'init-process', 'usermsg' : 'Zwave network initialization process could take several minutes. ' +
                                                 ' Please be patient...', 'data': NodeStatusNW[3]})
@@ -769,8 +769,8 @@ class OZWavemanager():
 #                            self._log.info("A primary controller allready existing, node %d id affected as secondary.", nodeId)
 #                            retval = ZWaveController(self, homeId, nodeId,  False)
                 else :
-                    retval = ZWaveNode(self,  homeId, nodeId)
-                self._log.info('Created new node with homeId 0x%0.8x, nodeId %d', homeId, nodeId)
+                    retval = ZWaveNode(self, homeId, nodeId)
+                self._log.info(u'Created new node {0}'.format(ref))
                 self._nodes[ref] = retval
                 self._plugin.publishMsg('ozwave.ctrl.report',{'NetworkID': ctrl.networkID, 'NodeID': nodeId, 'type': 'init-process',
                                                                                       'usermsg' : 'New node added ', 'data': NodeStatusNW[0]})
@@ -799,13 +799,13 @@ class OZWavemanager():
 #         PollingEnabled = 12               / Polling of a node has been successfully turned on by a call to Manager::EnablePoll
 #         DriverReady = 18                  / A driver for a PC Z-Wave controller has been added and is ready to use.  The notification will contain the controller's Home ID, which is needed to call most of the Manager methods.
 #         DriverFailed = 19                 / Driver failed to load
-#         DriverReset = 20                  / All nodes and values for this driver have been removed.  This is sent instead of potentially hundreds of individual node and value notifications.
 #         EssentialNodeQueriesComplete = 21 / The queries on a node that are essential to its operation have been completed. The node can now handle incoming messages.
 #         NodeQueriesComplete = 22          / All the initialisation queries on a node have been completed.
 #         AwakeNodesQueried = 23            / All awake nodes have been queried, so client application can expected complete data for these nodes.
 #         AllNodesQueriedSomeDead = 24      / All nodes have been queried but some dead nodes found.
 #         AllNodesQueried = 25              / All nodes have been queried, so client application can expected complete data.
 #         Notification = 26                        / An error has occured that we need to report.
+#         DriverRemoved = 27                 / The Driver is being removed. (either due to Error or by request) Do Not Call Any Driver Relatedh -- see rev : ttps://code.google.com/p/open-zwave/source/detail?r=890
 #         ControllerCommand = 28	      / When Controller Commands are executed, Notifications of Success/Failure etc are communicated via this Notification
 #											    Notification::GetEvent returns Driver::ControllerCommand and Notification::GetNotification returns Driver::ControllerState
 
@@ -816,7 +816,7 @@ class OZWavemanager():
 #         DeleteButton = 15                 / Handheld controller button event deleted
 #         ButtonOn = 16                     / Handheld controller button on pressed event
 #         ButtonOff = 17                    / Handheld controller button off pressed event
-#         DriverRemoved = 27                 / The Driver is being removed. (either due to Error or by request) Do Not Call Any Driver Relatedh -- see rev : ttps://code.google.com/p/open-zwave/source/detail?r=890
+#         DriverReset = 20                  / All nodes and values for this driver have been removed.  This is sent instead of potentially hundreds of individual node and value notifications.
 #		  NodeReset = 29	        			/ The Device has been reset and thus removed from the NodeList in OZW.
 
         self.monitorNodes.openzwave_report(args)
@@ -861,6 +861,8 @@ class OZWavemanager():
             self._handleNotification(args)
         elif notifyType == 'ControllerCommand':
             self._handleControllerCommand(args)
+        elif notifyType == 'DriverRemoved':
+            self._handleDriverRemoved(args)
         else :
             self._log.info("zwave callback : %s is not handled yet",  notifyType)
             self._log.info(args)
@@ -914,17 +916,14 @@ class OZWavemanager():
             ctrl.ready = False
             ctrl.initFully = False
             ctrl.status = 'close'
-            for n in self._nodes:
-                if self._nodes[n].homeId == ctrl.homeId :
-                    node = self._nodes.pop(n)
-                    del(node)
+            delN = [refNode for refNode, node in self._nodes.iteritems() if node.homeId == ctrl.homeId]
+            for refNode in delN:
+                del self._nodes[refNode]
             self._log.info(u"Driver {0}, homeId {1} is removed, all network nodes deleted".format(ctrl.driver, args))
             data = {'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId), 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed, All nodes deleted.'}
             data.update(ctrl.getStatus())
             self.sendDmgCtrlStatus(ctrl, data)
             self._plugin.publishMsg('ozwave.ctrl.state', data)
-            self._devicesCtrl.pop(ctrl)
-            del (ctrl)
         else :
             self._log.warning(u"A driver removed is recieved but not domogik controller attached, all nodes deleted. Notification : {1}".format(args))
             self._plugin.publishMsg('ozwave.ctrl.state', {'NetworkID': ctrl.networkID, 'NodeID': ctrl.nodeId, 'type': 'change', 'value': 'driver-remove', 'usermsg' : 'Driver removed but not registered, All nodes deleted.', 'state' : 'dead', 'init': NodeStatusNW[6]})
@@ -1082,7 +1081,7 @@ class OZWavemanager():
         """Un node est ajouté ou a changé"""
         node = self._fetchNode(args['homeId'], args['nodeId'])
         node._lastUpdate = time.time()
-        self._log.info(u"Node {0} as add or changed (homeId {1})".format(args['nodeId'], self.matchHomeID(args['homeId'])))
+        self._log.info(u"Node {0} is added or changed (homeId {1})".format(args['nodeId'], self.matchHomeID(args['homeId'])))
 
     def _handleNodeRemoved(self, args):
         """Un node est ajouté ou a changé"""
@@ -1207,15 +1206,28 @@ class OZWavemanager():
         return retval
 
     def  handle_ControllerHardReset(self, networkId):
-        """Transmmet le hard resset au controleur primaire."""
-        # TODO: Pour l'instant l"action ne contient pas l'ID du controleur, On lance l'action sur le premier. Mettre l'ID dans l'action
+        """
+        Hard Reset a PC Z-Wave Controller.
+        Resets a controller and erases its network configuration settings.  The
+        controller becomes a primary controller ready to add devices to a new network.
+        """
         retval = {'error': ''}
-        if self.isReady :
-            ctrl = self.getCtrlOfNetwork(networkId)
-            if not ctrl.node.hard_reset() :
-                retval['error'] = 'No reset for secondary controller'
-        else : retval['error'] = 'Controller node ready'
+        ctrl = self.getCtrlOfNetwork(networkId)
+        if ctrl is not None :
+            if ctrl.ready :
+                if ctrl.node.isPrimaryCtrl :
+                    self._log.info(u'Start Hard Reset of ZWave controller on driver {0} with homeId {1}'.format(ctrl.driver, self.matchHomeID(ctrl.homeId)))
+                    threading.Thread(None, self._hardResetcontroller, "th_hardResetcontroller", (ctrl.driver, ctrl.homeId,)).start()
+                else:
+                    retval['error'] = 'No possible Hard Reset on secondary controller {0}'.format(self.refName)
+            else : retval['error'] = 'Controller for network {0} not ready, Hard Reset aborded.'.format(networkId)
+        else : retval['error'] = 'No Controller Registered for network {0}'.format(networkId)
         return retval
+
+    def _hardResetcontroller(self, driver, homeId):
+        self._openingDriver = driver # openzwave reopen driver, so set plugin to wait for it.
+        self._manager.resetController(homeId)
+        self._log.info(u'Hard Reset of ZWave controller on driver :{0}, homeId :{1}, completed'.format(driver, self.matchHomeID(homeId)))
 
     def getOpenzwaveInfo(self):
         """ Retourne les infos de config d'openzwave (dict) """
@@ -1705,10 +1717,12 @@ class OZWavemanager():
                 report = self.testNetwork(data["networkId"], int(data['count']),  10000, True)
             else :
                 report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+            report.update({'NetworkID': data['networkId'], 'Driver': ctrl.driver})
         else :
             report["error"] = "Network ID <{0}> not registered, wait or check configuration and hardware.".format(data['networkId'])
             report["init"] = NodeStatusNW[0] # Uninitialized
             report["state"] = "unknown"
+            report.update({'NetworkID': data['networkId'], 'Driver': 'unknown'})
         return report
 
     def _handleNodeRequest(self, request, data):
