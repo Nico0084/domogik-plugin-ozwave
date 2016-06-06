@@ -222,15 +222,27 @@
                 });
         });
         $('#hardreset').click(function() {
-            bootbox.confirm('<h3 class="text-center alert-info">Hard Reset of PC ZWave Controller</h3> ' +
+            bootbox.confirm({
+                message : '<h3 class="text-center alert-info">Hard Reset of PC ZWave Controller</h3> ' +
                               '<h4 class="text-center">{{ network_active }} - {{ network_state.HomeID }}</h4>' +
                               '<p class="text-center alert-danger">Resets a controller and erases its network configuration settings. The controller becomes a primary controller ready to add devices to a new network.</p>' +
                               '<h4 class="text-center">Please confirm the Hard Reset</h4>',
-                function(result) {
+                buttons: {
+                        'cancel': {
+                            label: 'Cancel',
+                            className: 'btn-default pull-left'
+                        },
+                        'confirm': {
+                            label: "I'm sure and confirm hard reset",
+                            className: 'btn-danger pull-right'
+                        }
+                    },
+                callback: function(result) {
                     if (result) {
                         $('#softreset').addClass('disabled'); // Disables visually + functionally
                         sendRequest("ozwave.ctrl.hardreset", {"networkId": "{{ network_active }}"}, function(data, result) {
-                            $('#softreset').removeClass('disabled');
+                           $('#softreset').removeClass('disabled');
+                           $("#ctrl-process-running").removeClass("hide");
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',
@@ -248,6 +260,7 @@
                             };
                         });
                     };
+                }
                 });
         });
         $('#healnetwork').click(function() {
@@ -260,7 +273,7 @@
                     if (result) {
                         $('#healnetwork').addClass('disabled'); // Disables visually + functionally
                         sendRequest("ozwave.ctrl.healnetwork", {"networkId": "{{ network_active }}", "forceroute": $('#forceroute').is(":checked")}, function(data, result) {
-                            $('#healnetwork').removeClass('disabled');
+                           $('#healnetwork').removeClass('disabled');
                            if (result == "error" || data.result == "error") {
                                 new PNotify({
                                     type: 'error',

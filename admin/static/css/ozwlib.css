@@ -75,6 +75,16 @@
   border: solid 1px #000;
 }
 
+.exclusive-process {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  cursor: wait;
+}
+
 /* Datattable Header cells cmdclss  */
 .headcmdclss {
     text-align: center !important;

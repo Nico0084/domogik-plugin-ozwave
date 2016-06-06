@@ -171,6 +171,10 @@
         </div>
     </div>
 </div>
+<div id="ctrl-process-running" class="container exclusive-process hide">
+    <i class="fa fa-spinner fa-pulse fa-5x icon-warning"></i>
+    <span class="sr-only">Reseting...</span>
+</div>
 
 <script type="text/javascript">
 
@@ -270,7 +274,7 @@
             ws_onmessage_menu(e);
             var data = JSON.parse(e.data);
             if (data.msgid == "plugin.status") {
-                if ( data.content['host'] == 'vmdomogik0' && 'plugin-ozwave' == data.content['type'] + '-'+ data.content['name'] ) {
+                if (data.content['type'] + '-'+ data.content['name'] == 'plugin-ozwave') {
                     if (data.content['event'] == "starting" || data.content['event'] == "stopped" || data.content['event'] == "fail") {
                         if ($('#client-status .status').text() != "starting") {
                             $("#ozw-status").removeClass().addClass("label status-stopped");
@@ -289,7 +293,7 @@
             } else {
                 var msgId = data.msgid.split(".");
                 if (msgId[0] == "ozwave") {
-                    console.log("Zwave menu publish receive :)", data);
+ //                   console.log("Zwave menu publish receive :)", data);
                     switch (msgId[1]) {
                         case "ctrl" :
                             switch (msgId[2]) {
@@ -302,6 +306,15 @@
                                         };
                                         <!-- debug infos -->
                                         $("#debug-ctrl").text(JSON.stringify(data.content));
+                                    };
+                                    if (data.content.type == 'hard-reset') {
+                                        new PNotify({
+                                                    type: 'success',
+                                                    title: 'Hard Reset.',
+                                                    text: data.content.usermsg,
+                                                    delay: 8000
+                                        });
+                                        $("#ctrl-process-running").addClass("hide");
                                     };
                                     break;
                                 case "saveconf":
