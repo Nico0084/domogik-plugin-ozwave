@@ -203,8 +203,6 @@ Callbacks :
             return retval
         errorCom = {'error': 'Not started, check your controller.'}
         errorNode ={'error': 'Unknown node : {0}, check input options.'.format(action['nodeid'])}
-        if action['dosecurity'] =='True' : doSecurity = True
-        else : doSecurity = False
         if action['action'] == 'stop' :
             if self.cancel_command() :
                 retval['error'] = ''
@@ -220,7 +218,7 @@ Callbacks :
             self._lastCtrlState['command'] = action['command']
             self._lastCtrlState['nodeId'] = action['nodeid']
             if action['command'] == 'AddDevice' :
-                if self.add_node(doSecurity) :
+                if self.add_node(action['dosecurity']) :
                     retval['message'] ='It is up to you to perform the action on the local device(s) to add. Usually a switch to actuate 2 or 3 times.'
                 else : retval.update(errorCom)
 
