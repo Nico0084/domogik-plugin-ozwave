@@ -1228,6 +1228,8 @@ class OZWavemanager():
         self._openingDriver = driver # openzwave reopen driver, so set plugin to wait for it.
         self._manager.resetController(homeId)
         self._log.info(u'Hard Reset of ZWave controller on driver :{0}, homeId :{1}, completed'.format(driver, self.matchHomeID(homeId)))
+        self._plugin.publishMsg('ozwave.ctrl.state',{'Driver': driver, 'type': 'hard-reset',
+                                                                          'usermsg' : 'Driver {0} is reseted with new homeId. All nodes are exclude'.format(driver)})
 
     def getOpenzwaveInfo(self):
         """ Retourne les infos de config d'openzwave (dict) """
@@ -1979,7 +1981,7 @@ class PrimaryController():
                     retval["init"] = NodeStatusNW[3] # In progress - Devices initializing
                     retval["status"] = 'starting'
             if self.ctrlActProgress and self.ctrlActProgress.has_key('state') and self.ctrlActProgress['state'] == libopenzwave.PyControllerState[4] :
-                status['status'] ='locked' #Waiting
+                retval['status'] ='locked' #Waiting
         elif self.status == 'close' : retval["status"] = 'stopped'
         elif self.status == 'fail' :
             retval["status"] = 'dead'
