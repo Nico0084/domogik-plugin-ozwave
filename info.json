@@ -6,6 +6,11 @@
             "documentation" : "http://aeotec.com/z-wave-usb-stick",
             "type": "ozwave.primary_controller"
         }, {
+            "name" : "Z-Stick Gen5",
+            "id" : "ctrl_aeon_stick_gen5",
+            "documentation" : "http://aeotec.com/z-wave-usb-stick",
+            "type": "ozwave.primary_controller"
+        }, {
             "name" : "FGS211 Relay 3kW",
             "id" : "FGS211_Relay",
             "documentation" : "http://www.fibaro.com/en/support",
