@@ -22,6 +22,7 @@ Plugin purpose
 ==============
 
 Support Z-wave technology
+Version for domogik >= 0.5
 
 Implements
 ==========
@@ -29,8 +30,7 @@ Implements
 -Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@author: bibi21000 aka Sébastien GALLET <bibi21000@gmail.com>
-@copyright: (C) 2007-2012 Domogik project
+@copyright: (C) 2007-2016 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """

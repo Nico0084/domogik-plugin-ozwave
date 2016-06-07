@@ -29,7 +29,7 @@ Implements
 -Zwave
 
 @author: Nico <nico84dev@gmail.com>
-@copyright: (C) 2007-2015 Domogik project
+@copyright: (C) 2007-2016 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """

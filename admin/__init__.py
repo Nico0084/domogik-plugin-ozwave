@@ -9,8 +9,8 @@ from jinja2 import TemplateNotFound
 
 ### package specific imports
 from domogik_packages.plugin_ozwave.admin.views.network_tools import get_manager_state, get_openzwave_info, \
-                                                                                                     get_controller_state, get_controller_nodes, get_request, \
-                                                                                                     get_openzwave_all_products
+                                                                     get_controller_state, get_controller_nodes, get_request, \
+                                                                     get_openzwave_all_products
 
 ### common tasks
 package = "plugin_ozwave"

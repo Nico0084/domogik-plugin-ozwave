@@ -1,10 +1,10 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-  
+# -*- coding: utf-8 -*-
 
-""" This file is part of B{Domogik} project (U{http://www.domogik.org}).
+""" This file is part of B{Domogik} project (U{http://www.domogik.org}$
 
 License
-=======
+======
 
 B{Domogik} is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,17 +20,19 @@ You should have received a copy of the GNU General Public License
 along with Domogik. If not, see U{http://www.gnu.org/licenses}.
 
 Plugin purpose
-==============
+===========
 
-
+Support Z-wave technology
+Version for domogik >= 0.5
 
 Implements
-==========
+========
 
+- Zwave
 
-@author: Domogik project
-@copyright: (C) 2007-2012 Domogik project
+@author: Nico <nico84dev@gmail.com>
+@copyright: (C) 2007-2016 Domogik project
 @license: GPL(v3)
 @organization: Domogik
 """
-    
+
