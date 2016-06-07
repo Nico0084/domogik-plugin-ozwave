@@ -1239,8 +1239,13 @@ class OZWavemanager():
                 if self._manager is not None : retval["status"] = "alive"
                 else : retval["status"] = "starting"
                 for option in libopenzwave.PyOptionList :
-                    retval["Options"] [option] = libopenzwave.PyOptionList[option]
-                    retval["Options"] [option]['value']  = self.options.getOption(option)
+                    retval["Options"][option] = libopenzwave.PyOptionList[option]
+                    if option == 'NetworkKey' :
+                        value = self.options.getOption(option)
+                        retval["Options"][option]['value'] = "Secure Key Enable" if value != '' else "No Secure"
+                        retval["Options"][option]['doc']  = "Network Key to use for Encrypting Secure Messages over the Network. Get/Set 16 Byte Key in options.xml file of Openzwave path."
+                    else :
+                        retval["Options"][option]['value']  = self.options.getOption(option)
                 retval["error"] = ""
             else : retval["status"] = "stopped"
         retval["ConfigPath"] = self._configPath
