@@ -200,7 +200,7 @@ class ZWaveNode:
             if values and self._batteryCheck :
                 for value in values : value.RefreshOZWValue()
         elif self._requestConfig :
-            self._updateConfig()
+            self.updateConfig()
         self._checkDmgDeviceLink()
 
     def setBatteryCheck(self, check):
@@ -583,15 +583,18 @@ class ZWaveNode:
                 })
         del(self._groups[:])
         self._groups = groups
-        self.log.debug(u'Node {0} groups are: {1}'.format(self._nodeId, self._groups))
+        self.log.debug(u'Node {0} groups are: {1}'.format(self.refName, self._groups))
 
-    def _updateConfig(self):
+    def updateConfig(self):
         if not self._sleeping :
-            self.log.debug(u"Requesting config params for node {0}".format(self._nodeId))
+            self.log.debug(u"Requesting config params values for node {0}".format(self.refName))
             self._manager.requestAllConfigParams(self._homeId, self._nodeId)
+            report = {'error' : u"", 'usermsg' : u"Requesting config params values for node {0}".format(self.refName)}
         else :
-            self.log.debug(u"Node {0} is sleeping can't request config params.".format(self._nodeId))
+            report = {'error' : u"Node {0} is sleeping can't request config params value.".format(self.refName)}
+            self.log.debug(u"Node {0} is sleeping can't request config params value.".format(self.refName))
         self._requestConfig = True # Flag set to False to unlock update all config value at once."
+        return report
 
     def updateNode(self):
         """Mise à jour de toutes les caractéristiques du node"""
@@ -600,7 +603,6 @@ class ZWaveNode:
         self._updateNeighbors()
         self._updateGroups()
         self._updateInfos()
-#        self._updateConfig()
 
 # Gestion des messagaes completés.
     def updateLastMsg(self, type, ZWMsg):
@@ -1018,7 +1020,8 @@ class ZWaveNode:
     def getInstances(self):
         """Return instance(s) of nodes"""
         instances = {}
-        for id, value in self._values.iteritems():
+        for id in self._values.keys():  # Can't use iterator due to possible change during loop (AddedValue, RemovedValue)
+            value = self._values[id]
             if value.instance not in instances :
                 instances[value.instance] = []
             if value.valueData['label'] not in instances[value.instance] and not value.valueData['readOnly'] and value.valueData['genre'] == 'User':
