@@ -165,7 +165,7 @@ class OZwave(Plugin):
 
     def publishMsg(self, category, content):
         self._pub.send_event(category, content)
-        self.log.debug(u"Publishing over MMQ <{0}>, data : {1}".format(category, content))
+        self.log.debug(u"Publishing over MQ <{0}>, data : {1}".format(category, content))
 
 class Timer():
     """

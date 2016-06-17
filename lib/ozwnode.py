@@ -589,7 +589,7 @@ class ZWaveNode:
         if not self._sleeping :
             self.log.debug(u"Requesting config params values for node {0}".format(self.refName))
             self._manager.requestAllConfigParams(self._homeId, self._nodeId)
-            report = {'error' : u"", 'usermsg' : u"Requesting config params values for node {0}".format(self.refName)}
+            report = {'error' : u"", 'usermsg' : u"Requesting all config params values for node {0}".format(self.refName)}
         else :
             report = {'error' : u"Node {0} is sleeping can't request config params value.".format(self.refName)}
             self.log.debug(u"Node {0} is sleeping can't request config params value.".format(self.refName))

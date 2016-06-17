@@ -410,6 +410,8 @@ function DialBoxRequestRefreshNode(nodeData) {
                                     '<li><a id="RefreshNodeState" type="refresh" href="#"><i class="fa fa-check"></i> State node</a></li>' +
                                     '<li><a id="RefreshNodeDynamic" type="refresh" href="#"><i class="fa fa-spinner fa-spin"></i> Dynamics data</a></li>' +
                                     '<li><a id="HealNode" type="refresh" href="#"><i class="fa fa-road"></i> Heal node with reroute</a></li>' +
+                                    '<li><a id="UpdateConfigParams" type="refresh" href="#"><i class="fa fa-cogs"></i> Values of all COMMAND_CLASS_CONFIGURATION</a></li>' +
+                                    '<li><a id="RefrechDetectDev" type="refresh" href="#"><i class="fa fa-search"></i> Domogik detected devices</a></li>' +
                                 '</ul' +
                             '</div> ' +
                         "</div>"+

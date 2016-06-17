@@ -957,7 +957,7 @@ class OZWavemanager():
             self._log.debug(u"     In process initialization complete, refresh node {0} informations.".format(node.nodeId))
             node.updateNode() # Pourrait être utile si un node s'est réveillé pendant l'init.
             if not node.isConfigured :
-                node._updateConfig()
+                node.updateConfig()
         self._log.debug(u"End of process initialization complete")
         ctrl.ready = True
         ctrl.initFully = True
@@ -1790,11 +1790,17 @@ class OZWavemanager():
                     report['state'] = node.setBatteryCheck(True if data['state'] in [True, 'True', 'true'] else False)
                     report['error'] = ''
                 else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
+            elif data['action'] == 'UpdateConfigParams' :
+                node = self._getNode(data['homeId'], data['nodeId'])
+                if node :
+                    report = node.updateConfig()
+                else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
             elif data['action'] == 'RefrechDetectDev' :
                 node = self._getNode(data['homeId'], data['nodeId'])
                 if node :
                     threading.Thread(None, node._checkDmgDeviceLink, "th_refreshDevices", (), {"force": True}).start()
                     report['error'] = ''
+                    report['usermsg'] = u"Domogik detection devices for node {0} started ...".format(node.refName)
                 else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
             else :
                 report['error'] ='Request {0} unknown action, data : {1}'.format(request, data)
@@ -1826,6 +1832,12 @@ class OZWavemanager():
                 valId = long(data['valueId']) # Pour javascript type string
                 report = self.setValue(data['homeId'], data['nodeId'], valId, data['newValue'])
             else : report = {'error':  'Invalide nodeId format.'}
+        elif request == 'value.RequestConfigParam' :
+            if self._IsNodeId(data['nodeId']):
+                valId = long(data['valueId']) # Pour javascript type string
+                value = node.getValue(valId)
+                report = value.requestConfigParam()
+            else : report = {'error':  'Invalide nodeId format.'}
         elif request == 'value.poll':
             valId = long(data['valueId']) # Pour javascript type string
             data['intensity'] = int(data['intensity'])
@@ -1835,7 +1847,6 @@ class OZWavemanager():
                     report = ctrl.node.enablePoll(data['nodeId'],  valId,  data['intensity'])
                 elif data['action'] == 'DisablePoll':
                     report = ctrl.node.disablePoll(data['nodeId'],  valId)
-                    value = node.getValue(valId)
                     value.setPollIntensity(data['intensity'])
                 else :
                     report['error'] = 'Request {0} unknown action, data : {1}'.format(request,  data)

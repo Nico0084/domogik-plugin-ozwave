@@ -462,6 +462,16 @@ class ZWaveValueNode:
             self.log.error(u"Get help value error : {0}".format(traceback.format_exc()))
             return "Get help value error : {0}".format(traceback.format_exc())
 
+    def requestConfigParam(self):
+        """Send a resquest to get value of command_class_configuration"""
+        if self._valueData['commandClass'] == 'COMMAND_CLASS_CONFIGURATION' :
+            if not self._valueData['writeOnly'] :
+                self._node._manager.requestConfigParam(self.homeId, self.nodeId,  self._valueData['index'])
+                report = {'error': "",  'usermsg': u"Node {0} requesting config param values{1} index {0}.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+            else : report = {'error': u"Node {0} configuration value {1} index {2} is on write only, can't read real value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+        else : report = {'error':  u"Node {0} configuration value {1} index {2} is not a COMMAND_CLASS_CONFIGURATION, bad request for this value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+        return report
+
     def enablePoll(self, intensity = 1):
         """Enable the polling of a device's state.
 
