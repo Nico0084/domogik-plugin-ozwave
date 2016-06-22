@@ -540,11 +540,8 @@ class DeviceClasses:
         try :
             item['command_classes'] = []
             cmdClass = a.attributes.get("command_classes").value.strip().split(',')
-            print "*******************  ", cmdClass
             for clss in cmdClass :
-                print clss
                 item['command_classes'].append(u"{0} - {1}".format(clss, PyManager.COMMAND_CLASS_DESC[int(clss, 16)]))
-                print item['command_classes']
         except :
             item['command_classes'] = []
         try :

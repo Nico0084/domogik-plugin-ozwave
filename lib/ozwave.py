@@ -1817,9 +1817,9 @@ class OZWavemanager():
         elif request == 'node.testnetworknode':
             if self._IsNodeId(data['nodeId']):
                 report = self.testNetworkNode(data["homeId"], data['nodeId'], int(data['count']), 10000, True)
-            else : report = {'error':  'Invalide nodeId format.'}
+            else : report = {'error': u'Invalide nodeId format.'}
         else :
-            report['error'] ='Unknown request <{0}>, data : {1}'.format(request, data)
+            report['error'] = u'Unknown request <{0}>, data : {1}'.format(request, data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId']})
         return report
 
@@ -1831,18 +1831,19 @@ class OZWavemanager():
             if self._IsNodeId(data['nodeId']):
                 valId = long(data['valueId']) # Pour javascript type string
                 report =self.getValueInfos(data['nodeId'], valId)
-            else : report = {'error':  'Invalide nodeId format.'}
+            else : report = {'error': u'Invalide nodeId format.'}
         elif request == 'value.set' :
             if self._IsNodeId(data['nodeId']):
                 valId = long(data['valueId']) # Pour javascript type string
                 report = self.setValue(data['homeId'], data['nodeId'], valId, data['newValue'])
-            else : report = {'error':  'Invalide nodeId format.'}
-        elif request == 'value.RequestConfigParam' :
-            if self._IsNodeId(data['nodeId']):
+            else : report = {'error': u'Invalide nodeId format.'}
+        elif request == 'value.reqRefresh' :
+            node = self._getNode(data['homeId'], data['nodeId'])
+            if node :
                 valId = long(data['valueId']) # Pour javascript type string
                 value = node.getValue(valId)
-                report = value.requestConfigParam()
-            else : report = {'error':  'Invalide nodeId format.'}
+                report = value.RefreshOZWValue()
+            else : report = {'error':  u"Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
         elif request == 'value.poll':
             valId = long(data['valueId']) # Pour javascript type string
             data['intensity'] = int(data['intensity'])
@@ -1854,11 +1855,11 @@ class OZWavemanager():
                     report = ctrl.node.disablePoll(data['nodeId'],  valId)
                     value.setPollIntensity(data['intensity'])
                 else :
-                    report['error'] = 'Request {0} unknown action, data : {1}'.format(request,  data)
-            else : report = {'error':  "Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
+                    report['error'] = u'Request {0} unknown action, data : {1}'.format(request,  data)
+            else : report = {'error':  u"Node {0}.{1} doesn't exist.".format(data['homeId'], data['nodeId'])}
             report.update({'action': data['action'], 'intensity': data['intensity']})
         else :
-            report['error'] ='Unknown request <{0}>, data : {1}'.format(request,  data)
+            report['error'] = u'Unknown request <{0}>, data : {1}'.format(request,  data)
         report.update({'NetworkID': data['networkId'], 'NodeID': data['nodeId'], 'ValueID': data['valueId']})
         return report
 

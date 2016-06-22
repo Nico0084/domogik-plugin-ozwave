@@ -139,16 +139,37 @@ class ZWaveValueNode:
                 self._node._ozwmanager._cb_send_sensor(sensor_msg['device'], sensor_msg['id'], sensor_msg['data_type'], sensor_msg['data']['current'])
 
     def RefreshOZWValue(self):
-        """Effectue une requette pour rafraichir la valeur réelle lut par openzwave"""
-        if self._valueData['genre'] != 'Config' :
-            if self._node._manager.refreshValue(self._valueData['id']):
-                self.log.debug(u"Node {0} Request a RefreshOZWValue : {1}".format(self._valueData['nodeId'], self._valueData['label']))
-                return True
+        """Send a resquest to get real value from openzwave"""
+        if not self._node.isFailed :
+            if not self._valueData['writeOnly'] :
+                if self._valueData['genre'] != 'Config' :
+                    if self._node._manager.refreshValue(self._valueData['id']):
+                        self.log.debug(u"Node {0} Request a RefreshOZWValue : {1}".format(self._node.refName, self._valueData['label']))
+                        report = {'error': u"",  'usermsg': u"Node {0} requesting value {1} index {0}.".format(self._node.refName, self._valueData['label'], self._valueData['index'])}
+                    else :
+                        report = {'error': u"Node {0} not found, can't request value {1} index {0}.".format(self._node.refName, self._valueData['label'], self._valueData['index'])}
+                else :
+                    report = self.RequestConfigParam()
+            else :
+                report = {'error': u"Node {0} value {1} index {2} is on write only, can't read real value.".format(self._node.refName, self._valueData['label'], self._valueData['index'])}
         else :
-            self.log.debug(u"RefreshOZWValue : call requestConfigParam waiting ValueChanged...")
-            self._node._manager.requestConfigParam(self.homeId,  self.nodeId,  self._valueData['index'])
-            return True
-        return False
+            report = {'error': u"Dropping command request value because Node {0} is presumed dead.".format(self._node.refName)}
+        return report
+
+    def RequestConfigParam(self):
+        """Send a resquest to get value of command_class_configuration"""
+        if not self._node.isFailed :
+            if self._valueData['commandClass'] == 'COMMAND_CLASS_CONFIGURATION' :
+                if not self._valueData['writeOnly'] :
+                    self._node._manager.requestConfigParam(self.homeId, self.nodeId, self._valueData['index'])
+                    report = {'error': u"",  'usermsg': u"Node {0} requesting config param values{1} index {0}.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+                else :
+                    report = {'error': u"Node {0} configuration value {1} index {2} is on write only, can't read real value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+            else :
+                report = {'error':  u"Node {0} configuration value {1} index {2} is not a COMMAND_CLASS_CONFIGURATION, bad request for this value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
+        else :
+            report = {'error': u"Dropping command request value because Node {0} is presumed dead.".format(self._node.refName)}
+        return report
 
     def getCmdClassAssociateValue(self):
         """retourn la commandClass, son Label et son instance qui peut-etre associé à un type bouton ou autre."""
@@ -239,10 +260,10 @@ class ZWaveValueNode:
                 retval ['value'] = val
         if self._valueData['genre'] == 'Config' :
             self._node._manager.requestConfigParam(self.homeId,  self.nodeId,  self._valueData['index'])
-            self.log.debug(u"setValue : call requestConfigParam...")
+            self.log.debug(u"setValue : call RequestConfigParam...")
         report = {'Value' : str(self),  'report': retval}
         self._node.updateLastMsg('setValue', self._valueData)
-        self._node._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, report)
+        self._node._ozwmanager.monitorNodes.nodeChangeZ_report(self.homeId, self.nodeId, report)
         if retval['error'] == '' :
             self.HandleSleepingSetvalue()
             self._node.requestOZWValue(self.getCmdClassAssociateValue())
@@ -461,16 +482,6 @@ class ZWaveValueNode:
         except :
             self.log.error(u"Get help value error : {0}".format(traceback.format_exc()))
             return "Get help value error : {0}".format(traceback.format_exc())
-
-    def requestConfigParam(self):
-        """Send a resquest to get value of command_class_configuration"""
-        if self._valueData['commandClass'] == 'COMMAND_CLASS_CONFIGURATION' :
-            if not self._valueData['writeOnly'] :
-                self._node._manager.requestConfigParam(self.homeId, self.nodeId,  self._valueData['index'])
-                report = {'error': "",  'usermsg': u"Node {0} requesting config param values{1} index {0}.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
-            else : report = {'error': u"Node {0} configuration value {1} index {2} is on write only, can't read real value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
-        else : report = {'error':  u"Node {0} configuration value {1} index {2} is not a COMMAND_CLASS_CONFIGURATION, bad request for this value.".format(self._node.refName, self._valueData['label'],  self._valueData['index'])}
-        return report
 
     def enablePoll(self, intensity = 1):
         """Enable the polling of a device's state.

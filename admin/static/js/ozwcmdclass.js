@@ -328,6 +328,31 @@ function buildValuesTab (data) {
                             break;
                     };
                 });
+                $( "[id^='reqValRefresh_']").not("[isHandled]" ).each(function(rowN, nData) {
+                    var refId =  this.id.split("_");
+                    var valueData = GetValueZWNode(refId[1],refId[2],refId[3]);
+                    $(this).attr("isHandled", true);
+                    $(this).click(function(e){
+                        sendRequest("ozwave.value.reqRefresh", {"networkId": refId[1], "nodeId": refId[2], "valueId": refId[3]}, function(data, result) {
+                            if (result == "error" || data.result == "error") {
+                                new PNotify({
+                                    type: 'error',
+                                    title: 'Request refreshing value fail.',
+                                    text: data.content.error,
+                                    delay: 6000
+                                });
+                            } else {
+                                new PNotify({
+                                    type: 'success',
+                                    title: 'Request refreshing value sended.',
+                                    text: data.content.usermsg,
+                                    delay: 4000
+                                });
+                            };
+                        });
+                    });
+                });
+
             },
         "sPaginationType": "full_numbers",
         data: RowN
@@ -411,10 +436,14 @@ function renderCmdClssValue(data, type, full, meta) {
                     var stText = "Not recovered"
                     valueData.realvalue = valueData.value;
                 };
-                modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +
-                    '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+stText+'</i></span>';
+                modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
+                    '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+stText+'</i>'+
+                    '<span id="reqValRefresh'+ valueRef + '"class="btn btn-xs btn-info pull-right" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Request refresh value">'+
+                        '<span class="glyphicon glyphicon-refresh"></span>'+
+                    '</span>'+
+                    '</span>';
         } else if (valueData.realvalue != valueData.value) {
-            modify = '<span class="input-addon-xs label-warning"><i id="stic_'+ valueRef +
+            modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
                 '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
         };
         var ret = valueData.value;
