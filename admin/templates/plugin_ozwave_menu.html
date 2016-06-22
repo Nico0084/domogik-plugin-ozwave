@@ -371,6 +371,16 @@
                                         ctrl_tab.removeClass().addClass("label status-stopped").attr("data-original-title", "{% trans %}Controller is stopped{% endtrans %}");
                                     };
                                     break;
+                                case "command" :
+                                    if (data.content.state == "Error") {
+                                        new PNotify({
+                                            type: 'error',
+                                            title: 'ZWave '+ data.content.NetworkID +' controller error',
+                                            text: 'Command : '+data.content.command+' <br>'+data.content.usermsg+'<br>Error : '+data.content.error,
+                                            delay: 6000
+                                        });
+                                    };
+                                    break;
                             };
                         break;
                     case "lib" :
