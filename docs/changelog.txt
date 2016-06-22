@@ -2,11 +2,18 @@
 Change log
 ==========
 
-0.5.1 : (02-06-2016)
+0.5.1 : (22-06-2016)
 --------------------
 * Compatibily library : OpenZwave >= 1.4.248, python_openzwave >= 0.3.0 (final)
 * You must compile and install python_openzwave
 - Change log :
+    - Hide zwave network key in admin openzwave options.
+    - Fix possible iterator issue on values iteration.
+    - Add user notification on failed controller command.
+    - Add node details info and zwave+ info.
+    - Add user Domogik device detection refresh command.
+    - Add user COMMAND_CLASS_CONFIGURATION refresh value command (global and individual).
+    - Add AEON Z-Stick Gen5 udev rules
     - Handle Group Association instance.
     - Handle full hard reset with no resart needed.
 
