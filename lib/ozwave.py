@@ -1518,10 +1518,10 @@ class OZWavemanager():
             node = self._getNode(homeId,  nodeId)
             if self.isNodeDeviceCtrl(node) is None :
                 if node : retval = node.testNetworkNode(count, timeOut, allReport)
-                else : retval['error'] = "Zwave node {0} unknown.".format(node.refName)
-            else : retval['error'] = "Can't test primary controller, node {0}.".format(node.refName)
+                else : retval = {"error": u"Zwave node {0} unknown.".format(node.refName)}
+            else : retval = {"error": u"Can't test primary controller, node {0}.".format(node.refName)}
             return retval
-        else : return {"error" : "Zwave network not ready, can't find node {0}".format(node.refName)}
+        else : return {"error": u"Zwave network not ready, can't find node {0}".format(node.refName)}
 
     def healNetwork(self, networkId, upNodeRoute):
         """Tente de 'réparé' des nodes pouvant avoir un problème. Passe tous les nodes un par un"""

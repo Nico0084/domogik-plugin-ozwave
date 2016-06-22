@@ -146,7 +146,7 @@ class OZwave(Plugin):
                 else :
                     self.log.warning(u"Abording command, no device found for command MQ: {0}".format(data))
                     reply_msg.add_data('status', False)
-                    reply_msg.add_data('reason', u"Abording command, no device dound for MQ command: {0}".format(data))
+                    reply_msg.add_data('reason', u"Abording command, no device found for MQ command: {0}".format(data))
             else :
                 self.log.warning(u"Abording command, no extra key in command MQ: {0}".format(data))
                 reply_msg.add_data('status', False)

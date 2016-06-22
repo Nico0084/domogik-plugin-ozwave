@@ -263,7 +263,7 @@ class ZWaveValueNode:
             self.log.debug(u"setValue : call RequestConfigParam...")
         report = {'Value' : str(self),  'report': retval}
         self._node.updateLastMsg('setValue', self._valueData)
-        self._node._ozwmanager.monitorNodes.nodeChangeZ_report(self.homeId, self.nodeId, report)
+        self._node._ozwmanager.monitorNodes.nodeChange_report(self.homeId, self.nodeId, report)
         if retval['error'] == '' :
             self.HandleSleepingSetvalue()
             self._node.requestOZWValue(self.getCmdClassAssociateValue())
