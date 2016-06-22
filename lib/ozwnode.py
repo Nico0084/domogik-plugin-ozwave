@@ -86,12 +86,15 @@ class ZWaveNode:
         self._commandClasses = set()
         self._neighbors = set()
         self._nodeInfos = None
+        self._nodeInfosPLus = None
         self._values = dict()  # voir la class ZWaveValueNode
         self._name = ''
         self._location = ''
         self._manufacturer = None
         self._product = None
         self._productType = None
+        self._zWavePlus = False
+        self.maxBaudRate = 0
         self._groups = list()
         self._sleeping = False
         self._batteryCheck = False # For device with battery get battery level when node awake
@@ -138,9 +141,9 @@ class ZWaveNode:
     isOn = property(lambda self: self._getIsOn())
     batteryLevel = property(lambda self: self._getBatteryLevel())
     signalStrength = property(lambda self: self._getSignalStrength())
-    basic = property(lambda self: BasicDeviceType[self._nodeInfos.basic] if self._nodeInfos else None)
-    generic = property(lambda self: GenericDeviceType[self._nodeInfos.generic] if self._nodeInfos else None)
-    specific = property(lambda self: SpecificDeviceType[self._nodeInfos.generic][self._nodeInfos.specific] if self._nodeInfos else None)
+    basic = property(lambda self: self._ozwmanager.deviceClasses.getBasic(self._nodeInfos.basic) if self._nodeInfos else None)
+    generic = property(lambda self: self._ozwmanager.deviceClasses.getGeneric(self._nodeInfos.generic) if self._nodeInfos else None)
+    specific = property(lambda self: self._ozwmanager.deviceClasses.getSpecific(self._nodeInfos.generic, self._nodeInfos.specific) if self._nodeInfos else None)
     security = property(lambda self: self._nodeInfos.security if self._nodeInfos else None)
     version = property(lambda self: self._nodeInfos.version if self._nodeInfos else None)
     isPolled = property(lambda self: self._hasValuesPolled())
@@ -491,6 +494,8 @@ class ZWaveNode:
         self._manufacturer = NamedPair(id=self._manager.getNodeManufacturerId(self._homeId, self._nodeId), name=self._manager.getNodeManufacturerName(self._homeId, self._nodeId))
         self._product = NamedPair(id=self._manager.getNodeProductId(self._homeId, self._nodeId), name=self._manager.getNodeProductName(self._homeId, self._nodeId))
         self._productType = NamedPair(id=self._manager.getNodeProductType(self._homeId, self._nodeId), name=self._manager.getNodeType(self._homeId, self._nodeId))
+        self._zWavePlus = self._manager.isNodeZWavePlus(self._homeId, self._nodeId)
+        self.maxBaudRate = self._manager.getNodeMaxBaudRate(self._homeId, self._nodeId)
         self._nodeInfos = NodeInfo(
             generic = self._manager.getNodeGeneric(self._homeId, self._nodeId),
             basic = self._manager.getNodeBasic(self._homeId, self._nodeId),
@@ -498,6 +503,14 @@ class ZWaveNode:
             security = self._manager.getNodeSecurity(self._homeId, self._nodeId),
             version = self._manager.getNodeVersion(self._homeId, self._nodeId)
         )
+        self._nodeInfosPLus = {
+                'deviceType' : u"0x{0:04x}".format(self._manager.getNodeDeviceType(self._homeId, self._nodeId)),
+                'deviceTypeName' : self._manager.getNodeDeviceTypeString(self._homeId, self._nodeId),
+                'role' : u"0x{0:02x}".format(self._manager.getNodeRole(self._homeId, self._nodeId)),
+                'roleName' : self._manager.getNodeRoleString(self._homeId, self._nodeId),
+                'plusType' : u"0x{0:02x}".format(self._manager.getNodePlusType(self._homeId, self._nodeId)),
+                'plusTypeStr' : self._manager.getNodePlusTypeString(self._homeId, self._nodeId)
+        }
 
     def  _isSleeping(self):
         "Interroge le node pour voir son etat et envoi une notification UI si changement."
@@ -782,6 +795,7 @@ class ZWaveNode:
         retval = {}
         self._updateInfos() # mise à jour selon OZW
         self._updateCommandClasses()
+        print self._nodeInfosPLus
         retval["NetworkID"] = self.networkID
         retval["HomeID"] = self.homeID
         retval["Model"]=self.manufacturer + " -- " + self.product
@@ -797,6 +811,9 @@ class ZWaveNode:
         retval["InitState"] = self.GetNodeStateNW()
         retval["Stage"] = self.GetCurrentQueryStage()
         retval["Polled"] = self.isPolled
+        retval["Infos"] = {'basic' : self.basic, 'generic': self.generic, 'specific': self.specific, 'security': self.security,
+                                   'version': self.version, 'maxBaudRate' : self.maxBaudRate,
+                                   'zwave +': self._zWavePlus,  'info +' : self._nodeInfosPLus}
         retval["ComQuality"] = self.getComQuality()
         retval["BatteryLevel"] = self._getBatteryLevel()
         retval["MultiInstanceAssoc"] = self.isMultiInstanceAssoc

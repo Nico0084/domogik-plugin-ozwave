@@ -1,24 +1,87 @@
-function initValuesTab(refId) {
- return '<div class="contenaire-fluid">'+
-             '<table id="valuesNode'+refId+'" class="display cell-border" cellspacing="0" width="100%">'+
-                '<thead>'+
-                    '<tr>'+
-                        '<th>Status</th>'+
-                        '<th>Index</th>'+
-                        '<th>Type</th>'+
-                        '<th>Value</th>'+
-                        '<th>Units</th>'+
-                        '<th>Command Class</th>'+
-                        '<th>Instance</th>'+
-                        '<th>Label</th>'+
-                        '<th>Genre</th>'+
-                    '</tr>'+
-                '</thead>'+
-                '<tbody>'+
-                '</tbody>'+
-             '</table>'+
-           '</div>'
+function initValuesTab(refId, nodeData) {
+    var struct = '<div class="contenaire-fluid">'+
+            '<div class="panel panel-default">'+
+                '<div class="panel-heading\">'+
+                    '<a class="bg-info" href="#" onclick="togglePanelCollapse(this);return false;" body="nodeInfo_'+refId+'"' + ' toggle="togglenodeInfo_'+refId+'">'+
+                        '<h5>' + ' Details for : ' + nodeData.Infos.basic.label + ' - ' + nodeData.Infos.generic.label + ' - ' + nodeData.Infos.specific.label +
+                            '<span class="glyphicon glyphicon-chevron-down pull-left" id="togglenodeInfo_'+refId+'" aria-hidden="true" data-target="nodeInfo_'+refId+'"> </span>' +
+                        '</h5>'+
+                    '</a>'+
+                '</div>'+
+                '<div class="panel-body" id="nodeInfo_'+refId+'" style="width: 95%; display: none;" hidden>'+
+                    '<div class="row">'+
+                        '<div class="col-md-8">'+
+                            '<h4>Device type</h4>'+
+                            '<ul>'+
+                                '<li>Type : <b>'+nodeData.Type+'</b></li>'+
+                                '<li>Basic : <b><i>'+ nodeData.Infos.basic.key + '</i> - ' + nodeData.Infos.basic.label +'</b></li>';
+    if (nodeData.Infos.basic.command_classes.length > 0) {
+        struct += '<ul>Associate with : ';
+        for (clss in nodeData.Infos.basic.command_classes) {
+            struct += '<li>'+nodeData.Infos.basic.command_classes[clss]+'</li>';
+        };
+        struct += '</ul>';
     };
+              struct += '<li>Generic : <b><i>'+ nodeData.Infos.generic.key + '</i> - ' + nodeData.Infos.generic.label +'</b></li>'
+    if (nodeData.Infos.generic.command_classes.length > 0) {
+        struct += '<ul>Associate with : ';
+        for (clss in nodeData.Infos.generic.command_classes) {
+            struct += '<li>'+nodeData.Infos.generic.command_classes[clss]+'</li>';
+        };
+        struct += '</ul>';
+    };
+               struct +='<li>Specific : <b><i>'+ nodeData.Infos.specific.key + '</i> - ' + nodeData.Infos.specific.label +'</b></li>';
+    if (nodeData.Infos.specific.command_classes.length > 0) {
+        struct += '<ul>Associate with : ';
+        for (clss in nodeData.Infos.specific.command_classes) {
+            struct += '<li>'+nodeData.Infos.specific.command_classes[clss]+'</li>';
+        };
+        struct += '</ul>';
+    };
+          struct += '</ul></div>'+
+                        '<div class="col-md-4">'+
+                        '<h4>Network capabilities</h4>'+
+                        '<ul>'+
+                            '<li>Maximum baud rate : <b>'+ nodeData.Infos.maxBaudRate + '</b> bps</li>'+
+                            '<li>Protocol version : <b>'+ nodeData.Infos.version + '</b></li>'+
+                            '<li>Security flag : <b>'+ nodeData.Infos.security + '</b></li>'+
+                            '<li>Zwave + : ';
+    if (nodeData.Infos["zwave +"]) {
+            struct += '<span class="fa fa-plus-square icon-success" </span></li>' +
+                        '</ul></div></div>'+
+                        '<div class="row">'+
+                            '<div class="col-md-6">'+
+                            '<h4>Zwave + extra infos</h4>'+
+                            '<ul>'+
+                                '<li>Device type : <b><i>'+nodeData.Infos["info +"].deviceType+'</i> - '+nodeData.Infos["info +"].deviceTypeName+'</b></li>'+
+                                '<li>Type + : <b><i>'+nodeData.Infos["info +"].plusType+'</i> - '+nodeData.Infos["info +"].plusTypeStr+'</b></li>'+
+                                '<li>Role : <b><i>'+nodeData.Infos["info +"].role+'</i> - '+nodeData.Infos["info +"].roleName+'</b></li>';
+    } else {struct += '<span class="fa fa-minus-square icon-warning" </span></li>';};
+
+    struct += '</ul></div></div>'+
+                '</div>'+
+            '</div>';
+
+     struct += '<table id="valuesNode'+refId+'" class="display cell-border" cellspacing="0" width="100%">'+
+                        '<thead>'+
+                            '<tr>'+
+                                '<th>Status</th>'+
+                                '<th>Index</th>'+
+                                '<th>Type</th>'+
+                                '<th>Value</th>'+
+                                '<th>Units</th>'+
+                                '<th>Command Class</th>'+
+                                '<th>Instance</th>'+
+                                '<th>Label</th>'+
+                                '<th>Genre</th>'+
+                            '</tr>'+
+                        '</thead>'+
+                        '<tbody>'+
+                        '</tbody>'+
+                     '</table>'+
+                   '</div>';
+    return struct;
+};
 
 function GetValueCell(table, valueRef, col) {
     try {

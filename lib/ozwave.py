@@ -160,6 +160,7 @@ class OZWavemanager():
         self._log.debug(u"   - Openzwave options : ")
         for opt in libopenzwave.PyOptionList.keys(): self._log.debug(u"       - {0} : {1}".format(opt, self.options.getOption(opt)))
         self._plugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
+        self.getDeviceClasses()
         self.getManufacturers()
         self._plugin.add_stop_cb(self.stop)
         # get the data_types
@@ -615,8 +616,12 @@ class OZWavemanager():
             status.update({'NetworkID': ctrl.networkID, 'HomeID': self.matchHomeID(ctrl.homeId)})
             self._plugin.publishMsg('ozwave.ctrl.state', status)
 
+    def getDeviceClasses(self):
+        """"Return list of all device type classes known by openzwave lib (config/device_classes.xml)."""
+        self.deviceClasses = DeviceClasses(self._configPath)
+
     def getManufacturers(self):
-        """"Return list of all manufacturer and product known by openzwave lib."""
+        """"Return list of all manufacturer and product known by openzwave lib (config/manufacturer_specific.xml)."""
         self.manufacturers = Manufacturers(self._configPath)
 
     def getAllProducts(self):

@@ -5,7 +5,7 @@ import json
 import sys
 
 from domogik.common.packagejson import PackageJson
-from domogik_packages.plugin_ozwave.lib.ozwxmlfiles import networkFileConfig
+from domogik_packages.plugin_ozwave.lib.ozwxmlfiles import NetworkFileConfig
 from domogik_packages.plugin_ozwave.lib.ozwdefs import *
 
 json_file = "/home/domogik/plugins/domogik-plugin-ozwave/info.json"
@@ -50,7 +50,7 @@ def get_cmds(type, commands):
 def get_device_type(device):
     """Search for an existing device_types from json device_types."""
     find  = None
-    if not device or (device == {}) : 
+    if not device or (device == {}) :
         print "No specific openzwave parameters cant't handle detection"
         return None
 #    print data["device_types"]
@@ -77,18 +77,18 @@ def get_device_type(device):
                     find = None
                     break
         if find and (sensors == []) and (commands == []): break
-        else : 
+        else :
             find = None
 #            print "     {0} Not corresponding, pass".format(dev)
     return find
-    
+
 def get_product(productName):
     """Search for existing product"""
     for prod in data["products"]:
         if productName == prod["name"]:
             return prod
     return None
-    
+
 def check_device_type(devJSON,  prodOZWV):
     """Check if product OZW corresponding to product JSON"""
     if not devJSON : return False
@@ -113,14 +113,14 @@ def get_device_type_from_product(product):
     if data["device_types"].has_key(product["type"]):
         return data["device_types"][product["type"]]
     else: return None
-    
-ozw_config = networkFileConfig(config_file)
+
+ozw_config = NetworkFileConfig(config_file)
 for node in ozw_config.nodes :
  #   print node,  "/n"
     print"********************************************************"
     print node["product"]["name"]
     product = get_product(node["product"]["name"])
-    if product : 
+    if product :
         print "Product detected in json : type :{0}, id : {1}".format(product["type"],  product["id"])
 #    print json.dumps(node, sort_keys=True, indent=4)
 #    print node
@@ -139,7 +139,7 @@ for node in ozw_config.nodes :
  #                   print ("+++++++ must be a device_types ++++++")
                     instances[v['instance']]["sensors"] = get_sensors(labeldomogik,  instances[v['instance']]["sensors"])
                     instances[v['instance']]["commands"] = get_cmds(labeldomogik,  instances[v['instance']]["commands"])
-        print "Devices detection process for : ",  json.dumps(instances, sort_keys=True, indent=4) 
+        print "Devices detection process for : ",  json.dumps(instances, sort_keys=True, indent=4)
         device = {"sensors":[],  "commands":[]}
         for i in instances:
             device["sensors"].extend(instances[i]["sensors"])

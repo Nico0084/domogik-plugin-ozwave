@@ -156,7 +156,7 @@
                                             });
                                         } else {
                                             RefreshValuesNodeData(data.content.NetworkID, data.content.NodeID, data.content.Values);
-                                            row.child(initValuesTab(nodeRefId)).show();
+                                            row.child(initValuesTab(nodeRefId, GetZWNode(data.content.NetworkID, data.content.NodeID))).show();
                                             buildValuesTab(data.content);
                                             $('#valuesNode'+nodeRefId +' thead tr').addClass("headcmdclss");
                                             $('#detailnodeic'+nodeRefId).removeClass('fa-search-plus fa-spinner fa-spin').addClass('fa-search-minus');

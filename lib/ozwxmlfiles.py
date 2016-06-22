@@ -33,7 +33,7 @@ Read openzwave lib C++ xml files configurations
 @license: GPL(v3)
 @organization: Domogik
 """
-
+from libopenzwave import PyManager
 from ozwdefs import *
 from xml.dom import minidom
 import sys
@@ -295,7 +295,7 @@ class Manufacturers():
             except: pass
         return {'products':products, 'tabtext' : tabtext}
 
-class networkFileConfig():
+class NetworkFileConfig():
     """Read and manage open-zwave xml zwave Network composing"""
 
     def __init__(self,  path):
@@ -492,7 +492,7 @@ class DeviceClasses:
 #        import pprint
 
         """Read XML device_classes.xml of open-zwave C++ lib"""
-        self.xml_file = path + "\device_classes.xml"
+        self.xml_file = path + "/device_classes.xml"
 
         self.xml_content = minidom.parse(self.xml_file)
         # read xml file
@@ -501,74 +501,134 @@ class DeviceClasses:
         for a in self.xml_content.getElementsByTagName("DeviceClasses"):
             xmlns = a.attributes.get("xmlns").value.strip()
         for a in self.xml_content.getElementsByTagName("Basic"):
-            item = {'key' : a.attributes.get("key").value.strip()}
-            item['label'] = a.attributes.get("label").value.strip()
-            self.clssBasic.append(item)
+            self._extractXmlData(a)
+            self.clssBasic.append(self._extractXmlData(a))
         for a in self.xml_content.getElementsByTagName("Generic"):
-            item = {'key' : a.attributes.get("key").value.strip()}
-            item['label'] = a.attributes.get("label").value.strip()
-            try :
-                item['command_classes'] = a.attributes.get("command_classes").value.strip().split(',')
-            except :
-                item['command_classes'] = []
+            item = self._extractXmlData(a)
             item['Specific'] = []
             try :
                 for s in a.getElementsByTagName("Specific"):
-                    itemSpec = {'key' : s.attributes.get("key").value.strip()}
-                    itemSpec['label'] = s.attributes.get("label").value.strip()
-                    try :
-                        itemSpec['command_classes'] = s.attributes.get("command_classes").value.strip().split(',')
-                    except :
-                        itemSpec['command_classes'] = []
-                    try :
-                        itemSpec['basic'] = s.attributes.get("basic").value.strip()
-                    except :
-                        itemSpec['basic'] = ""
-                    item['Specific'] .append(itemSpec)
+                    item['Specific'] .append(self._extractXmlData(s))
             except :
                 pass
             self.clssGeneric.append(item)
+        self.roles = []
+        for a in self.xml_content.getElementsByTagName("Role"):
+            self.roles.append(self._extractXmlData(a))
+        self.nodeTypes = []
+        for a in self.xml_content.getElementsByTagName("NodeType"):
+            self.nodeTypes.append(self._extractXmlData(a))
+        self.deviceTypes = []
+        for a in self.xml_content.getElementsByTagName("DeviceType"):
+            self.deviceTypes.append(self._extractXmlData(a))
+
+#        print "*********************"
 #        print self.clssBasic
 #        print "*********************"
 #        pprint.pprint(self.clssGeneric)
+#        print "*********************"
+#        pprint.pprint(self.roles)
+#        print "*********************"
+#        print self.nodeTypes
+#        print "*********************"
+#        pprint.pprint(self.deviceTypes)
 
-    def getBasic(self, clss):
-        if not isinstance(clss, int) :
-            clss = int(clss,  16)
+    def _extractXmlData(self, a):
+        item = {'key' : a.attributes.get("key").value.strip()}
+        item['label'] = a.attributes.get("label").value.strip()
+        # optional
+        try :
+            item['command_classes'] = []
+            cmdClass = a.attributes.get("command_classes").value.strip().split(',')
+            print "*******************  ", cmdClass
+            for clss in cmdClass :
+                print clss
+                item['command_classes'].append(u"{0} - {1}".format(clss, PyManager.COMMAND_CLASS_DESC[int(clss, 16)]))
+                print item['command_classes']
+        except :
+            item['command_classes'] = []
+        try :
+            item['basic'] = s.attributes.get("basic").value.strip()
+        except :
+            item['basic'] = u""
+        return item
+
+    def getBasic(self, id):
+        idNum = id
+        if not isinstance(id, int) :
+            idNum = int(id,  16)
         for c in self.clssBasic:
-            if int(clss) == int(c['key'], 16) : return c
-        return None
+            if int(idNum) == int(c['key'], 16) : return c
+        return {'key': id, 'label': u'Undefined Basic type'}
 
-    def getGeneric(self, generic):
+    def getGeneric(self, id):
 #        import pprint
-
-        if not isinstance(generic, int) :
-            generic = int(generic,  16)
+        idNum = id
+        if not isinstance(id, int) :
+            idNum = int(id,  16)
         for c in self.clssGeneric:
-            if int(generic) == int(c['key'], 16) :
+            if int(idNum) == int(c['key'], 16) :
 #                pprint.pprint(c)
                 return c
-        return None
+        return {'key': id,
+                'label': u'Undefined Generic type',
+                'Specific': [{
+                    'command_classes': [],
+                    'basic': '',
+                    'key': u'0x00',
+                    'label': u'Not used'
+                    }],
+                'command_classes': [u''],
+                'basic': u''
+                }
 
-    def getSpecific(self, generic,  clss):
+    def getSpecific(self, generic, id):
 #        import pprint
+        idNum = id
+        g = self.getGeneric(generic)
+        if g['label'] != u'Undefined Generic type' :
+            if not isinstance(generic, int) :
+                generic = int(generic,  16)
+            if not isinstance(id, int) :
+                idNum = int(id,  16)
+    #        print "****** find :", generic,  id
+            for g in self.clssGeneric:
+                if int(generic) == int(g['key'], 16) :
+    #                print "****** generic trouvé : "
+    #                pprint.pprint(g)
+                    for s in g['Specific']:
+    #                    print '****** cherche dans :', s
+                        if int(idNum) == int(s['key'], 16) :
+    #                        print '********* Spécific trouvé :'
+    #                        pprint.pprint(s)
+                            return s
+            return {'key': id, 'label': u'Undefined Specific type', 'command_classes': [], 'basic': u''}
+        else :
+            return {'key': id, 'label': g['label'] + u" {0}, Specific can't be find".format(g['key']), 'command_classes': [], 'basic': u''}
 
-        if not isinstance(generic, int) :
-            generic = int(generic,  16)
-        if not isinstance(clss, int) :
-            clss = int(clss,  16)
-#        print "****** find :", generic,  clss
-        for g in self.clssGeneric:
-            if int(generic) == int(g['key'], 16) :
-#                print "****** generic trouvé : "
-#                pprint.pprint(g)
-                for s in g['Specific']:
-#                    print '****** cherche dans :', s
-                    if int(clss) == int(s['key'], 16) :
-#                        print '********* Spécific trouvé :'
-#                        pprint.pprint(s)
-                        return s
-        return None
+    def getRole(self, id):
+        idNum = id
+        if not isinstance(id, int) :
+            idNum = int(id,  16)
+        for item in self.roles:
+            if int(idNum) == int(item['key'], 16) : return item
+        return {'key': id, 'label': u'Undefined Role type', 'command_classes': [], 'basic': u''}
+
+    def getNodeType(self, id):
+        idNum = id
+        if not isinstance(id, int) :
+            idNum = int(id,  16)
+        for item in self.nodeTypes:
+            if int(idNum) == int(item['key'], 16) : return item
+        return {'key': id, 'label': u'Undefined Node type', 'command_classes': [], 'basic': u''}
+
+    def getDeviceTypes(self, id):
+        idNum = id
+        if not isinstance(id, int) :
+            idNum = int(id,  16)
+        for item in self.deviceTypes:
+            if int(idNum) == int(item['key'], 16) : return item
+        return {'key': id, 'label': u'Undefined Device type', 'command_classes': [], 'basic': u''}
 
     def GetMandatoryCommandClasses(self, classList):
         mClass = []
@@ -583,13 +643,13 @@ if __name__ == "__main__":
 #    ozw_conf = "/home/admdomo/Partage-VM/domogik-plugin-ozwave/data/zwcfg_0x014d0f18.xml"
 #    trans_file = "/var/tmp/exporttrad.txt"
 
-#    ozw_path ="C:\Python_prog\Dev_OZW\openzwave\config"
-#    ozw_conf = "C:\Python_prog\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
-#    trans_file = "C:/Python_prog/test/exporttrad.txt"
+    ozw_path ="C:\Python_prog\Dev_OZW\openzwave\config"
+    ozw_conf = "C:\Python_prog\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
+    trans_file = "C:/Python_prog/test/exporttrad.txt"
 
-    ozw_path="C:\Domotique\python-openzwave\openzwave\config"
-    ozw_conf ="M:\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
-    trans_file ="M:\domogik-plugin-ozwave\data\exporttrad.txt"
+#    ozw_path="C:\Domotique\python-openzwave\openzwave\config"
+#    ozw_conf ="M:\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
+#    trans_file ="M:\domogik-plugin-ozwave\data\exporttrad.txt"
 
     listManufacturers = Manufacturers(ozw_path)
 #    print listManufacturers.getManufacturer('0x86')
@@ -597,7 +657,7 @@ if __name__ == "__main__":
 #    print '*************** searchProductType'
 #    print listManufacturers.searchProductType('0x0400',  '0x0106')
     tabtext = listManufacturers.getProduct('FGS211 Switch 3kW').getAllTranslateText()
-    listNodes = networkFileConfig(ozw_conf)
+    listNodes = NetworkFileConfig(ozw_conf)
     toTranslate = listManufacturers.getAllProductsTranslateText()
     fich = open(trans_file,  "w")
 #    for prod in  toTranslate['products']:
@@ -610,7 +670,14 @@ if __name__ == "__main__":
 #    print listNodes.getDriver(0)
 
     deviceClass = DeviceClasses(ozw_path)
-    prod =  listManufacturers.getProduct('FGWPE Wall Plug')
+#    prod =  listManufacturers.getProduct('FGWPE Wall Plug')
 #    print prod.__dict__
     print "*************GetProductDATA***************"
-    print prod.getProductData()
+    print
+#    print prod.getProductData()
+    print 'Basic', deviceClass.getBasic(6)
+    print 'Generic',  deviceClass.getGeneric(6)
+    print 'Specific', deviceClass.getSpecific(200, '0x01')
+    print 'Role', deviceClass.getRole(6)
+    print 'NodeType', deviceClass.getNodeType(4)
+    print 'DeviceTypes', deviceClass.getDeviceTypes("0x0600")
