@@ -336,8 +336,7 @@
                                     updateBtSavedConf(data.content.NetworkID, data.content.saved);
                                     break;
                                 case "saveconfchange":
-                                    updateBtSavedConf(data.content.NetworkID, data.content.saved);
-                                    if ( !data.content.saved ) {
+                                    if ( updateBtSavedConf(data.content.NetworkID, data.content.saved) && !data.content.saved ) {
                                         new PNotify({
                                             type: 'info',
                                             title: 'ZWave network '+ data.content.NetworkID +' config change',

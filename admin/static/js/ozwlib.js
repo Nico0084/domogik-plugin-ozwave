@@ -12,6 +12,7 @@ var COL_NODE_REF = {"Node": 0, "InitState": 0, "Stage": 0, "BatteryLevel":0,
                                 };
 
 var mbrGrpSt = {0: 'unknown', 1: 'confirmed', 2: 'to confirm', 3: 'to update'};
+var timeNotifSaved = 0; // Last time a save config notification have been sended
 
 // Handle Data nodes table
 
@@ -579,13 +580,20 @@ function updateBtStatus(refId, newClassSt) {
 };
 
 function updateBtSavedConf(NetworkID, saved) {
+    var notify = $("#saveconf_" + NetworkID).hasClass("btn-info") && !saved;
     if (saved) {
         $("#saveconf_" + NetworkID).removeClass("btn-warning hide").addClass("btn-info");
         $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-save glyphicon-hourglass").addClass("glyphicon-floppy-saved");
     } else {
         $("#saveconf_" + NetworkID).removeClass("btn-info hide").addClass("btn-warning");
         $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-saved glyphicon-hourglass").addClass("glyphicon-floppy-save");
+        var d = new Date();
+        if (timeNotifSaved + 60000 < d.getTime() || notify) { // Notify user only 60s after last notification
+            timeNotifSaved = d.getTime();
+            notify = true;
+        } else {notify = false;};
     };
+    return notify;
 };
 
 function updateBtMonitored(nodeData) {
