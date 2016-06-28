@@ -2,11 +2,12 @@
 Change log
 ==========
 
-0.5.1 : (22-06-2016)
+0.5.1 : (27-06-2016)
 --------------------
 * Compatibily library : OpenZwave >= 1.4.248, python_openzwave >= 0.3.0 (final)
 * You must compile and install python_openzwave
 - Change log :
+    - install_dependencies.sh get python-openzwave archive lib from GitHub repository
     - Hide zwave network key in admin openzwave options.
     - Fix possible iterator issue on values iteration.
     - Add user notification on failed controller command.

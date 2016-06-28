@@ -97,22 +97,54 @@ echo "Done"
 # python-openzwave
 #####################################################################
 
-export PYOZW=python-openzwave-0.3.1
-export DEP_DIR=./dependencies
 export TMP_DIR=/tmp
 
-### copy the tgz in /tmp and extract it
+if [[ "$1" = '-LAST' ]]
+then
+    title "Get last version of python-openzwave"
+    wget -N https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/pyozw_version.py
+    if [[ $? != 0 ]]
+    then
+        echo ":( Can't get check version script."
+        exit 1
+    else
+        python_openzwave_version=$(python pyozw_version.py)
+    fi
 
-export SRC=$DEP_DIR/$PYOZW.tgz
+elif [[ $1 = "-v" ]]
+then
+  if [[ $2 =~ ^[0-9]+\.[0-9]+ ]]
+  then
+    title "Get specific version of python-openzwave"
+    python_openzwave_version=$2
+  else
+    echo ":( Bad version number format : "$2" , use N.N.N"
+    exit 1
+  fi
+cd
+else
+    title "Get default version of python-openzwave"
+    python_openzwave_version="0.3.1"
+    echo "Default is : "$python_openzwave_version
+fi
+
+export PYOZW=python-openzwave-${python_openzwave_version}
+wget -N -P ${TMP_DIR}  https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/${PYOZW}.tgz
+if [ $? -ne 0 ]
+then
+    echo ":( Can not get check archive file."
+    exit 1
+else
+    title "Version "$python_openzwave_version" retreived"
+fi
+
+### extract the tgz in /tmp
+
 export TARGET=$TMP_DIR/$PYOZW.tgz
 
-title "Copy '$SRC' as '$TARGET'..."
-cp $SRC $TARGET
-raise_error $?
 chown -R $DOMOGIK_USER $TARGET
 raise_error $?
 echo "Done"
-
 
 title "Extract '$TARGET' in '$TMP_DIR/$PYOZW' ..."
 cd $TMP_DIR
@@ -121,6 +153,13 @@ raise_error $?
 chown -R $DOMOGIK_USER $TMP_DIR/$PYOZW
 raise_error $?
 cd $TMP_DIR/$PYOZW
+echo "Done"
+
+### uninstall previous lib
+
+title "Uninstall the previous python-openzwave lib..."
+sudo make uninstall
+raise_error $?
 echo "Done"
 
 ### Install dependencies
@@ -134,7 +173,7 @@ echo "Done"
 
 title "Build python-openzwave..."
 echo "make clean..."
-su $DOMOGIK_USER -c "make clean"
+sudo make clean
 raise_error $?
 
 echo "make build..."
@@ -142,5 +181,5 @@ su $DOMOGIK_USER -c "make build"
 raise_error $?
 
 echo "make install-lib..."
-make install-lib
+sudo make install-lib
 raise_error $?

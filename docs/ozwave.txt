@@ -54,12 +54,18 @@ To set up your first Zwave device, you will have to :
 Dependencies
 ============
 
-* `Python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ (>=0.3.5)
+* `Python-openzwave <https://github.com/OpenZWave/python-openzwave>`_ (>=0.3.1)
 * `tailer 0.3 library for Python <https://pypi.python.org/pypi/tailer>`_ (>=0.2.1)
 
 If ou are using a **Debian based** Linux release, you can install the dependencies with an installation script (in the root of the ozwave package folder) : ::
 
     $ sudo ./install_dependencies.sh
+
+Options :
+
+* -LAST : get the last python-openzwave archive from Git repository.
+* -v x.x.x : get a specific python-openzwave archive from Git repository.
+* nothing : get default python-openzwave archive from Git repository.
 
 **Else**, you can :doc:`follow the detailed instructions <advanced/dependencies>`.
 
@@ -69,6 +75,7 @@ Zwave Controller and devices Compatibility List
 The following controller interfaces are supported and verified with Domogik:
 
 * Aeon Labs Z-Stick Series 2
+* Aeon Labs Z-Stick Gen5
 * RaZberry
   * using rule with /dev/ttyAMA0 instead of /dev/ttyUSBx)
   * user domogik must have write permission, you can add it in dialout group. ::
