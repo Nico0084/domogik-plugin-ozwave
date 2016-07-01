@@ -25,7 +25,8 @@ before_script:
   - ~/domogik/src/domogik/tests/travis/travis-install-domogik.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh 
   - cd $TRAVIS_BUILD_DIR
-  - sudo tests/travis/travis-install-plugindenpencies.sh
+  - ls -l
+  - sudo /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/travis/travis-install-plugindenpencies.sh
   - ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
