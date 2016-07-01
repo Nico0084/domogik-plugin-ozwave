@@ -6,9 +6,10 @@ sudo apt-get install socat
 cd $TRAVIS_BUILD_DIR
 git clone git@github.com:Nico0084/py-zwave-emulator.git
 export ZWEMULATOR = py-zwave-emulator/bin/zwemulator.py
+ls -l py-zwave-emulator/bin/
 
 echo "==== Install Plugin dependency"
-./install_dependencies.sh -LAST
+sudo ./var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/install_dependencies.sh -LAST
 
 echo "==== Start zwave emulator"
 python $ZWEMULATOR &
