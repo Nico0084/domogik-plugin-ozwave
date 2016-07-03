@@ -9,7 +9,7 @@ export ZWEMULATOR = py-zwave-emulator/bin/zwemulator.py
 ls -l py-zwave-emulator/bin/
 
 echo "==== Install Plugin dependency"
-sudo ./tests/travis/travis-install-plugindenpencies.sh -LAST
+sudo install_dependencies.sh -LAST
 
 echo "==== Start zwave emulator"
 python $ZWEMULATOR &
