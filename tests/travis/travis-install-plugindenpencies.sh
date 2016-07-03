@@ -9,7 +9,7 @@ export ZWEMULATOR = py-zwave-emulator/bin/zwemulator.py
 ls -l py-zwave-emulator/bin/
 
 echo "==== Install Plugin dependency"
-sudo ./var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/install_dependencies.sh -LAST
+sudo ./tests/travis/travis-install-plugindenpencies.sh -LAST
 
 echo "==== Start zwave emulator"
 python $ZWEMULATOR &
