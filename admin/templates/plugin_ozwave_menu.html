@@ -304,6 +304,15 @@
                                         if (data.content.HomeID != null) {
                                             updateBtSavedConf(data.content.NetworkID, data.content.saved);
                                         };
+                                        if (data.content.status == "dead") {
+                                                new PNotify({
+                                                type: 'error',
+                                                title: data.content.value,
+                                                text: data.content.usermsg,
+                                                delay: 6000
+                                            });
+                                            $("#manager-init").text(data.content.NetworkID+': '+data.content.usermsg);
+                                        };
                                         <!-- debug infos -->
                                         $("#debug-ctrl").text(JSON.stringify(data.content));
                                     };
