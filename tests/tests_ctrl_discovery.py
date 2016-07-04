@@ -52,7 +52,6 @@ if __name__ == "__main__":
     plugin = Plugin(name = 'test',
                        daemonize = False,
                        parser = None,
-                       nohub = True,
                        test  = True)
 
     # set up the plugin name
