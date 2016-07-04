@@ -42,6 +42,11 @@ script:
   - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
+  - echo "********** ZWave-emulator log *******************"
+  - cat ~/py-zwave-emulator/bin/test.log
+  - echo "********** Openzwave lib log *******************"
+  - cat $TRAVIS_BUILD_DIR/data/OZW_Log.txt
+
 notifications:
   irc: "irc.freenode.net#domogik"
   on_success: never
