@@ -1,0 +1,7 @@
+{
+    "tests_ctrl_discovery" : {
+        "alter_configuration_or_setup" : true,
+        "need_hardware" : false,
+        "criticity" : "high"
+    }
+}
