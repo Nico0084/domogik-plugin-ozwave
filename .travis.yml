@@ -28,17 +28,13 @@ before_script:
   - cd ~
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
-  - ls -l py-zwave-emulator/bin/
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
-  - ls -l
-  - chmod +x install_dependencies.sh
-  - ls -l
   - sudo ./install_dependencies.sh -LAST
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - python zwemulator.py &
-  - ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
+  - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
