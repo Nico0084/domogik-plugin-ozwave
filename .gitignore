@@ -29,6 +29,7 @@ nosetests.xml
 .pydevproject
 
 # Openzwave files
+pyozw_version.py
 OZW_Log.txt
 zwscene.xml
 data/*
