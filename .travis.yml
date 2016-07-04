@@ -31,8 +31,10 @@ before_script:
   - ls -l py-zwave-emulator/bin/
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
+  - ls -l
   - chmod +x install_dependencies.sh
-  - sudo install_dependencies.sh -LAST
+  - ls -l
+  - sudo ./install_dependencies.sh -LAST
   - echo "==== Start zwave emulator"
   - python ~/py-zwave-emulator/bin/zwemulator.py &
   - ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
