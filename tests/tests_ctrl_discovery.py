@@ -86,9 +86,10 @@ if __name__ == "__main__":
 
     # create a test device
     devices = {}
+
     try:
         params = td.get_params(client_id, "ozwave.primary_controller")
-
+        print params
         for key, dev, in create_devices.iteritems():
             # fill in the params
             params["device_type"] = "ozwave.primary_controller"
@@ -104,6 +105,7 @@ if __name__ == "__main__":
             # xpl params
             pass # there are no xpl params for this plugin
             # create
+            print params
             device_id = td.create_device(params)['id']
             devices[key] = device_id
 
