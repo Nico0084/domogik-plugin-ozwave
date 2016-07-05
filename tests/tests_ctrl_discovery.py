@@ -109,29 +109,34 @@ if __name__ == "__main__":
 
     except:
         print(u"Error while creating the test devices : {0}".format(traceback.format_exc()))
+#        plugin.force_leave(return_code = 1)
+#        sys.exit(1)
+
+    try :
+        ### prepare and run the test suite
+        suite = unittest.TestSuite()
+        # check domogik is running, configure the plugin
+        suite.addTest(ZwaveCtrlTestCase("test_0001_domogik_is_running", plugin, name, cfg))
+        suite.addTest(ZwaveCtrlTestCase("test_0010_configure_the_plugin", plugin, name, cfg))
+
+        # start the plugin
+        suite.addTest(ZwaveCtrlTestCase("test_0050_start_the_plugin", plugin, name, cfg))
+
+        # do the specific plugin tests
+    #    suite.addTest(ZwaveCtrlTestCase("test_0100_ctrl_status", plugin, name, cfg))
+
+        # do some tests comon to all the plugins
+        #suite.addTest(ZwaveCtrlTestCase("test_9900_hbeat", plugin, name, cfg))
+        suite.addTest(ZwaveCtrlTestCase("test_9990_stop_the_plugin", plugin, name, cfg))
+
+        # quit
+        res = unittest.TextTestRunner().run(suite)
+        if res.wasSuccessful() == True:
+            rc = 0   # tests are ok so the shell return code is 0
+        else:
+            rc = 1   # tests are not ok so the shell return code is != 0
         plugin.force_leave(return_code = rc)
-        sys.exit(1)
 
-    ### prepare and run the test suite
-    suite = unittest.TestSuite()
-    # check domogik is running, configure the plugin
-    suite.addTest(CallerIdTestCase("test_0001_domogik_is_running", plugin, name, cfg))
-    suite.addTest(CallerIdTestCase("test_0010_configure_the_plugin", plugin, name, cfg))
-
-    # start the plugin
-    suite.addTest(CallerIdTestCase("test_0050_start_the_plugin", plugin, name, cfg))
-
-    # do the specific plugin tests
-    suite.addTest(CallerIdTestCase("test_0100_ctrl_status", plugin, name, cfg))
-
-    # do some tests comon to all the plugins
-    #suite.addTest(CallerIdTestCase("test_9900_hbeat", plugin, name, cfg))
-    suite.addTest(CallerIdTestCase("test_9990_stop_the_plugin", plugin, name, cfg))
-
-    # quit
-    res = unittest.TextTestRunner().run(suite)
-    if res.wasSuccessful() == True:
-        rc = 0   # tests are ok so the shell return code is 0
-    else:
-        rc = 1   # tests are ok so the shell return code is != 0
-    plugin.force_leave(return_code = rc)
+    except:
+        print(u"Error while running test : {0}".format(traceback.format_exc()))
+        plugin.force_leave(return_code = 1)
