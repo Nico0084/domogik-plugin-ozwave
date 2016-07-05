@@ -89,7 +89,6 @@ if __name__ == "__main__":
 
     try:
         params = td.get_params(client_id, "ozwave.primary_controller")
-        print params
         for key, dev, in create_devices.iteritems():
             # fill in the params
             params["device_type"] = "ozwave.primary_controller"
@@ -105,30 +104,29 @@ if __name__ == "__main__":
             # xpl params
             pass # there are no xpl params for this plugin
             # create
-            print params
             device_id = td.create_device(params)['id']
             devices[key] = device_id
 
     except:
         print(u"Error while creating the test devices : {0}".format(traceback.format_exc()))
+        plugin.force_leave(return_code = rc)
         sys.exit(1)
-
 
     ### prepare and run the test suite
     suite = unittest.TestSuite()
     # check domogik is running, configure the plugin
-    suite.addTest(CallerIdTestCase("test_0001_domogik_is_running", xpl_plugin, name, cfg))
-    suite.addTest(CallerIdTestCase("test_0010_configure_the_plugin", xpl_plugin, name, cfg))
+    suite.addTest(CallerIdTestCase("test_0001_domogik_is_running", plugin, name, cfg))
+    suite.addTest(CallerIdTestCase("test_0010_configure_the_plugin", plugin, name, cfg))
 
     # start the plugin
-    suite.addTest(CallerIdTestCase("test_0050_start_the_plugin", xpl_plugin, name, cfg))
+    suite.addTest(CallerIdTestCase("test_0050_start_the_plugin", plugin, name, cfg))
 
     # do the specific plugin tests
-    suite.addTest(CallerIdTestCase("test_0100_ctrl_status", xpl_plugin, name, cfg))
+    suite.addTest(CallerIdTestCase("test_0100_ctrl_status", plugin, name, cfg))
 
     # do some tests comon to all the plugins
-    #suite.addTest(CallerIdTestCase("test_9900_hbeat", xpl_plugin, name, cfg))
-    suite.addTest(CallerIdTestCase("test_9990_stop_the_plugin", xpl_plugin, name, cfg))
+    #suite.addTest(CallerIdTestCase("test_9900_hbeat", plugin, name, cfg))
+    suite.addTest(CallerIdTestCase("test_9990_stop_the_plugin", plugin, name, cfg))
 
     # quit
     res = unittest.TextTestRunner().run(suite)
@@ -136,4 +134,4 @@ if __name__ == "__main__":
         rc = 0   # tests are ok so the shell return code is 0
     else:
         rc = 1   # tests are ok so the shell return code is != 0
-    xpl_plugin.force_leave(return_code = rc)
+    plugin.force_leave(return_code = rc)
