@@ -135,8 +135,8 @@ if __name__ == "__main__":
 
         # do the specific plugin tests
         # test zwave ctrl start step
-        cfg = [{"status": "starting", "timeout": 60}, {"status": "alive", "timeout": 60}]
-        suite.addTest(ZwaveCtrlTestCase("test_0100_ctrl_status", plugin, name, cfg))
+        suite.addTest(ZwaveCtrlTestCase("test_0100_ctrl_status", plugin, name,  [{"status": "starting", "timeout": 60},
+                                                                                                                  {"status": "alive", "timeout": 60}]))
 
         # do some tests comon to all the plugins
         #suite.addTest(ZwaveCtrlTestCase("test_9900_hbeat", plugin, name, cfg))
