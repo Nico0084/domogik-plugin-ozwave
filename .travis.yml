@@ -33,7 +33,6 @@ before_script:
   - sudo ./install_dependencies.sh -LAST
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
-  - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
