@@ -41,7 +41,6 @@ script:
   - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
-  ozwave_start_error.log
   - echo "********** ozwave Plugin start error *******************"
   - cat var/log/domogik/ozwave_start_error.log
   - echo "********** ZWave-emulator log *******************"
