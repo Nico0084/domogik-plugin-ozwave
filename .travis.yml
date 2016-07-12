@@ -31,7 +31,7 @@ before_script:
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
-  - source sudo ./install_dependencies.sh -LAST
+  - sudo ./install_dependencies.sh -LAST
   - sudo pip freeze
   - ls -l /usr/local/lib/python2.7/dist-packages/
   - echo "==== Start zwave emulator"

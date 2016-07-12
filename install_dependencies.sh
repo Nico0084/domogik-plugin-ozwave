@@ -99,7 +99,7 @@ echo "Done"
 
 export TMP_DIR=/tmp
 
-if [[ "$1" = '-LAST' ]]
+if [[ ${$@["-LAST"]} != 0 ]]
 then
     title "Get last version of python-openzwave"
     wget -N https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/pyozw_version.py
@@ -111,9 +111,10 @@ then
         python_openzwave_version=$(python pyozw_version.py)
     fi
 
-elif [[ $1 = "-v" ]]
+elif [[${$@["-v"]} != 0 ]]
 then
-  if [[ $2 =~ ^[0-9]+\.[0-9]+ ]]
+  index=${$@["-v"]}
+  if [[ ${$index + 1} =~ ^[0-9]+\.[0-9]+ ]]
   then
     title "Get specific version of python-openzwave"
     python_openzwave_version=$2
