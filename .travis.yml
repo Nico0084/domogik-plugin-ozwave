@@ -13,6 +13,7 @@ mysql:
 env:
   DMG_BRANCH=testcase_non_xpl
   DMG_PLUGIN=ozwave
+  VIRTUALENV=/home/travis/virtualenv/python2.7.9
 install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
@@ -30,9 +31,9 @@ before_script:
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
-  - sudo ./install_dependencies.sh -LAST -env /home/travis/virtualenv/python2.7.9
-  - sudo pip freeze
-  - ls -l /usr/local/lib/python2.7/dist-packages/
+  - sudo ./install_dependencies.sh -LAST -env $VIRTUALENV
+  - sudo $VIRTUALENV/bin/pip freeze
+  - ls -l $VIRTUALENV/dist-packages/
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /home/travis/virtualenv/python2.7.9/bin/
@@ -45,6 +46,8 @@ script:
   - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
+  - echo "********** ozwave plugin_test.log *******************"
+  - cat /var/log/domogik/plugin_test.log
   - echo "********** ozwave Plugin start error *******************"
   - cat /var/log/domogik/ozwave_start_error.log
   - echo "********** ZWave-emulator log *******************"
