@@ -33,7 +33,9 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
   - sudo ./install_dependencies.sh -LAST -env $VIRTUALENV
   - sudo $VIRTUALENV/bin/pip freeze
-  - ls -l $VIRTUALENV/dist-packages/
+  - ls -l $VIRTUALENV/
+  - ls -l $VIRTUALENV/bin
+  - ls -l $VIRTUALENV/bin/dist-packages/
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /home/travis/virtualenv/python2.7.9/bin/
