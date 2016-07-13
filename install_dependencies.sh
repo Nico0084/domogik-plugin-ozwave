@@ -99,7 +99,7 @@ echo "Done"
 
 export TMP_DIR=/tmp
 python_openzwave_version=""
-export VIRTUALENV =""
+export VIRTUALENV=""
 
 while :
 do
@@ -209,7 +209,7 @@ echo "make build..."
 su $DOMOGIK_USER -c "make build"
 raise_error $?
 
-if [[ VIRTUALENV = "" ]]
+if [[ VIRTUALENV != "" ]]
     then
         echo "make install-lib in virual env ("$VIRTUALENV")"
         sudo make VIRTUAL_ENV=$VIRTUALENV install-lib
