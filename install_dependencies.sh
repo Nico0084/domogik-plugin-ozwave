@@ -212,7 +212,7 @@ raise_error $?
 if [[ VIRTUALENV != "" ]]
     then
         echo "make install-lib in virtual env ("$VIRTUALENV")"
-        sudo make VIRTUAL_ENV=$VIRTUALENV install-lib
+        sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
     else
         echo "make install-lib..."
         sudo make install-lib
