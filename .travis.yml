@@ -30,11 +30,12 @@ before_script:
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
-  - sudo ./install_dependencies.sh -LAST -env /home/travis/virtualenv/python2.7
+  - sudo ./install_dependencies.sh -LAST -env /home/travis/virtualenv/python2.7.9
   - sudo pip freeze
   - ls -l /usr/local/lib/python2.7/dist-packages/
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
+  - ls -l /home/travis/virtualenv/python2.7.9/bin/
   - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
