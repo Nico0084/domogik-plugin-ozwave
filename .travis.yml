@@ -35,7 +35,7 @@ before_script:
   - sudo $VIRTUALENV/bin/pip freeze
   - ls -l $VIRTUALENV/
   - ls -l $VIRTUALENV/lib/python2.7
-  - ls -l $VIRTUALENV/lib/python2.7/dist-packages/
+  - ls -l $VIRTUALENV/lib/python2.7/site-packages/
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /home/travis/virtualenv/python2.7.9/bin/
