@@ -98,36 +98,64 @@ echo "Done"
 #####################################################################
 
 export TMP_DIR=/tmp
+python_openzwave_version=""
+export VIRTUALENV =""
 
-if [[ ${$@["-LAST"]} != 0 ]]
-then
-    title "Get last version of python-openzwave"
-    wget -N https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/pyozw_version.py
-    if [[ $? != 0 ]]
-    then
-        echo ":( Can't get check version script."
-        exit 1
-    else
-        python_openzwave_version=$(python pyozw_version.py)
-    fi
-
-elif [[${$@["-v"]} != 0 ]]
-then
-  index=${$@["-v"]}
-  if [[ ${$index + 1} =~ ^[0-9]+\.[0-9]+ ]]
-  then
-    title "Get specific version of python-openzwave"
-    python_openzwave_version=$2
-  else
-    echo ":( Bad version number format : "$2" , use N.N.N"
-    exit 1
-  fi
-cd
-else
-    title "Get default version of python-openzwave"
-    python_openzwave_version="0.3.1"
-    echo "Default is : "$python_openzwave_version
-fi
+while :
+do
+    case "$1" in
+      -LAST)
+            title "Get last version of python-openzwave"
+            if [[ $python_openzwave_version = "" ]]
+                then
+                    wget -N https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/pyozw_version.py
+                    if [[ $? != 0 ]]
+                        then
+                            echo ":( Can't get check version script."
+                            exit 1
+                        else
+                            python_openzwave_version=$(python pyozw_version.py)
+                    fi
+                    shift
+                else
+                    echo ":( Option number mess : "$python_openzwave_version" , check your option script"
+                    exit 1
+            fi
+            ;;
+      -v)
+            title "Get specific version of python-openzwave"
+            if [[ $python_openzwave_version = "" ]]
+                then
+                    if [[ $2 =~ ^[0-9]+\.[0-9]+ ]]
+                        then
+                            python_openzwave_version=$2
+                            echo $python_openzwave_version
+                        else
+                            echo ":( Bad version number format : "$2" , use N.N.N"
+                            exit 1
+                    fi
+                    shift 2
+                else
+                    echo ":( Option number mess : "$python_openzwave_version" , check your option script"
+                    exit 1
+            fi
+            ;;
+      -env)
+            title "Install python-openzwave lib in virtualenv : "$2
+            export VIRTUALENV=$2
+            shift 2
+            ;;
+      *)  # No more options
+            if [[ $python_openzwave_version = "" ]]
+                then
+                    echo "****** Get default version *****"
+                    python_openzwave_version="0.3.1"
+                    echo "Default : "$python_openzwave_version
+            fi
+            break
+        ;;
+    esac
+done
 
 export PYOZW=python-openzwave-${python_openzwave_version}
 wget -N -P ${TMP_DIR}  https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/${PYOZW}.tgz
@@ -181,6 +209,12 @@ echo "make build..."
 su $DOMOGIK_USER -c "make build"
 raise_error $?
 
-echo "make install-lib..."
-sudo make install-lib
+if [[ VIRTUALENV = "" ]]
+    then
+        echo "make install-lib in virual env ("$VIRTUALENV")"
+        sudo make VIRTUAL_ENV=$VIRTUALENV install-lib
+    else
+        echo "make install-lib..."
+        sudo make install-lib
+fi
 raise_error $?
