@@ -211,7 +211,7 @@ raise_error $?
 
 if [[ VIRTUALENV != "" ]]
     then
-        echo "make install-lib in virual env ("$VIRTUALENV")"
+        echo "make install-lib in virtual env ("$VIRTUALENV")"
         sudo make VIRTUAL_ENV=$VIRTUALENV install-lib
     else
         echo "make install-lib..."
