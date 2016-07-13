@@ -33,12 +33,10 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
   - sudo ./install_dependencies.sh -LAST -env $VIRTUALENV
   - sudo $VIRTUALENV/bin/pip freeze
-  - ls -l $VIRTUALENV/
-  - ls -l $VIRTUALENV/lib/python2.7
   - ls -l $VIRTUALENV/lib/python2.7/site-packages/
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
-  - ls -l /home/travis/virtualenv/python2.7.9/bin/
+  - ls -l /var/lib/domogik//domogik_packages/
   - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
@@ -52,10 +50,12 @@ after_script:
   - cat /var/log/domogik/plugin_test.log
   - echo "********** ozwave Plugin start error *******************"
   - cat /var/log/domogik/ozwave_start_error.log
+  - locate ozwave_start_error.log
+  - locate plugin_ozwave.log
   - echo "********** ZWave-emulator log *******************"
   - cat ~/py-zwave-emulator/bin/test.log
   - echo "********** Openzwave lib log *******************"
-  - cat $TRAVIS_BUILD_DIR/data/OZW_Log.txt
+  - cat $PYTHONPATH/domogik_packages/plugin_ozwave/data/OZW_Log.txt
 
 notifications:
   irc: "irc.freenode.net#domogik"
