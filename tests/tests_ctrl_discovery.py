@@ -28,7 +28,10 @@ class ZwaveCtrlTestCase(PluginTestCase):
         global device_ctrl
 
         r = subprocess.check_output('ps aux | grep ozwave', shell=True)
-        print r
+        print (u"----- Process : {0}".format(r))
+
+        r = subprocess.check_output('ps aux', shell=True)
+        print (u"----- ALL Process : {0}".format(r))
 
         print(u"Device Controller = {0}".format(device_ctrl))
         print(u"Device id = {0}".format(device_ctrl['id']))
