@@ -43,6 +43,8 @@ class ZwaveCtrlTestCase(PluginTestCase):
 
 if __name__ == "__main__":
 
+    os.system("ps aux | grep ozwave")
+
     test_folder = os.path.dirname(os.path.realpath(__file__))
 
     ### global variables
