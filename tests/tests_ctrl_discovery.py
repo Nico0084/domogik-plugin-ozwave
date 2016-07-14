@@ -27,7 +27,7 @@ class ZwaveCtrlTestCase(PluginTestCase):
         """
         global device_ctrl
 
-        r = subprocess.check_output('ps aux | grep ozwave',shell=False)
+        r = subprocess.check_output('ps aux | grep ozwave', shell=True)
         print r
 
         print(u"Device Controller = {0}".format(device_ctrl))
@@ -47,7 +47,7 @@ class ZwaveCtrlTestCase(PluginTestCase):
 
 if __name__ == "__main__":
 
-    r = subprocess.check_output('ps aux | grep ozwave',shell=False)
+    r = subprocess.check_output('ps aux | grep ozwave', shell=True)
     print r
 
     test_folder = os.path.dirname(os.path.realpath(__file__))
