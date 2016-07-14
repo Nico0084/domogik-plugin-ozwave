@@ -26,6 +26,7 @@ class ZwaveCtrlTestCase(PluginTestCase):
         """
         global device_ctrl
 
+        os.system("ps aux | grep ozwave")
         print(u"Device Controller = {0}".format(device_ctrl))
         print(u"Device id = {0}".format(device_ctrl['id']))
         for step in self.configuration:
