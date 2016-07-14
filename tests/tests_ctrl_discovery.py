@@ -14,6 +14,7 @@ import unittest
 import sys
 import os
 import traceback
+import subprocess
 
 class ZwaveCtrlTestCase(PluginTestCase):
 
@@ -26,7 +27,9 @@ class ZwaveCtrlTestCase(PluginTestCase):
         """
         global device_ctrl
 
-        os.system("ps aux | grep ozwave")
+        r = subprocess.check_output('ps aux | grep ozwave',shell=False)
+        print r
+
         print(u"Device Controller = {0}".format(device_ctrl))
         print(u"Device id = {0}".format(device_ctrl['id']))
         for step in self.configuration:
@@ -44,7 +47,8 @@ class ZwaveCtrlTestCase(PluginTestCase):
 
 if __name__ == "__main__":
 
-    os.system("ps aux | grep ozwave")
+    r = subprocess.check_output('ps aux | grep ozwave',shell=False)
+    print r
 
     test_folder = os.path.dirname(os.path.realpath(__file__))
 
