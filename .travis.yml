@@ -34,7 +34,8 @@ before_script:
   - cd python-openzwave
   - ls -l
   - git checkout master
-  - sudo make deps
+  - sudo make repo-deps
+  - make update
   - make build
   - sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
   - sudo $VIRTUALENV/bin/pip freeze
