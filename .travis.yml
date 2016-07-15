@@ -38,8 +38,7 @@ before_script:
   - sudo $VIRTUALENV/bin/pip install Cython
   - sudo make repo-deps
   - make update
-  - make build
-  - sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
+  - make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
   - sudo $VIRTUALENV/bin/pip freeze
   - ls -l $VIRTUALENV/lib/python2.7/site-packages/
   - echo "==== Start zwave emulator"
