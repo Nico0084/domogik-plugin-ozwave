@@ -35,6 +35,7 @@ before_script:
   - ls -l
   - git checkout master
   - sudo make python-deps
+  - sudo $VIRTUALENV/bin/pip install Cython
   - sudo make cython-deps
   - sudo make repo-deps
   - make update
