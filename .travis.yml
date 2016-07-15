@@ -34,6 +34,7 @@ before_script:
   - cd python-openzwave
   - ls -l
   - git checkout master
+  - sudo make python-deps
   - sudo make cython-deps
   - sudo make repo-deps
   - make update
