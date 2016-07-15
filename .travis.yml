@@ -48,6 +48,7 @@ after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
   - echo "********** ozwave plugin_test.log *******************"
   - cat /var/log/domogik/plugin_test.log
+  - ls -l /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages/domogik/bin/
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
   - echo "********** ozwave Plugin start error *******************"
   - cat /var/log/domogik/ozwave_start_error.log
