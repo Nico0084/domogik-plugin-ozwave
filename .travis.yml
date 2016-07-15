@@ -29,9 +29,12 @@ before_script:
   - cd ~
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
-  - echo "==== Install Plugin dependency"
-  - cd $TRAVIS_BUILD_DIR
-  - sudo ./install_dependencies.sh -LAST -env $VIRTUALENV
+  - echo "==== Install Plugin dependency : python-openzwave lib"
+  - git clone https://github.com/OpenZWave/python-openzwave.git
+  - cd python-openzwave
+  - sudo make deps
+  - make build
+  - sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
   - sudo $VIRTUALENV/bin/pip freeze
   - ls -l $VIRTUALENV/lib/python2.7/site-packages/
   - echo "==== Start zwave emulator"
