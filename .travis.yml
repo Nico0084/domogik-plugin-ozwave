@@ -29,7 +29,7 @@ before_script:
   - cd ~
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
-  - echo "==== Install Plugin dependency : python-openzwave lib"
+  - echo "==== Install Plugin dependency python-openzwave lib"
   - git clone https://github.com/OpenZWave/python-openzwave.git
   - cd python-openzwave
   - sudo make deps
