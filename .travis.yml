@@ -32,6 +32,8 @@ before_script:
   - echo "==== Install Plugin dependency python-openzwave lib"
   - git clone https://github.com/OpenZWave/python-openzwave.git
   - cd python-openzwave
+  - ls -l
+  - git checkout master
   - sudo make deps
   - make build
   - sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
