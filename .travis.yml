@@ -21,6 +21,7 @@ install:
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
+  - ~/domogik/src/domogik/tests/travis/travis.install-mysql-5.7.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
 before_script:
   - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
