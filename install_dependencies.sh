@@ -209,7 +209,7 @@ echo "make build..."
 su $DOMOGIK_USER -c "make build"
 raise_error $?
 
-if [[ VIRTUALENV != "" ]]
+if [[ $VIRTUALENV != "" ]]
     then
         echo "make install-lib in virtual env ("$VIRTUALENV")"
         sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
