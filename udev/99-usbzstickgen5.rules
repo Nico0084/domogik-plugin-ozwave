@@ -1,4 +1,4 @@
 # model : AEON Z-Stick GEN5
-# description : Usb Zwave Stick R adaptator link to /dev/zwaveGen5
-DRIVERS=="usb", ATTRS{idVendor}=="0658", ATTRS{idProduct}=="0200", SYMLINK+="zwaveGen5", MODE="0666"
+# description : Usb Zwave Stick R adaptator link to /dev/zwave
+DRIVERS=="usb", ATTRS{idVendor}=="0658", ATTRS{idProduct}=="0200", SYMLINK+="zwave", MODE="0666"
 
