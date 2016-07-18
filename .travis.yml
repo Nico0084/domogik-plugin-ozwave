@@ -3,51 +3,35 @@
 # the templates are availables in the documentation on http://docs.domogik.org/domogik/dev/en/package_development/plugins/tests/travis_templates.html
 # sudo: false
 sudo: required
-dist: trusty
 language: python
 python:
   - "2.7"
-mysql:
-  adapter: mysql2
-  database: domogik
-  username: travis
-  encoding: utf8
+services:
+  - docker
 env:
   DMG_BRANCH=testcase_non_xpl
   DMG_PLUGIN=ozwave
   VIRTUALENV=/home/travis/virtualenv/python2.7.10
-install:
+before_install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
-  - git checkout $DMG_BRANCH
-  - ~/domogik/src/domogik/tests/travis/travis.install-mysql-5.7.sh
-  - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
+  - docker pull domogik/domogik:develop
+  - docker run -t -i -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+
 before_script:
-  - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
-  - ~/domogik/src/domogik/tests/travis/travis-install-domogik-mq.sh
-  - ~/domogik/src/domogik/tests/travis/travis-install-domogik.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
   - echo "==== Install zwave emulator dependency"
   - cd ~
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
-  - echo "==== Install Plugin dependency python-openzwave lib"
-  - git clone https://github.com/OpenZWave/python-openzwave.git
-  - cd python-openzwave
-  - ls -l
-  - git checkout master
-  - sudo make python-deps
-  - sudo $VIRTUALENV/bin/pip install Cython
-  - sudo make repo-deps
-  - make update
-  - make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
-  - sudo $VIRTUALENV/bin/pip freeze
-  - ls -l $VIRTUALENV/lib/python2.7/site-packages/
+  - echo "==== Install Plugin dependency"
+  - cd $TRAVIS_BUILD_DIR
+  - sudo ./install_dependencies.sh -LAST
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
-  - $VIRTUALENV/bin/python zwemulator.py &
+  - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
