@@ -125,6 +125,18 @@ Currently, your PC controller is known as **/dev/ttyUSBx** (by default). This is
 
 We will so create a new udev rule that will create a link called **/dev/zwave** that will point to **/dev/ttyUSBx**.
 
+.. |gen4| image:: controller_model_aeonlabs_gen4.jpg 
+
+.. |gen5| image:: controller_model_aeonlabs_gen5.jpg
+
++--------------------------------------------------+-------------------------------+
+|Zwave controller model                            |Udev rule file                 |
++--------------------------------------------------+-------------------------------+
+| Aeon Labs Gen4 Zwave   |gen4|                    |98-usbcp210x.rules             |
++--------------------------------------------------+-------------------------------+
+| Aeon Labs Gen5 Zwave+  |gen5|                    |99-usbzstickgen5.rules         |
++--------------------------------------------------+-------------------------------+
+
 To install a udev rule, copy the appropriate file in the udev rules folder on your system. Example ::
 
     $ sudo cp udev/98-usbcp210x.rules /etc/udev/rules.d/
