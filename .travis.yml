@@ -18,9 +18,10 @@ before_install:
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
-  - docker pull domogik/domogik:$DMG_BRANCH
-  - docker start -a domogik/domogik:$DMG_BRANCH
+  - docker pull domogik/domogik:develop
+  - docker start -a domogik/domogik:develop
   - docker ps
+  - docker
 
 before_script:
   - $DOCKERCMD ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
