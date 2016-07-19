@@ -34,7 +34,7 @@ before_script:
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - $DOCKERCMD python zwemulator.py &
-  - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
+  - $DOCKERCMD sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
