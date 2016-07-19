@@ -12,13 +12,13 @@ env:
   DMG_BRANCH=testcase_non_xpl
   DMG_PLUGIN=ozwave
   VIRTUALENV=/home/travis/virtualenv/python2.7.10
-  DOCKERCMD="docker exec -d domogik/domogik:develop"
+  DOCKERCMD="docker exec -d domogik_bash"
 before_install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - docker pull domogik/domogik:develop
-  - docker run -d -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - docker run --name domogik_bash -d -p 40404:40404 -p 40406:40406 domogik/domogik:develop
   - docker ps
 
 before_script:
