@@ -23,10 +23,10 @@ before_install:
   - docker ps
 
 before_script:
-  - $DOCKERCMD ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
+  - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
   - echo "==== Install zwave emulator dependency"
   - cd ~
-  - $DOCKERCMD sudo apt-get install socat
+  - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
