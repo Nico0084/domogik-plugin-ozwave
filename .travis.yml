@@ -18,8 +18,8 @@ before_install:
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
-  - docker pull domogik/domogik:develop
-  - docker start --attach --name domogik_bash -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - docker pull domogik/domogik:$DMG_BRANCH
+  - docker start -a domogik/domogik:$DMG_BRANCH
   - docker ps
 
 before_script:
