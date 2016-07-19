@@ -18,7 +18,7 @@ before_install:
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - docker pull domogik/domogik:develop
-  - docker run --name domogik_bash -d -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - docker run --name domogik_bash -d -t -p 40404:40404 -p 40406:40406 domogik/domogik:develop
   - docker ps
 
 before_script:
