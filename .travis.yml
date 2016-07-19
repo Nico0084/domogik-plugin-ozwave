@@ -12,32 +12,34 @@ env:
   DMG_BRANCH=testcase_non_xpl
   DMG_PLUGIN=ozwave
   VIRTUALENV=/home/travis/virtualenv/python2.7.10
+  DOCKERCMD="docker exec -d"
 before_install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - docker pull domogik/domogik:develop
-  - docker run -t -i -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - docker run -d -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - docker ps
 
 before_script:
-  - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
+  - $DOCKERCMD ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
   - echo "==== Install zwave emulator dependency"
   - cd ~
-  - sudo apt-get install socat
+  - $DOCKERCMD sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency"
   - cd $TRAVIS_BUILD_DIR
-  - sudo ./install_dependencies.sh -LAST
+  - $DOCKERCMD sudo ./install_dependencies.sh -LAST
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
-  - python zwemulator.py &
+  - $DOCKERCMD python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
   - export PYTHONPATH=/var/lib/domogik
-  - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
+  - $DOCKERCMD dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
   - echo "********** ozwave plugin_test.log *******************"
