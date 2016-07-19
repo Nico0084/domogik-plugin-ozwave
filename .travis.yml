@@ -19,7 +19,7 @@ before_install:
   - cd domogik
   - git checkout $DMG_BRANCH
   - docker pull domogik/domogik:develop
-  - docker run --name domogik_bash -d -t -p 40404:40404 -p 40406:40406 domogik/domogik:develop
+  - start --attach --name domogik_bash -p 40404:40404 -p 40406:40406 domogik/domogik:develop
   - docker ps
 
 before_script:
