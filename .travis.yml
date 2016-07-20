@@ -19,11 +19,11 @@ before_install:
   - cd domogik
   - git checkout $DMG_BRANCH
   - docker pull domogik/domogik:develop
-  - docker run --name domogik_bash -a stdout -a stdin -p 40404:40404 -p 40406:40406 domogik/domogik:develop bash
+  - docker run --name domogik_bash -a stdout -p 40404:40404 -p 40406:40406 domogik/domogik:develop
   - docker ps
 
 before_script:
-  - $DOCKERCMD ls -l
+  - docker run --name domogik_bash -a stdout domogik/domogik:develop /bin/sh -c "ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
