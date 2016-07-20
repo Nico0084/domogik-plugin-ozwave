@@ -27,6 +27,13 @@ before_script:
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
+  - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
+  - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
+  - docker create --name domogik_bash --volume /var/lib/domogik/domogik_packages plugin_$DMG_PLUGIN
+  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages"
+  - tar -c -C $TRAVIS_BUILD_DIR . | docker cp - domogik_bash:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
+  - docker run --rm --volumes-from domogik_bash plugin_$DMG_PLUGIN ls -al /var/lib/domogik/domogik_packages
+  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
   - echo "==== Install zwave emulator dependency"
   - $DOCKERCMD "cd ~; apt-get install socat"
   - $DOCKERCMD "git clone https://github.com/Nico0084/py-zwave-emulator.git"
@@ -34,12 +41,6 @@ before_script:
   - $DOCKERCMD "sudo ls -l $TRAVIS_BUILD_DIR; sudo ls -l; sudo install_dependencies.sh -LAST"
   - echo "==== Start zwave emulator"
   - $DOCKERCMD "cd ~/py-zwave-emulator/bin; python zwemulator.py &"
-  - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
-  - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
-  - $DOCKERCMD  "su - domogik -c 'mkdir /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN'"
-  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages"
-  - docker cp $TRAVIS_BUILD_DIR domogik_bash:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
-  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
   - docker ps
   - $DOCKERCMD "sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh"
   - cd ~
