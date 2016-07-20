@@ -13,6 +13,7 @@ env:
   DMG_PLUGIN=ozwave
   VIRTUALENV=/home/travis/virtualenv/python2.7.10
   DOCKERCMD="docker run -a stdout domogik/domogik:develop /bin/sh -c "
+  DMG_DIR="/opt/dmg"
 before_install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
@@ -27,7 +28,7 @@ before_script:
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
-  - $DOCKERCMD "~/domogik/src/domogik/tests/travis/travis-install-plugin.sh"
+  - $DOCKERCMD "$DMG_DIR/domogik/src/domogik/tests/travis/travis-install-plugin.sh"
   - echo "==== Install zwave emulator dependency"
   - cd ~
   - $DOCKERCMD "cd ~; apt-get install socat"
