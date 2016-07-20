@@ -31,7 +31,7 @@ before_script:
   - $DOCKERCMD "cd ~; apt-get install socat"
   - $DOCKERCMD "git clone https://github.com/Nico0084/py-zwave-emulator.git"
   - echo "==== Install Plugin dependency"
-  - $DOCKERCMD "sudo cd $TRAVIS_BUILD_DIR; sudo ls -l; sudo install_dependencies.sh -LAST"
+  - $DOCKERCMD "sudo ls -l $TRAVIS_BUILD_DIR; sudo ls -l; sudo install_dependencies.sh -LAST"
   - echo "==== Start zwave emulator"
   - $DOCKERCMD "cd ~/py-zwave-emulator/bin; python zwemulator.py &"
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
