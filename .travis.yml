@@ -31,7 +31,7 @@ before_script:
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
   - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis"
   - $DOCKERCMD "ln -s $TRAVIS_BUILD_DIR /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN"
-  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
+  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
   - echo "==== Install zwave emulator dependency"
   - cd ~
   - $DOCKERCMD "cd ~; apt-get install socat"
