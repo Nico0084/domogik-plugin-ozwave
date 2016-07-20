@@ -24,14 +24,14 @@ before_install:
   - docker ps
 
 before_script:
-  - docker run -a stdout domogik/domogik:develop /bin/sh -c "cd ~; ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
+  - docker run -a stdout -a stderr domogik/domogik:develop /bin/sh -c "cd ~; ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
   - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
   - $DOCKERCMD "su - domogik -c 'mkdir /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN';  ls -l /var/lib/domogik/domogik_packages"
-  - docker cp $TRAVIS_BUILD_DIR domogik/domogik:develop:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
+  - docker cp $TRAVIS_BUILD_DIR domogik_bash:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
   - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
   - echo "==== Install zwave emulator dependency"
   - cd ~
