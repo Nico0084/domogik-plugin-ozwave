@@ -3,52 +3,65 @@
 # the templates are availables in the documentation on http://docs.domogik.org/domogik/dev/en/package_development/plugins/tests/travis_templates.html
 # sudo: false
 sudo: required
+dist: trusty
 language: python
 python:
   - "2.7"
-services:
-  - docker
+mysql:
+  adapter: mysql2
+  database: domogik
+  username: travis
+  encoding: utf8
 env:
   DMG_BRANCH=testcase_non_xpl
   DMG_PLUGIN=ozwave
   VIRTUALENV=/home/travis/virtualenv/python2.7.10
-  DOCKERCMD="docker run -a stdout -a stderr domogik/domogik:develop /bin/sh -c "
-  DMG_DIR="/opt/dmg"
-before_install:
+install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
-  - docker pull domogik/domogik:develop
-  - docker run --name domogik_bash -a stdout -p 40404:40404 -p 40406:40406 domogik/domogik:develop
-  - docker ps
+  - ~/domogik/src/domogik/tests/travis/travis.install-mysql-5.7.sh
+  - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
 before_script:
-  - docker run -a stdout -a stderr domogik/domogik:develop /bin/sh -c "cd ~; ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
-  - who
-  - echo $TRAVIS_BUILD_DIR
-  - ls -l $TRAVIS_BUILD_DIR
-  - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
-  - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
-  - docker create --name domogik_bash --volume /var/lib/domogik/domogik_packages plugin_$DMG_PLUGIN
-  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages"
-  - tar -c -C $TRAVIS_BUILD_DIR . | docker cp - domogik_bash:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
-  - docker run --rm --volumes-from domogik_bash plugin_$DMG_PLUGIN ls -al /var/lib/domogik/domogik_packages
-  - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
-  - echo "==== Install zwave emulator dependency"
-  - $DOCKERCMD "cd ~; apt-get install socat"
-  - $DOCKERCMD "git clone https://github.com/Nico0084/py-zwave-emulator.git"
-  - echo "==== Install Plugin dependency"
-  - $DOCKERCMD "sudo ls -l $TRAVIS_BUILD_DIR; sudo ls -l; sudo install_dependencies.sh -LAST"
-  - echo "==== Start zwave emulator"
-  - $DOCKERCMD "cd ~/py-zwave-emulator/bin; python zwemulator.py &"
-  - docker ps
-  - $DOCKERCMD "sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh"
+  - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
+  - ~/domogik/src/domogik/tests/travis/travis-install-domogik-mq.sh
+  - ~/domogik/src/domogik/tests/travis/travis-install-domogik.sh
+  - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
   - cd ~
+  - echo "==== release of python"
+  - wget https://launchpad.net/ubuntu/+archive/primary/+files/python2.7_2.7.6-8.dsc https://launchpad.net/ubuntu/+archive/primary/+files/python2.7_2.7.6.orig.tar.gz https://launchpad.net/ubuntu/+archive/primary/+files/python2.7_2.7.6-8.diff.gz
+  - dpkg-source -x python2.7_2.7.6-8.dsc
+  - sudo apt-get build-dep python2.7
+  - cd python2.7-2.7.6
+  - dpkg-buildpackage
+  - cd ..
+  - sudo dpkg -i *.deb
+  - echo "==== Install zwave emulator dependency"
+  - sudo apt-get install socat
+  - git clone https://github.com/Nico0084/py-zwave-emulator.git
+  - echo "==== Install Plugin dependency python-openzwave lib"
+  - git clone https://github.com/OpenZWave/python-openzwave.git
+  - cd python-openzwave
+  - ls -l
+  - git checkout master
+  - sudo make python-deps
+  - sudo $VIRTUALENV/bin/pip install Cython
+  - sudo make repo-deps
+  - make update
+  - make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
+  - sudo $VIRTUALENV/bin/pip freeze
+  - ls -l $VIRTUALENV/lib/python2.7/site-packages/
+  - echo "==== Start zwave emulator"
+  - cd ~/py-zwave-emulator/bin
+  - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
+  - $VIRTUALENV/bin/python zwemulator.py &
+  - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
   - export PYTHONPATH=/var/lib/domogik
-  - $DOCKERCMD "dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/"
+  - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
   - echo "********** ozwave plugin_test.log *******************"
