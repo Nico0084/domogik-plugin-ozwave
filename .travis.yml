@@ -29,7 +29,7 @@ before_script:
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
-  - $DOCKERCMD "locate domogik_packages"
+  - $DOCKERCMD "sudo su domogik"
   - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l  domogik/src/domogik/tests/travis; domogik/src/domogik/tests/travis/travis-install-plugin.sh"
   - echo "==== Install zwave emulator dependency"
   - cd ~
