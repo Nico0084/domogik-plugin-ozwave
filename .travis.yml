@@ -28,7 +28,7 @@ before_script:
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
-  - $DOCKERCMD "$DMG_DIR/domogik/src/domogik/tests/travis/travis-install-plugin.sh"
+  - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l  domogik/src/domogik/tests/travis; domogik/src/domogik/tests/travis/travis-install-plugin.sh"
   - echo "==== Install zwave emulator dependency"
   - cd ~
   - $DOCKERCMD "cd ~; apt-get install socat"
