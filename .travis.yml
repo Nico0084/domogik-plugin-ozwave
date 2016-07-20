@@ -22,7 +22,6 @@ before_install:
   - docker pull domogik/domogik:develop
   - docker run --name domogik_bash -a stdout -p 40404:40404 -p 40406:40406 domogik/domogik:develop
   - docker ps
-
 before_script:
   - docker run -a stdout -a stderr domogik/domogik:develop /bin/sh -c "cd ~; ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
   - who
@@ -35,7 +34,6 @@ before_script:
   - $DOCKERCMD "cd $TRAVIS_BUILD_DIR; sudo ./install_dependencies.sh -LAST"
   - echo "==== Start zwave emulator"
   - $DOCKERCMD "cd ~/py-zwave-emulator/bin; python zwemulator.py &"
-
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
   - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
   - $DOCKERCMD  "su - domogik -c 'mkdir /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN'"
@@ -44,7 +42,7 @@ before_script:
   - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
   - docker ps
   - $DOCKERCMD "sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh"
- - cd ~
+  - cd ~
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
