@@ -23,12 +23,11 @@ before_install:
   - docker ps
 
 before_script:
-  - docker run -a stdout domogik/domogik:develop /bin/sh -c "ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
+  - docker run -a stdout domogik/domogik:develop /bin/sh -c "cd ~; ls -l; who; echo $TRAVIS_BUILD_DIR; ls -l $TRAVIS_BUILD_DIR; ls -l /opt/dmg"
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
-  - $DOCKERCMD "ls -l /opt/dmg"
-  - $DOCKERCMD ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
+  - $DOCKERCMD "~/domogik/src/domogik/tests/travis/travis-install-plugin.sh"
   - echo "==== Install zwave emulator dependency"
   - cd ~
   - $DOCKERCMD "cd ~; apt-get install socat"
@@ -38,12 +37,12 @@ before_script:
   - echo "==== Start zwave emulator"
   - $DOCKERCMD "cd ~/py-zwave-emulator/bin; python zwemulator.py &"
   - docker ps
-  - $DOCKERCMD sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
+  - $DOCKERCMD "sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh"
 script:
   - echo $TRAVIS_BUILD_DIR
   - cd $TRAVIS_BUILD_DIR
   - export PYTHONPATH=/var/lib/domogik
-  - $DOCKERCMD dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
+  - $DOCKERCMD "dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/"
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
   - echo "********** ozwave plugin_test.log *******************"
