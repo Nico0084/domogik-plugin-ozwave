@@ -28,9 +28,11 @@ before_script:
   - who
   - echo $TRAVIS_BUILD_DIR
   - ls -l $TRAVIS_BUILD_DIR
+  - ls -l /var/lib/domogik/domogik_packages
   - $DOCKERCMD "ls -l /var; ls -l /var/lib/; ls -l /var/lib/domogik; ls -l /var/lib/domogik/domogik_packages"
   - $DOCKERCMD "cd $DMG_DIR; ls -l; ls -l domogik/src/domogik/tests/travis;"
-  - docker run -a stdout -a stderr --volume /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN domogik/domogik:develop
+  - $DOCKERCMD  "su - domogik -c 'mkdir /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN'"
+  - ls -l /var/lib/domogik/domogik_packages
   - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages"
   - docker cp $TRAVIS_BUILD_DIR domogik_bash:/var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
   - $DOCKERCMD "ls -l /var/lib/domogik/domogik_packages; ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/"
