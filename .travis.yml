@@ -16,7 +16,7 @@ python:
 mysql:
   adapter: mysql2
   database: domogik
-  username: root
+  username: travis
   encoding: utf8
 env:
   DMG_BRANCH=testcase_non_xpl
