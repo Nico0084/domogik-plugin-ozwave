@@ -4,6 +4,12 @@
 # sudo: false
 sudo: required
 dist: trusty
+addons:
+  apt:
+    packages:
+    - mysql-server-5.6
+    - mysql-client-core-5.6
+    - mysql-client-5.6
 language: python
 python:
   - "2.7"
@@ -21,7 +27,6 @@ install:
   - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
-  - ~/domogik/src/domogik/tests/travis/travis.install-mysql-5.7.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
 before_script:
   - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
