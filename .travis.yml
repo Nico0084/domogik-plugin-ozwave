@@ -16,7 +16,7 @@ python:
 mysql:
   adapter: mysql2
   database: domogik
-  username: travis
+  username: root
   encoding: utf8
 env:
   DMG_BRANCH=testcase_non_xpl
@@ -29,7 +29,7 @@ install:
   - git checkout $DMG_BRANCH
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
 before_script:
-  - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
+  - ~/domogik/src/domogik/tests/travis/travis_trusty-setup-database.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-domogik-mq.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-domogik.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
