@@ -436,6 +436,16 @@ class ZWaveValueNode:
                 for param in dmgDevice['commands'][cmd] :
                     if param['key'].lower() == labelDomogik :
                         # handle praticular labels
+                            # type button to one dmg device
+                        if labelDomogik == "bright-dim" :
+                            if dmgDevice['commands'][cmd]['data_type'] == "DT_Bool":
+                                cmds[cmd] = dmgDevice['commands'][cmd]
+                        elif labelDomogik == "up-down" :
+                            if dmgDevice['commands'][cmd]['data_type'] == "DT_UpDown":
+                                cmds[cmd] = dmgDevice['commands'][cmd]
+                        elif labelDomogik == "inc-dec" :
+                            if dmgDevice['commands'][cmd]['data_type'] == "DT_Step":
+                                cmds[cmd] = dmgDevice['commands'][cmd]
                         # generic labels
                         cmds[cmd] = dmgDevice['commands'][cmd]
                 if cmds :

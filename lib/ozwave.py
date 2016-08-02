@@ -143,9 +143,10 @@ class OZWavemanager():
         self._ozwLog = ozwlog
         opts = "--logging true" if self._ozwLog else "--logging false"
         self._log.info(u"Try to run openzwave manager")
-        self.options = libopenzwave.PyOptions(config_path =str(self._configPath), user_path=str(self._userPath))
+        self.options = libopenzwave.PyOptions(config_path=str(self._configPath), user_path=str(self._userPath))
         self.options.create(self._configPath, self._userPath, opts)
-        if self._completMsg: self.options.addOptionBool('NotifyTransactions',  self._completMsg)
+        self.options.addOptionBool('Logging', self._ozwLog)
+        if self._completMsg: self.options.addOptionBool('NotifyTransactions', self._completMsg)
         self.options.lock() # Needed to lock openzwave options et autorize PyManager dtarting
         self._plugin.publishMsg('ozwave.lib.state', self.getOpenzwaveInfo())
         self._configPath = self.options.getOption('ConfigPath')  # Get real path through openzwave lib

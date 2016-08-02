@@ -19,6 +19,18 @@
         "Motion Sensor",
         "Door/Window Sensor",
         "Tamper Sensor"
+    ],
+    "bright-dim" : [
+        "bright",
+        "dim"
+    ],
+    "up-down" : [
+        "up",
+        "down"
+    ],
+    "inc-dec" : [
+        "inc",
+        "dec"
     ]
 }
 

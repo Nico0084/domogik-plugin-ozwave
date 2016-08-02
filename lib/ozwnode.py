@@ -1310,13 +1310,16 @@ class ZWaveNode:
                             retval = self.values[value].setValue(int(newValue))
                             newVal = int(newValue)
                             break
-                elif command in ['inc', 'dec', 'bright','dim']:
+                elif command in ['bright-dim', 'up-down', 'inc-dec']:
                     cmdsClass = ['COMMAND_CLASS_BASIC', 'COMMAND_CLASS_SWITCH_BINARY','COMMAND_CLASS_SWITCH_MULTILEVEL']
+                    print dataType
+                    cmd = dataType['labels'][str(newValue)].lower()
+                    print cmd
                     for value in self.values.keys() :
                         val = self.values[value].valueData
                         if (val['commandClass'] in cmdsClass) and val['instance'] == device['instance'] and \
-                                            self.checkAvailableLabel(self.values[value].labelDomogik, command) :
-                            self.log.debug(u"Value find as type button {0}: {1}".format(command, val))
+                                            self.checkAvailableLabel(self.values[value].labelDomogik, cmd) and self.values[value].labelDomogik == cmd :
+                            self.log.debug(u"Value find as type button {0} ({1} action): {1}".format(command, cmd, val))
                             retval = self.values[value].setValue(True)
                             newVal = True
                             break

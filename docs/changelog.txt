@@ -2,6 +2,19 @@
 Change log
 ==========
 
+0.5.2 : (03-08-2016)
+--------------------
+
+- Change log :
+    - Json Change :
+        - Remove **Humidity** sensor, use only **Relative humidity**
+		- Create general conversion **for_Binary_Inversion** and sensors binary inversion
+		- Modify binary **Bright/Dim Increase/Decrease Up/down** button as a single command
+		- Modify device_types associate
+		- Add details configuration values openzwave options help
+	- Handle **Bright/Dim Increase/Decrease Up/down** button 
+	- Update doc
+
 0.5.1 : (27-06-2016)
 --------------------
 * Compatibily library : OpenZwave >= 1.4.248, python_openzwave >= 0.3.0 (final)

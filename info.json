@@ -29,7 +29,7 @@
             "name" : "ZME_KFOB 4 Button Key Fob",
             "id" : "ZME_KFOB",
             "documentation" : "http://www.z-wave.me/index.php?id=31",
-            "type": "ozwave.battery-level_level__bright_dim"
+            "type": "ozwave.battery-level_level__bright-dim"
         }, {
             "name" : "Home Energy Meter 3 phases",
             "id" : "HEM_3p",
@@ -44,7 +44,7 @@
             "name" : "HSM100 Wireless Multi-Sensor",
             "id" : "HSM100",
             "documentation" : "http://www.homeseer.com/company/releases/07-07-HSM100.htm",
-            "type": "ozwave.battery-level_humidity_temperature-c"
+            "type": "ozwave.battery-level_relative-humidity_temperature-c"
         }, {
             "name" : "AN158 Plug-in Meter Appliance Module",
             "id" : "AN158",
@@ -59,7 +59,7 @@
             "name" : "ST814 Temperature and Humidity Sensor",
             "id" : "ST814",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/ST814.aspx",
-            "type": "ozwave.battery-level_humidity_relative-humidity_temperature-c"
+            "type": "ozwave.battery-level_relative-humidity_temperature-c"
         }, {
             "name" : "SF812 Smoke Alarm",
             "id" : "SF812",
@@ -114,14 +114,14 @@
         },{
             "key" : "cpltmsg",
             "name" : "Send complet message",
-            "description" : "Message complet confirmation send as notification (see doc to use it at True). [default : false]",
+            "description" : "Message complet confirmation send as notification (see doc to use it at True). [default : False]. In any case, if exist, the value of openzwave option.xml file is the last considered.",
             "default" : false,
             "required": true,
             "type" : "boolean"
         },{
             "key" : "ozwlog",
             "name": "Enable openzwave log",
-            "description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : false]",
+            "description" : "Active openzwave log (see file OZW_Log.txt in User path). WARNING file not in rotate mode, file should beging ernormous ! [default : False]. In any case, if exist, the value of openzwave option.xml file is the last considered.",
             "default" : false,
             "required": true,
             "type" : "boolean"
@@ -256,20 +256,6 @@
                     "round_value": 0
             }
         },
-        "humidity" : {
-            "name" : "Humidity",
-            "incremental": false,
-            "data_type" : "DT_Humidity",
-            "conversion" : "",
-            "timeout": 0,
-            "history": {
-                    "store": true,
-                    "duplicate": false,
-                    "max": 0,
-                    "expire": 0,
-                    "round_value": 0
-            }
-        },
         "relative-humidity" : {
             "name" : "Relative humidity",
             "incremental": false,
@@ -316,7 +302,21 @@
             "name" : "Sensor",
             "incremental": false,
             "data_type" : "DT_OpenClose",
-            "conversion" : "from_Opening_Sensor_to_DT_OpenClose",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "opening-sensor-inv" : {
+            "name" : "Sensor",
+            "incremental": false,
+            "data_type" : "DT_OpenClose",
+            "conversion" : "for_Binary_Inversion",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -340,6 +340,20 @@
                     "round_value": 0
             }
         },
+        "door-window-sensor-inv" : {
+            "name" : "Door/Window Sensor",
+            "incremental": false,
+            "data_type" : "DT_OpenClose",
+            "conversion" : "for_Binary_Inversion",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "binary-sensor" : {
             "name" : "Sensor",
             "incremental": false,
@@ -354,11 +368,39 @@
                     "round_value": 0
             }
         },
+        "binary-sensor-inv" : {
+            "name" : "Sensor",
+            "incremental": false,
+            "data_type" : "DT_Bool",
+            "conversion" : "for_Binary_Inversion",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
         "motion-sensor-binary" : {
             "name" : "Motion Sensor",
             "incremental": false,
             "data_type" : "DT_Binary",
             "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "motion-sensor-binary-inv" : {
+            "name" : "Motion Sensor",
+            "incremental": false,
+            "data_type" : "DT_Binary",
+            "conversion" : "for_Binary_Inversion",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -778,7 +820,7 @@
             "name" : "Switch",
             "incremental": false,
             "data_type" : "DT_Switch",
-            "conversion" : "from_switch_to_DT_Switch",
+            "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -908,42 +950,42 @@
                 }
             ]
         },
-        "increase" : {
-            "name" : "Increase button",
+        "increase-decrease" : {
+            "name" : "Increase/Decrease button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "Inc",
+                    "key" : "Inc-Dec",
+                    "data_type" : "DT_Step",
+                    "conversion" : ""
+                }
+            ]
+        },
+        "bright-dim" : {
+            "name" : "Bright/Dim button",
+            "return_confirmation" : false,
+            "parameters" : [{
+                    "key" : "Bright-Dim",
                     "data_type" : "DT_Bool",
                     "conversion" : ""
                 }
             ]
         },
-        "decrease" : {
-            "name" : "Decrease button",
+        "up-down" : {
+            "name" : "Up/Down button",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "Dec",
-                    "data_type" : "DT_Bool",
+                    "key" : "Up-Down",
+                    "data_type" : "DT_UpDown",
                     "conversion" : ""
                 }
             ]
         },
-        "bright" : {
-            "name" : "Bright button",
+        "level" : {
+            "name" : "Level Control",
             "return_confirmation" : false,
             "parameters" : [{
-                    "key" : "Bright",
-                    "data_type" : "DT_Bool",
-                    "conversion" : ""
-                }
-            ]
-        },
-        "dim" : {
-            "name" : "Dim button",
-            "return_confirmation" : false,
-            "parameters" : [{
-                    "key" : "Dim",
-                    "data_type" : "DT_Bool",
+                    "key" : "Level",
+                    "data_type" : "DT_Scaling",
                     "conversion" : ""
                 }
             ]
@@ -1343,12 +1385,12 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.battery-level_humidity_temperature-c" :{
+        "ozwave.battery-level_relative-humidity_temperature-c" :{
             "description" : "Temperature sensor with humidity (battery)",
-            "id": "ozwave.battery-level_humidity_temperature-c",
+            "id": "ozwave.battery-level_relative-humidity_temperature-c",
             "name" : "Sensor Temperature/Humidity (battery)",
             "commands": [],
-            "sensors": ["temperature-c", "humidity", "battery-level"],
+            "sensors": ["temperature-c", "relative-humidity", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
@@ -1375,12 +1417,12 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.humidity_temperature-c" :{
+        "ozwave.relative-humidity_temperature-c" :{
             "description" : "Temperature sensor with humidity",
-            "id": "ozwave.humidity_temperature-c",
+            "id": "ozwave.relative-humidity_temperature-c",
             "name" : "Sensor Temperature/Humidity",
             "commands": [],
-            "sensors": ["temperature-c", "humidity"],
+            "sensors": ["temperature-c", "relative-humidity"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
@@ -1402,12 +1444,12 @@
                 "min_value": 1
             }]
         },
-        "ozwave.battery-level_humidity_relative-humidity_temperature-c" :{
+        "ozwave.battery-level_relative-humidity_temperature-f" :{
             "description" : "Temperature sensor with humidity and relative humidity (battery)",
-            "id": "ozwave.battery-level_humidity_relative-humidity_temperature-c",
-            "name" : "Sensor Temperature/humidity/relative (battery)",
+            "id": "ozwave.battery-level_relative-humidity_temperature-f",
+            "name" : "Sensor Temperature (F)/humidity/relative (battery)",
             "commands": [],
-            "sensors": ["temperature-c", "humidity", "relative-humidity", "battery-level"],
+            "sensors": ["temperature-f", "relative-humidity", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
@@ -1437,9 +1479,9 @@
         "ozwave.humidity_relative-humidity_temperature-c" :{
             "description" : "Temperature sensor with humidity and relative humidity",
             "id": "ozwave.humidity_relative-humidity_temperature-c",
-            "name" : "Sensor Temperature/humidity/relative",
+            "name" : "Sensor Temperature/humidity",
             "commands": [],
-            "sensors": ["temperature-c", "humidity", "relative-humidity"],
+            "sensors": ["temperature-c", "relative-humidity", "relative-humidity"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
@@ -1461,11 +1503,11 @@
                 "min_value": 1
             }]
         },
-        "ozwave.battery-level_level__bright_dim" :{
+        "ozwave.battery-level_level__bright-dim" :{
             "description" : "Dimmer button (battery)",
-            "id": "ozwave.battery-level_level__bright_dim",
+            "id": "ozwave.battery-level_level__bright-dim",
             "name" : "Dimmer buttons (battery)",
-            "commands": ["bright", "dim"],
+            "commands": ["bright-dim"],
             "sensors": ["level", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
@@ -1493,11 +1535,11 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.level__bright_dim" :{
+        "ozwave.level__bright-dim" :{
             "description" : "Dimmer button",
-            "id": "ozwave.level__bright_dim",
+            "id": "ozwave.level__bright-dim",
             "name" : "Dimmer button",
-            "commands": ["bright", "dim"],
+            "commands": ["bright-dim"],
             "sensors": ["level"],
             "parameters" : [{
                 "key" : "networkid",
@@ -1834,6 +1876,33 @@
                 "description" : "Check battery level at zwave device wakeup.",
                 "type" : "boolean"
             }]
+        },
+        "ozwave.energy-k_energy-previous-reading-k_level_power_switch__level_up-down_switch":{
+            "description": "Dimmer level with switch and power measure like flush shutter.",
+            "id": "ozwave.energy-k_energy-previous-reading-k_level_power_switch__level_up-down_switch",
+            "name": "Flush shutter, Switch Dimmer",
+            "commands": ["up-down", "switch","level"],
+            "sensors": ["energy-k", "energy-previous-reading-k", "level", "power", "switch"],
+            "parameters": [{
+                  "type": "string",
+                  "description": "Zwave network name if refered in controller node or Openzwave Home ID",
+                  "key": "networkid",
+                  "xpl": false
+            },{
+                "description": "Zwave node id",
+                "xpl": false,
+                "max_value": 255,
+                "min_value": 1,
+                "key": "node",
+                "type": "integer"
+            },{
+                "description": "Zwave node instance id",
+                "xpl": false,
+                "max_value": 255,
+                "min_value": 1,
+                "key": "instance",
+                "type": "integer"
+            }]
         }
     },
     "identity" : {
@@ -1853,7 +1922,7 @@
         "domogik_min_version" : "0.5.0",
         "name": "ozwave",
         "type" : "plugin",
-        "version" : "0.5.1"
+        "version" : "0.5.2"
     },
     "json_version" : 2
     }

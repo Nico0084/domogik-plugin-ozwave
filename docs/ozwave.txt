@@ -105,7 +105,8 @@ The following devices are supported :
 * Aeon Labs
 
   * HEM - Home Energy Metter
-  * DSB05 - Motion Multi Sensor,
+  * DSB05 - Motion Multi Sensor
+  * ZW089 - Recessed Door Sensor Gen5
 
 * Express Controls
 
@@ -114,6 +115,10 @@ The following devices are supported :
 * Danfoss
 
   * Living connect (thermost heating)
+  
+* Qubino
+
+  * ZMNHCDx - Flush Shutter
 
 
 Create the udev rule for the Zwave controller
@@ -172,25 +177,23 @@ configpath        string   If **autoconfpath** is not checked, set up the Openzw
 
                            In this folder you will find all the Openzwave xml files.
 
-cpltmsg           boolean  Notifications  is reported.
+cpltmsg           boolean  Notifications when transaction complete is reported.
 
-                           .. warning ::
-
-                                A bug can happen with the openzwave library, if so, set this option false or modify file
-                                openzwavecpp/src/Manager.cpp at line 320, in Driver* Manager::GetDriver
-                                function, comment assert(0) function : // assert(0);
-
-                                You must compile and reinstall python-openzwave.
-
-                                This modification is not recommended if you don't control svn repposit,
-
-                                the next update of openzwave revision could require manual intervention.
+						   .. note::
+						   
+						       In any case the value of openzwave option.xml file is the last considered.
+							   If **NotifyTransactions** is enable in your option.xml comment it to get control by plugin.
 
 ozwlog            boolean  If checked, activate the Openzwave logger.
 
                            Please do this only for debug purpose as the logs are very verbose!
 
-                           The file is located in the **date** folder of the plugin and named **OZW_Log.txt**.
+                           The file is located in the **data** folder of the plugin and named **OZW_Log.txt**.
+						   .. note::
+						   
+						       In any case, if exist, the value of option.xml file is the last considered.
+							   If **Logging** is enable in your option.xml comment it to get control by plugin.
+						   
 ================= ======== =======================================================================================
 
 Now, you will need to create a device for your Zwave controller...
