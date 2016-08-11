@@ -478,6 +478,55 @@ function renderNodeName(nodeData) {
     };
 };
 
+function renderDmgDevice(device) {
+    return buildHtmlDevice(device,"");
+};
+function buildHtmlDevice(theObj) {
+    var value ="";
+    if (theObj.constructor == Object) {
+        for (var p in theObj) {
+            if (theObj[p] !== null && theObj[p].constructor == Object) {
+                value += "<li><b>" + p + " :</b></li>";
+                value += "<ul>" + buildHtmlDevice(theObj[p], value) + "</ul>";
+            } else if (theObj[p] !== null && theObj[p].constructor == Array) {
+                if (theObj[p].length !== 0) {
+                    value += "<li><b>" + p + " :</b></li>";
+                    value += "<ul>"+buildHtmlDevice(theObj[p],value)+"</ul>";
+                } else {
+                    value += "<li><b>" + p + " :</b> []</li>";
+                };
+            } else {
+                var val = theObj[p];
+                if (typeof val === 'string') {
+                    val = theObj[p].replace("'","&#39")
+                };
+                value += "<li><b>" + p + "</b> : " + val +"</li>";
+            };
+        };
+    } else if (theObj.constructor == Array){
+        for (var p in theObj) {
+            if (theObj[p] !== null && theObj[p].constructor == Object) {
+                value += "{" + buildHtmlDevice(theObj[p], value) + "}"
+                if (theObj.indexOf(theObj[p]) +1 !== theObj.length) {value +=","};
+            } else if (theObj[p] !== null && theObj[p].constructor == Array) {
+                if (theObj[p].length !== 0) {
+                    value += "<li><b>" + p + " :</b></li>";
+                    value += "<ul>"+buildHtmlDevice(theObj[p],value)+"</ul>";
+                } else {
+                    value += "<li><b>" + p + " :</b> []</li>";
+                };
+            } else {
+                var val = theObj[p];
+                if (typeof val === 'string') {
+                    val = theObj[p].replace("'","&#39")
+                };
+                value += "<li>" +val +"</li>";
+            };
+        };
+    };
+  return value;
+};
+
 function renderBadgeCount(id, count) {
     if (count > 0) {
         $("#"+id).removeClass("hidden");
@@ -727,7 +776,7 @@ function renderNodeStatusCol(data, type, full, meta) {
                                             '</a>'+
                                         '</div>'+
                                         '<div class="panel-body" id="dmgDev_'+refDmg+'" style="width: 95%; display: none;" hidden>'+
-                                            '<pre>' +JSON.stringify(nodeData.DmgDevices[nD], null, 2)+'</pre>'+
+                                            '<div>' +renderDmgDevice(nodeData.DmgDevices[nD])+'</div>'+
                                         '</div>'+
                                       '</div>';
         };
