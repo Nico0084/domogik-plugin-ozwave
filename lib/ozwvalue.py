@@ -308,6 +308,7 @@ class ZWaveValueNode:
 
     def _checkUptoDate(self):
         """Check if value is up to date with real openzwave and readed directly from ozw node."""
+        if self._valueData['writeOnly'] : return True
         if self._realValue is not None and self._realValue == self._valueData['value'] : return True
         else : return False
 

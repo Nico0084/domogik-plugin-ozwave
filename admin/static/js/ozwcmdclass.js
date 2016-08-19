@@ -352,7 +352,6 @@ function buildValuesTab (data) {
                         });
                     });
                 });
-
             },
         "sPaginationType": "full_numbers",
         data: RowN
@@ -431,17 +430,20 @@ function renderCmdClssValue(data, type, full, meta) {
         var modify = "";
         if (valueData.realvalue == undefined) {
                 if (valueData.writeOnly) {
-                    var stText = "Write only, can't recover real value"
+                    modify = '<span class="input-addon-xs label-info"><i id="stic'+ valueRef +
+                        '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+
+                        "Write only, can't recover real value</i>"+
+                        '</span>';
                 } else {
-                    var stText = "Not recovered"
                     valueData.realvalue = valueData.value;
+                    modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
+                        '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+
+                        'Not recovered</i>'+
+                        '<span id="reqValRefresh'+ valueRef + '"class="btn btn-xs btn-info pull-right" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Request refresh value">'+
+                            '<span class="glyphicon glyphicon-refresh"></span>'+
+                        '</span>'+
+                        '</span>';
                 };
-                modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
-                    '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+stText+'</i>'+
-                    '<span id="reqValRefresh'+ valueRef + '"class="btn btn-xs btn-info pull-right" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Request refresh value">'+
-                        '<span class="glyphicon glyphicon-refresh"></span>'+
-                    '</span>'+
-                    '</span>';
         } else if (valueData.realvalue != valueData.value) {
             modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
                 '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value change but not confirmed by node."> old : ' + valueData.realvalue + '</i></span>';
