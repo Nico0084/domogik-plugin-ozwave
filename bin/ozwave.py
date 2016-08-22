@@ -80,7 +80,7 @@ class OZwave(Plugin):
             self.get_stop().wait(2)
             try:
                 self.log.debug('try second attempt after 2s.{0}'.format(sys.exc_info()))
-                self.myzwave = OZWavemanager(self, self.send_sensor, self.get_stop(), self.log, configPath = pathConfig,  userPath = pathUser,  ozwlog = ozwlogConf)
+                self.myzwave = OZWavemanager(self, self.send_sensor, self.get_stop(), self.log, configPath = pathConfig, userPath = pathUser, ozwlog = ozwlogConf)
                 print 'OZWmanager demarré :-)'
             except Exception as e2:
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))

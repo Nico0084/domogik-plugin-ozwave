@@ -536,6 +536,7 @@ class ZWaveNode:
             if not value.isUpToDate :
                 self._isConfigured = False
                 self.log.debug(u"{0} value not up to date ({1}): {2}".format(self.refName, value._realValue, value))
+                self._requestConfig = True # Flag set to False to lock update all config value at once."
                 return False
         self._isConfigured = True
         self._requestConfig = False # Flag set to False to lock update all config value at once."
@@ -603,10 +604,11 @@ class ZWaveNode:
             self.log.debug(u"Requesting config params values for node {0}".format(self.refName))
             self._manager.requestAllConfigParams(self._homeId, self._nodeId)
             report = {'error' : u"", 'usermsg' : u"Requesting all config params values for node {0}".format(self.refName)}
+            self._requestConfig = False # Flag set to False to unlock update all config value at once."
         else :
             report = {'error' : u"Node {0} is sleeping can't request config params value.".format(self.refName)}
             self.log.debug(u"Node {0} is sleeping can't request config params value.".format(self.refName))
-        self._requestConfig = True # Flag set to False to unlock update all config value at once."
+            self._requestConfig = True # Flag set to False to unlock update all config value at once."
         return report
 
     def updateNode(self):
