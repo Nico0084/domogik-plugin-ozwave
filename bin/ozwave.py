@@ -101,7 +101,7 @@ class OZwave(Plugin):
         return "{0}/{1}_{2}/lib/".format(self.packages_directory, self._type, self._name)
 
     def on_message(self, msgid, content):
-        #Transmit mq message to mananer
+        #Transmit mq message to manager
         if self.myzwave is not None :
             self.myzwave.on_MQ_Message(msgid, content)
 

@@ -314,6 +314,18 @@ class OZWavemanager():
         self._log.info(u"Domogik label available list initialized with {0} labels.".format(len(DomogikLabelAvailable)))
         self._log.debug(u"  -- list in lower case : {0}".format(DomogikLabelAvailable))
 
+    def getProductById(self, productId):
+        """Return the product(s) set in json corresponding to productId.
+           productId must contain id."""
+        products = []
+        productId = productId.lower()
+#        print "Retrieve products id : {0}".format(productId)
+        for product in self._plugin.json_data['products']:
+            if productId.find(product['id'].lower()) != -1:
+#                print "    Find product : {0}".format(product)
+                products.append(product)
+        return products
+
     def getSensorByName(self, name):
         """Return the sensor(s) set in json corresponding to name """
         sensors = {}
@@ -1405,6 +1417,20 @@ class OZWavemanager():
             node = self._getNode(self.getHomeID(device['networkid']), device['node'])
             if node : node.sendCmdBasic(device, command, cmdValue)
 
+    def getNodeOzwConfig(self, networkId, nodeId):
+        """Return xml config values for node from openzwave file ozwcfg_<homeid>.xml"""
+        ctrl = self.getCtrlOfNetwork(networkId)
+        if ctrl is not None :
+            config_file =  "{0}/zwcfg_{1}.xml".format(self._userPath, self.matchHomeID(ctrl.homeId))
+            if os.path.isfile(config_file):
+                retval = getXmlNodeConfig(config_file, ctrl.homeId, nodeId)
+                retval["file"] = config_file
+                return retval
+            else :
+                return {"error": u"Openzwave config file {0} not found.".format(config_file)}
+        else :
+            return {"error": u"Controller not find for {0}.{1}".format(networkId, nodeId)}
+
     def getNodeInfos(self, homeId, nodeId):
         """ Retourne les informations d'un device, format dict{} """
         if self.isReady :
@@ -1762,6 +1788,10 @@ class OZWavemanager():
             if data['key'] == 'values':
                 if self._IsNodeId(data['nodeId']):
                     report =self.getNodeValuesInfos(data['networkId'], data['nodeId'])
+                else : report = {'error':  'Invalide nodeId format.'}
+            elif data['key'] == 'ozwconfig':
+                if self._IsNodeId(data['nodeId']):
+                    report =self.getNodeOzwConfig(data['networkId'], data['nodeId'])
                 else : report = {'error':  'Invalide nodeId format.'}
         elif request == 'node.action' :
             if data['action'] == 'StartMonitorNode':

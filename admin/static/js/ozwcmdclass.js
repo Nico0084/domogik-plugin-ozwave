@@ -1,4 +1,359 @@
+// Xonomy xml document specification
+
+Xonomy.askStringInfo=function(defaultString, params) {
+    var html="";
+    if (params != undefined && params.help!= undefined && params.help != "") {
+        html +="<i class='fa fa-info-circle fa-lg icon-info' style='margin:2px 5px' title='" + params.help + "'></i>";
+    };
+    if (params != undefined && params.title!= undefined && params.title != "") {
+        html = "<p>"+html+"<span><b>"+params.title+"</b></span></p>";
+    };
+    html+=Xonomy.askString(defaultString);
+    return html;
+};
+
+Xonomy.askLongStringInfo=function(defaultString, params) {
+    var html="";
+    if (params != undefined && params.help!= undefined && params.help != "") {
+        html +="<i class='fa fa-info-circle fa-lg icon-info' style='margin:2px 5px' title='" + params.help + "'></i>";
+    };
+    if (params != undefined && params.title!= undefined && params.title != "") {
+        html = "<p>"+html+"<span><b>"+params.title+"</b></span></p>";
+    };
+    html+=Xonomy.askLongString(defaultString);
+    return html;
+};
+
+Xonomy.askPicklistInfo=function(defaultString, params) {
+    var html="";
+    if (params != undefined && params.help!= undefined && params.help != "") {
+        html +="<i class='fa fa-info-circle fa-lg icon-info' style='margin:2px 5px' title='" + params.help + "'></i>";
+    };
+    if (params != undefined && params.title!= undefined && params.title != "") {
+        html = "<p>"+html+"<span><b>"+params.title+"</b></span></p>";
+    };
+    html+=Xonomy.askPicklist(defaultString, params.pickList);
+    return html;
+};
+
+function xonomyValidate_Int(jsAttribute) {
+    if($.trim(jsAttribute.value)=="") {
+        Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @"+jsAttribute.name+" attribute should not be undefine."});
+        return false;
+    } else if (!Number.isInteger(Number(jsAttribute.value))) {
+        Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @"+jsAttribute.name+" attribute should be a integer."});
+        return false;
+    };
+    return true;
+};
+
+var xmlDocSpec = {
+    elements: {
+        "Manufacturer": {
+            mustBeBefore: ["CommandClasses"],
+            attributes: {
+                "name": {
+                asker: Xonomy.askString
+                }
+            }
+        },
+        "CommandClass": {
+            attributes: {
+                "id": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Command Class identification number',
+                                    "help": 'Command class instance of this value. It is possible for there to be '+
+                                                'multiple instances of a command class, although currently it appears that '+
+                                                'only the SensorMultilevel command class ever does this.  Knowledge of '+
+                                                'instances and command classes is not required to use OpenZWave, but this  '+
+                                                'information is exposed in case it is of interest.'},
+					validate: function(jsAttribute){
+                        return xonomyValidate_Int(jsAttribute);
+                    }
+                },
+                "name": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Command Class identification name',
+                                    "help": 'Command class full name according to command class id.'+
+                                            'Refer to zwave specification.'},
+					validate: function(jsAttribute){
+                        // TODO : Check if name is correct.
+                        return true;
+                    }
+                },
+                "version": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Command Class version number',
+                                    "help": 'Refer to manufacturer user manual. default <1>'},
+					validate: function(jsAttribute){
+                        return xonomyValidate_Int(jsAttribute);
+                    }
+                },
+                "request_flags": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Select bit compose for request at start-up',
+                        "pickList": [
+                            {value: "1", caption: "Request Instance."},
+                            {value: "2", caption: "Request Values."},
+                            {value: "4", caption: "Request Version."},
+                            {value: "3", caption: "Request Instance & Values."},
+                            {value: "5", caption: "Request Instance & Version."},
+                            {value: "6", caption: "Request Values & Version."},
+                            {value: "7", caption: "Request Instance & Values & Version."}
+                        ]
+                    }
+                },
+                "override_precision": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Override value precision',
+                                     "help": 'Override precision when writing values if >=0'},
+					validate: function(jsAttribute){
+                        return xonomyValidate_Int(jsAttribute);
+                    }
+                },
+                "after_mark": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'No controled command class',
+                        "help":  'Set to true if the command class is listed after COMMAND_CLASS_MARK, and should not create any values.',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "create_vars": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Do we want to create variables',
+                        "help":  'Create or not depending values of command class.'+
+                                     'If attribute @create_vars not present openzwave use default True.',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "getsupported": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Get operation supported',
+                        "help":  'Handle or not request values of command class.'+
+                                     'If attribute @getsupported not present openzwave use default True.',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "issecured": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Command class secured',
+                        "help":  'Is this command class secured with the Security Command Class.'+
+                                     'If attribute @issecured not present openzwave use default false.',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "innif": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Present in the NIF Frame',
+                        "help":  'Was this command class present in the NIF Frame we recieved '+
+                                      'or was it created from our device_classes.xml file, or because it was in the Security SupportedReport message.',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "mapping": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Mapping Command Class id number',
+                                    "help": 'Genraly used by Basic command class to mappe towards an other.'},
+					validate: function(jsAttribute){
+                        return xonomyValidate_Int(jsAttribute);
+                    }
+                }
+            }
+        },
+        "Instance": {
+            mustBeBefore: ["Value", "Associations"]
+        },
+        "Value": {
+            mustBeBefore: ["SensorMap"],
+            menu: [{
+                caption: "Add @size=\"0\"",
+                action: Xonomy.newAttribute,
+                actionParameter: {name: "size", value: "0"},
+                hideIf: function(jsElement){
+                    return jsElement.hasAttribute("size");
+                }
+                }, {
+                caption: "Delete this <Value>",
+                action: Xonomy.deleteElement
+                }, {
+                caption: "New <Value> before this",
+                action: Xonomy.newElementBefore,
+                actionParameter: "<Value type='' genre='' instance='1' index='' label=''/>"
+                }, {
+                caption: "New <Value> after this",
+                action: Xonomy.newElementAfter,
+                actionParameter: "<Value type='' genre='' instance='1' index='' label=''/>"
+                }],
+            attributes: {
+                "type": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Select type of data represented by the value object.',
+                        "pickList": [
+                            {value: "bool", caption: "Boolean, true or false."},
+                            {value: "button", caption: "A write-only value that is the equivalent of pressing a button."},
+                            {value: "byte", caption: "8 bits"},
+                            {value: "short", caption: "16-bit signed value."},
+                            {value: "int", caption: "32-bit signed value."},
+                            {value: "decimal", caption: "Represents a non-integer value as a string, to avoid floating point accuracy issues."},
+                            {value: "string", caption: "Text string."},
+                            {value: "list", caption: "List from which one item can be selected."},
+                            {value: "Schedule", caption: "Complex type used with the Climate Control Schedule command class."},
+                            {value: "Raw", caption: "A collection of bytes."}
+                            ]
+                        },
+					validate: function(jsAttribute) {
+						if($.trim(jsAttribute.value)=="") {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @type attribute should not be undefine."});
+							return false;
+						}
+						return true;
+					}
+                },
+                "genre": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Select classification of a value',
+                        "help": 'This attribute enable low level system or configuration parameters to be filtered by the application.',
+                        "pickList": [
+                            {value: "basic", caption: "The 'level' as controlled by basic commands."},
+                            {value: "user", caption: "User would be interested in."},
+                            {value: "config", caption: "Device-specific configuration parameters."},
+                            {value: "system", caption: "Only to users who understand the Z-Wave protocol."}
+                            ]
+                    },
+					validate: function(jsAttribute) {
+						if($.trim(jsAttribute.value)=="") {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @genre attribute should not be undefine."});
+							return false;
+						}
+						return true;
+					}
+                },
+                "instance": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Value identification instance',
+                                                    "help": 'It is possible for there to be multiple instances of a command class, ' +
+                                                            'although currently it appears that only the SensorMultilevel command class ever does this. '+
+                                                            'Knowledge of instances and command classes is not required to use OpenZWave, '+
+                                                            'but this information is exposed in case it is of interest.'},
+					validate: function(jsAttribute) {
+						if($.trim(jsAttribute.value)=="") {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @instance attribute should not be undefine."});
+							return false;
+						} else if (!Number.isInteger(Number(jsAttribute.value))) {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @instance attribute should be a integer."});
+							return false;
+                        };
+						return true;
+					}
+                },
+                "index": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Value identification index',
+                                                 "help": 'The index is used to identify one of multiple ' +
+                                                        'values created and managed by a command class.  In the case of configurable ' +
+                                                        'parameters (handled by the configuration command class), the index is the '+
+                                                        'same as the parameter ID.  Knowledge of command classes is not required '+
+                                                        'to use OpenZWave, but this information is exposed in case it is of interest.'},
+					validate: function(jsAttribute) {
+						if($.trim(jsAttribute.value)=="") {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @index attribute should not be undefine."});
+							return false;
+						} else if (!Number.isInteger(Number(jsAttribute.value))) {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @index attribute should be a integer."});
+							return false;
+                        };
+						return true;
+					}
+                },
+                "label": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Enter your label'},
+					validate: function(jsAttribute) {
+						if($.trim(jsAttribute.value)=="") {
+							Xonomy.warnings.push({htmlID: jsAttribute.htmlID, text: "The @label attribute should not be undefine."});
+							return false;
+                        };
+						return true;
+					}
+                },
+                "units":{
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {"title": 'Enter value unit'},
+                },
+                "read_only":{
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Access type',
+                        "help":  'This value is only on read from zwave device',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "write_only":{
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Access type',
+                        "help":  "This value is only on write from zwave device."+
+                                     " Variable cannot be retrieved to know his real value.",
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "verify_changes": {
+                    asker: Xonomy.askPicklistInfo,
+                    askerParameter: {
+                        "title": 'Verify value changed',
+                        "pickList": ["true", "false"]
+                    }
+                },
+                "poll_intensity": {
+                    asker: Xonomy.askStringInfo,
+                    askerParameter: {
+                        "title": 'Polling Intensity',
+                        "help":  "Number of poll during global PollInterval config parameter."+
+                                     " value '0' desactivate polling."
+                    },
+                    validate: function(jsAttribute){
+                        return xonomyValidate_Int(jsAttribute);
+                    }
+                }
+            }
+        },
+        "Help": {
+            mustBeBefore: ["Item"],
+            asker: Xonomy.askLongStringInfo,
+            askerParameter: {"title": 'Enter description, generaly from manufacturer manual.',
+                                        "help":'For test :-)'},
+        }
+    },
+    validate: function(jsElement){
+        //Validate the element:
+        var elementSpec=xmlDocSpec.elements[jsElement.name];
+        if(elementSpec.validate) elementSpec.validate(jsElement);
+        //Cycle through the element's attributes:
+        for(var i=0; i<jsElement.attributes.length; i++) {
+            var jsAttribute=jsElement.attributes[i];
+            var attributeSpec=elementSpec.attributes[jsAttribute.name];
+            if(attributeSpec.validate) attributeSpec.validate(jsAttribute);
+        };
+        //Cycle through the element's children:
+        for(var i=0; i<jsElement.children.length; i++) {
+            var jsChild=jsElement.children[i];
+            if(jsChild.type=="element") { //if element
+                xmlDocSpec.validate(jsChild); //recursion
+            }
+        }
+    }
+};
+
 function initValuesTab(refId, nodeData) {
+    var nodeRef = GetNodeRefId(nodeData.NetworkID, nodeData.NodeID);
     var struct = '<div class="contenaire-fluid">'+
             '<div class="panel panel-default">'+
                 '<div class="panel-heading\">'+
@@ -9,6 +364,15 @@ function initValuesTab(refId, nodeData) {
                     '</a>'+
                 '</div>'+
                 '<div class="panel-body" id="nodeInfo_'+refId+'" style="width: 95%; display: none;" hidden>'+
+                    '<div class="row text-center">'+
+                        '<span class="btn btn-info" id="xmlnodeconfig'+ nodeRef +'">' +
+                            '<i id="xmlnodeconf-ic'+ nodeRef +'" class="fa fa-info-circle"></i>' +
+                            '<span> Display xml data form openzwave config ...</span>' +
+                        '</span>'+
+                    '</div>'+
+                    '<div class="row">'+
+                        '<div class="pre-scrollable" id="xmlconfig'+nodeRef+'">'+'</div>' +
+                    '</div>'+
                     '<div class="row">'+
                         '<div class="col-md-8">'+
                             '<h4>Device type</h4>'+
@@ -58,7 +422,8 @@ function initValuesTab(refId, nodeData) {
                                 '<li>Role : <b><i>'+nodeData.Infos["info +"].role+'</i> - '+nodeData.Infos["info +"].roleName+'</b></li>';
     } else {struct += '<span class="fa fa-minus-square icon-warning" </span></li>';};
 
-    struct += '</ul></div></div>'+
+    struct += '</ul></div>';
+    struct +=  '</div>'+
                 '</div>'+
             '</div>';
 
@@ -93,6 +458,34 @@ function GetValueCell(table, valueRef, col) {
         var cell = false;
         };
     return cell
+};
+
+function enableXmlConfigEdit(){
+    console.log(data.content);
+    $("[id^='xmlnodeconfig']").not("[isHandled]" ).each(function(rowN, nData) {
+    EnableButtonAction(this, function(obj) {
+        $("[id^='xmlnodeconf-ic']").removeClass("fa-info-circle").addClass("fa-spinner fa-spin");
+        var refId =  obj.id.split("_");
+        var NetworkID = refId[1];
+        var NodeID = refId[2];
+        var nodeRefId = GetNodeRefId(NetworkID, NodeID);
+        sendRequest("ozwave.node.get", {"key": "ozwconfig", "networkId": refId[1], "nodeId": refId[2]}, function(data, result) {
+            var nodeRefId = GetNodeRefId(data.content.NetworkID, data.content.NodeID);
+            $("[id^='xmlnodeconf-ic']").removeClass("fa-spinner fa-spin").addClass("fa-info-circle");
+            if (result == "error" || data.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Fail to get xml openzwave config',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                var editor=document.getElementById("xmlconfig"+nodeRefId);
+                Xonomy.render(data.content.xmlSource, editor, xmlDocSpec);
+            };
+        });
+    });
+});
 };
 
 function validateSetValueCmdClss(refId, newValue, valueData) {

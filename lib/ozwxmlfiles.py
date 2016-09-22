@@ -320,6 +320,11 @@ class NetworkFileConfig():
             self.drivers.append(driver)
         for n in self.xml_content.getElementsByTagName("Node"):
             item = {'id' : int(n.attributes.get("id").value.strip())}
+            newdoc = minidom.Document()
+            x = newdoc.importNode(n, True)  # deep copy
+            newdoc.appendChild(x)  # append to children of 2nd node in "foo.xml"
+            xmlSource = newdoc.toxml()
+#            print xmlSource
 #            print n ,  item['id']
             try :
                 item['name'] = n.attributes.get("name").value.strip()
@@ -465,6 +470,7 @@ class NetworkFileConfig():
             except: pass
             if cmdsClass != [] :
                 item["cmdsClass"] = cmdsClass
+                item["xmlSource"] = xmlSource
             if item.has_key("product"): self.nodes.append(item)
 #        print self.nodes
 
@@ -632,20 +638,49 @@ class DeviceClasses:
         for cls in classList :
             pass
 
+def getXmlNodeConfig(path, homeId, nodeId):
+    """Read XML file zwcfg_<HOMEID>.xml of open-zwave C++ lib and return part of node"""
 
+    xml_content = minidom.parse(path)
+    # read xml file
+    try : # handle openzwave version int or boolean
+        for a in xml_content.getElementsByTagName("Driver"):
+            driver = {'version': a.attributes.get("version").value.strip()}
+            driver['homeId'] = long(a.attributes.get("home_id").value.strip(), 16)
+            driver['nodeId'] = int(a.attributes.get("node_id").value.strip())
+    except :
+        return {"error": "Bad xml file format {0}, driver section not found ".format(path), "xmlSource" : ""}
+    if driver['homeId'] != homeId :
+        return {"error": "HomeId ({0}) of xml file doesn't egal to homeId {1}".format(driver["homeId"], homeId), "xmlSource" : ""}
+
+    for n in xml_content.getElementsByTagName("Node"):
+        nId = int(n.attributes.get("id").value.strip())
+        print "**** nId :",  nId,  nodeId
+        if nId == nodeId :
+            try :
+                n.attributes.get("name").value.strip()
+            except :
+                print "Except in format"
+#                pass
+            else :
+                newdoc = minidom.Document()
+                x = newdoc.importNode(n, True)  # deep copy
+                newdoc.appendChild(x)  # append node in "newdoc.xml"
+                return {"error": "", "xmlSource": newdoc.toxml()}
+    return {"error": "Node {0}.{1} not find in xml file {2}".format(homeId, nodeId, path), "xmlSource" : ""}
 
 if __name__ == "__main__":
     print sys.platform
-#    ozw_path = "/home/admdomo/python-openzwave/openzwave/config"
-#    ozw_conf = "/home/admdomo/Partage-VM/domogik-plugin-ozwave/data/zwcfg_0x014d0f18.xml"
-#    trans_file = "/var/tmp/exporttrad.txt"
+    ozw_path = "/home/admdomo/python-openzwave/openzwave/config"
+    ozw_conf = "/home/admdomo/Partage-VM/domogik-plugin-ozwave/data/zwcfg_0xe21303da.xml"
+    trans_file = "/var/tmp/exporttrad.txt"
 
-    ozw_path ="C:\Python_prog\Dev_OZW\openzwave\config"
-    ozw_conf = "C:\Python_prog\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
-    trans_file = "C:/Python_prog/test/exporttrad.txt"
+#    ozw_path ="C:\Python_prog\Dev_OZW\openzwave\config"
+#    ozw_conf = "C:\Python_prog\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
+#    trans_file = "C:/Python_prog/test/exporttrad.txt"
 
 #    ozw_path="C:\Domotique\python-openzwave\openzwave\config"
-#    ozw_conf ="M:\domogik-plugin-ozwave\data\zwcfg_0x01ff11ff.xml"
+#    ozw_conf ="M:\domogik-plugin-ozwave\data\zwcfg_0xe21303da.xml"
 #    trans_file ="M:\domogik-plugin-ozwave\data\exporttrad.txt"
 
     listManufacturers = Manufacturers(ozw_path)
@@ -655,26 +690,26 @@ if __name__ == "__main__":
 #    print listManufacturers.searchProductType('0x0400',  '0x0106')
     tabtext = listManufacturers.getProduct('FGS211 Switch 3kW').getAllTranslateText()
     listNodes = NetworkFileConfig(ozw_conf)
-    toTranslate = listManufacturers.getAllProductsTranslateText()
-    fich = open(trans_file,  "w")
-#    for prod in  toTranslate['products']:
-#        print prod
-#        fich.write(prod['name'].encode('utf8').replace('\n','\r') + '\n\n')
-    for ligne in toTranslate['tabtext']:
-        fich.write(ligne.encode('utf8').replace('\n','\r') + '\n\n')
-    fich.close()
-
-#    print listNodes.getDriver(0)
-
-    deviceClass = DeviceClasses(ozw_path)
-#    prod =  listManufacturers.getProduct('FGWPE Wall Plug')
-#    print prod.__dict__
-    print "*************GetProductDATA***************"
-    print
-#    print prod.getProductData()
-    print 'Basic', deviceClass.getBasic(6)
-    print 'Generic',  deviceClass.getGeneric(6)
-    print 'Specific', deviceClass.getSpecific(200, '0x01')
-    print 'Role', deviceClass.getRole(6)
-    print 'NodeType', deviceClass.getNodeType(4)
-    print 'DeviceTypes', deviceClass.getDeviceTypes("0x0600")
+#    toTranslate = listManufacturers.getAllProductsTranslateText()
+#    fich = open(trans_file,  "w")
+##    for prod in  toTranslate['products']:
+##        print prod
+##        fich.write(prod['name'].encode('utf8').replace('\n','\r') + '\n\n')
+#    for ligne in toTranslate['tabtext']:
+#        fich.write(ligne.encode('utf8').replace('\n','\r') + '\n\n')
+#    fich.close()
+#
+##    print listNodes.getDriver(0)
+#
+#    deviceClass = DeviceClasses(ozw_path)
+##    prod =  listManufacturers.getProduct('FGWPE Wall Plug')
+##    print prod.__dict__
+#    print "*************GetProductDATA***************"
+#    print
+##    print prod.getProductData()
+#    print 'Basic', deviceClass.getBasic(6)
+#    print 'Generic',  deviceClass.getGeneric(6)
+#    print 'Specific', deviceClass.getSpecific(200, '0x01')
+#    print 'Role', deviceClass.getRole(6)
+#    print 'NodeType', deviceClass.getNodeType(4)
+#    print 'DeviceTypes', deviceClass.getDeviceTypes("0x0600")
