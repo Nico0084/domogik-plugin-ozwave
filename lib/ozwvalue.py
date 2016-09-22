@@ -273,7 +273,7 @@ class ZWaveValueNode:
         """valueData update from callback argument. return true/false if value is different from old."""
         if self._tempConv and valueData['label'] is not None and \
                 valueData['label'].lower() == 'temperature' and valueData['units'] == 'F': # TODO: Conversion forcée de F en °C, a mettre en option.
-            valueData['units'] = '°C'
+            valueData['units'] = 'C'
             self.log.debug(u"************** Conversion : {0}".format(float(valueData['value'])))
             self.log.debug(u"{0}".format(float(valueData['value'])*(5.0/9)))
             valueData['value'] = (float(valueData['value'])*(5.0/9))-(160.0/9)
