@@ -137,10 +137,10 @@ Callbacks :
         """
         networkCtrl = self.getNetworkCtrl
         msg = report.copy()
-        msg["NetworkID"] = self.networkID
-        msg["Node count"] = networkCtrl.getNodeCount()
-        msg["Node sleeping"] = networkCtrl.getSleepingNodeCount()
-        msg["Node fail"] = networkCtrl.getFailedNodeCount()
+        msg[u"NetworkID"] = self.networkID
+        msg[u"Node count"] = networkCtrl.getNodeCount()
+        msg[u"Node sleeping"] = networkCtrl.getSleepingNodeCount()
+        msg[u"Node fail"] = networkCtrl.getFailedNodeCount()
         self._ozwmanager._plugin.publishMsg('ozwave.ctrl.report', msg)
 
     def stats(self):

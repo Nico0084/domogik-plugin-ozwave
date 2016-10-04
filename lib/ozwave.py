@@ -323,6 +323,7 @@ class OZWavemanager():
         for product in self._plugin.json_data['products']:
             if productId.find(product['id'].lower()) != -1:
 #                print "    Find product : {0}".format(product)
+                product[u'picture'] = self._plugin.get_picture_product(product)
                 products.append(product)
         return products
 
@@ -1293,37 +1294,37 @@ class OZWavemanager():
         return retval
 
     def getNetworkInfo(self, ctrl):
-        """ Retourne les infos principales du réseau zwave (dict) """
+        """ Return mains network zwave infos(dict) """
         retval = {}
         if ctrl is not None :
             retval = ctrl.getStatus()
-            retval["NetworkID"] = ctrl.networkID
-            retval["HomeID"] = self.matchHomeID(ctrl.homeId)
+            retval[u"NetworkID"] = ctrl.networkID
+            retval[u"HomeID"] = self.matchHomeID(ctrl.homeId)
             if ctrl.ready :
                 if ctrl.node is not None :
-                    retval["Model"] = "{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
-                    retval["NodeID"] = ctrl.node.nodeId
-                    retval["Poll interval"] = ctrl.node.getPollInterval()
+                    retval[u"Model"] = u"{0} -- {1}".format(ctrl.node.manufacturer, ctrl.node.product)
+                    retval[u"NodeID"] = ctrl.node.nodeId
+                    retval[u"Poll interval"] = ctrl.node.getPollInterval()
                 else:
-                    retval["Model"] = "Zwave controller not ready, be patient..."
-                    retval["NodeID"] = 0
-                    retval["Poll interval"] = 0
-                retval["Protocol"] = self._manager.getControllerInterfaceType(ctrl.homeId)
-                retval["Primary controller"] = ctrl.getControllerDescription()
-                retval["Library"] = ctrl.libraryTypeName
-                retval["Version"] = ctrl.libraryVersion
-                retval["Node count"] = ctrl.getNodeCount()
-                retval["Node sleeping"] = ctrl.getSleepingNodeCount()
-                retval["Node fail"] = ctrl.getFailedNodeCount()
-                retval["ListNodeId"] = ctrl.getNodesId()
+                    retval[u"Model"] = u"Zwave controller not ready, be patient..."
+                    retval[u"NodeID"] = 0
+                    retval[u"Poll interval"] = 0
+                retval[u"Protocol"] = self._manager.getControllerInterfaceType(ctrl.homeId)
+                retval[u"Primary controller"] = ctrl.getControllerDescription()
+                retval[u"Library"] = ctrl.libraryTypeName
+                retval[u"Version"] = ctrl.libraryVersion
+                retval[u"Node count"] = ctrl.getNodeCount()
+                retval[u"Node sleeping"] = ctrl.getSleepingNodeCount()
+                retval[u"Node fail"] = ctrl.getFailedNodeCount()
+                retval[u"ListNodeId"] = ctrl.getNodesId()
             else:
-                retval["Model"] = "Zwave network not ready, be patient..."
-            retval["error"] = ""
+                retval[u"Model"] = u"Zwave network not ready, be patient..."
+            retval[u"error"] = ""
             return retval
         else :
-            retval["error"] = "Network ID <{0}> not registered, wait or check configuration and hardware.".format(networkId)
-            retval["init"] = NodeStatusNW[0] # Uninitialized
-            retval["status"] = "unknown"
+            retval[u"error"] = u"Network ID <{0}> not registered, wait or check configuration and hardware.".format(networkId)
+            retval[u"init"] = NodeStatusNW[0] # Uninitialized
+            retval["status"] = u"unknown"
             return retval
 
     def getZWRefFromDB(self, deviceID, id, type = 'cmd'):
