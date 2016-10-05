@@ -103,6 +103,7 @@ class ZWaveNode:
         self._knownDeviceTypes = {}
         self._newDeviceTypes = {}
         self._dmgDevices = []
+        self.dmgProducts = []
         self._alarmSteps = []
         self._alarmRunning = False
         self._multiInstanceAssoc = None
@@ -179,8 +180,9 @@ class ZWaveNode:
     def _checkDmgDeviceLink(self, force = False):
         if (not self._knownDeviceTypes and not self._newDeviceTypes and self.isInitialized()) or force :
             try :
-                self.liklyDmgDevices()
+                self.liklyDmgProducts()
                 if self._dmgDevices == [] : self.refreshAllDmgDevice()
+                self.liklyDmgDevices()
             except :
                 self.log.warning(u"Error while search likey dmg device : {0}".format(traceback.format_exc()))
 
@@ -823,6 +825,7 @@ class ZWaveNode:
         retval["BatteryChecked"] = self.isbatteryChecked
         retval["Monitored"] = self._ozwmanager.monitorNodes.getFileName(self.homeId,  self.nodeId) if self._ozwmanager.monitorNodes.isMonitored(self.homeId,  self.nodeId) else ''
         retval["DmgDevices"] = self.getDmgDevices()
+        retval["DmgProducts"] = self.dmgProducts
         devices = {}
         for id, d in self._knownDeviceTypes.items() :
             devices[u".".join([str(i) for i in id])] = d
@@ -1037,13 +1040,13 @@ class ZWaveNode:
         return retval
 
     def getInstances(self):
-        """Return instance(s) of nodes"""
+        """Return instance(s) of nodes with label of user type value"""
         instances = {}
         for id in self._values.keys():  # Can't use iterator due to possible change during loop (AddedValue, RemovedValue)
             value = self._values[id]
             if value.instance not in instances :
                 instances[value.instance] = []
-            if value.valueData['label'] not in instances[value.instance] and not value.valueData['readOnly'] and value.valueData['genre'] == 'User':
+            if value.valueData['label'] not in instances[value.instance] and value.valueData['genre'] == 'User':
                 instances[value.instance].append(value.valueData['label'])
         return instances
 
@@ -1113,6 +1116,10 @@ class ZWaveNode:
                 if label in linksLabel and valueLabel in linksLabel : return True
 #        print u"************ Label not available **************"
         return  False
+
+    def liklyDmgProducts(self):
+        """Return list of all domogik product from zwave detected product"""
+        self.dmgProducts = self._ozwmanager.getProductById(self.product)
 
     def liklyDmgDevices(self):
         """Return list of all likely domogik device from all valueNodes"""
@@ -1198,9 +1205,11 @@ class ZWaveNode:
         print (u"***************** likly domogik devices for node ****************")
         print (devices)
         self._knownDeviceTypes = self._ozwmanager.findDeviceTypes(devices)
+        self._dmgDeviceTypeFiltering()
         print (u"***************** existing domogik device_types for node ****************")
         print (self._knownDeviceTypes)
-        if self._knownDeviceTypes : self._ozwmanager.registerDetectedDevice(self._knownDeviceTypes)
+        if self._knownDeviceTypes :
+            self._ozwmanager.registerDetectedDevice(self._knownDeviceTypes)
 
         self._newDeviceTypes = self._ozwmanager.create_Device_Type_Feature(devices)
         print (u"***************** New domogik device_types for node ****************")
@@ -1209,7 +1218,30 @@ class ZWaveNode:
         for id, d in self._knownDeviceTypes.items() :
             devices[u".".join([str(i) for i in id])] = d
         self.reportToUI({'type': 'node-state-changed', 'usermsg' : 'Domogik device linked.',
-                        'data': {'state': 'DmgDevices', 'KnownDeviceTypes': devices, 'NewDeviceTypes': self._newDeviceTypes}})
+                        'data': {'state': 'DmgDevices', 'DmgProducts': self.dmgProducts, 'KnownDeviceTypes': devices, 'NewDeviceTypes': self._newDeviceTypes}})
+
+    def _dmgDeviceTypeFiltering(self):
+        """Check if domogik products is listed in _knownDeviceTypes and add it if need.
+           Clean all devices detected in _knownDeviceTypes  list."""
+        for product in self.dmgProducts:
+            if self._knownDeviceTypes != {} :
+                for kDev in self._knownDeviceTypes:
+                    if kDev[2] == 1 : # Actualy domogik handle only one device_type per product, so this correspond to instance 1 of zwave modul.
+                        if product['type'] not in self._knownDeviceTypes[kDev]:
+                            self._knownDeviceTypes[kDev].append(product['type'])
+                            break
+            else :
+                self._knownDeviceTypes[(self.networkID, self.nodeId, 1)] = [product['type']]
+        for dmgDev in self._dmgDevices:
+            instance = 1 if dmgDev["device_type_id"] in ["ozwave.primary_controller", "ozwave.node"] else int(dmgDev['parameters']['instance']['value'])
+            popList = []
+            for kDev in self._knownDeviceTypes:
+                if kDev[2] == instance :
+                    if dmgDev['device_type_id'] in self._knownDeviceTypes[kDev]:
+                        self._knownDeviceTypes[kDev].remove(dmgDev['device_type_id'])
+                    if self._knownDeviceTypes[kDev] == []:
+                        popList.append(kDev)
+            for p in popList: self._knownDeviceTypes.pop(p)
 
     def getDmgDevices(self):
         """Return all domogik device for all node values"""

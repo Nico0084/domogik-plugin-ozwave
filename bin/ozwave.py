@@ -37,12 +37,13 @@ Implements
 """
 # A debugging code checking import error
 try:
-    from domogik.common.plugin import Plugin
+    from domogik.common.plugin import Plugin, PRODUCTS_PICTURES_EXTENSIONS
     from domogikmq.message import MQMessage
 
     from domogik_packages.plugin_ozwave.lib.ozwave import OZWavemanager
     import threading
     import sys
+    import os
     import traceback
 
 except ImportError as exc :
@@ -99,6 +100,16 @@ class OZwave(Plugin):
 
     def get_lib_directory(self):
         return "{0}/{1}_{2}/lib/".format(self.packages_directory, self._type, self._name)
+
+    def get_picture_product(self, product):
+        """Return product picture file from json plugin, else None.
+           @param : product : the json dict definition from json plugin.
+        """
+        for ext in PRODUCTS_PICTURES_EXTENSIONS:
+            file = "{0}.{1}".format(product['id'], ext)
+            if os.path.isfile("{0}/{1}".format(self.get_products_directory(), file)):
+                return file
+        return None
 
     def on_message(self, msgid, content):
         #Transmit mq message to manager
