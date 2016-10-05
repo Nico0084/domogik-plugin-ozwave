@@ -91,25 +91,29 @@
     background: #6CC8C8 !important;
 }
 
-  .icon-unknown {
-      color : #8C8C8C;
-  }
+.icon-unknown {
+  color : #8C8C8C;
+}
 
-  .icon-info {
-      color : #5BC0DE;
-  }
+.icon-info {
+  color : #5BC0DE;
+}
 
-  .icon-success {
-      color : #26CB34;
-  }
+.icon-info2 {
+  color : #0404B4;
+}
 
-  .icon-warning {
-      color : #FFAE00;
-  }
+.icon-success {
+  color : #26CB34;
+}
 
-  .icon-danger {
-      color : #FF0000;
-  }
+.icon-warning {
+  color : #FFAE00;
+}
+
+.icon-danger {
+  color : #FF0000;
+}
 
 /* Kineticjs context node menu header via data attribute */
 .ktcNodeMenu-title:before {

@@ -56,6 +56,7 @@ function HandleDataNodeUpdMsg(data) {
                         break;
                     case "DmgDevices" :
                         if (data.content.data.DmgDevices != undefined) {nodeData['DmgDevices'] = data.content.data.DmgDevices;};
+                        if (data.content.data.DmgProducts != undefined) {nodeData['DmgProducts'] = data.content.data.DmgProducts;};
                         if (data.content.data.KnownDeviceTypes != undefined) {nodeData['KnownDeviceTypes'] = data.content.data.KnownDeviceTypes;};
                         if (data.content.data.NewDeviceTypes != undefined) {nodeData['NewDeviceTypes'] = data.content.data.NewDeviceTypes;};
                         dTableCol.push({col: 0, value: data.content.NetworkID+"."+data.content.NodeID});
@@ -744,9 +745,19 @@ function renderNodeStatusCol(data, type, full, meta) {
     var dmgDev = "";
     var knDev = "";
     var newDev = "";
-    var titleDev = "No domogik device existing for node "+nodeData.NodeID+".";
+    var prodInfo = "";
+    if (nodeData.DmgProducts.length != 0) { // Display product info as extra
+        for (p in nodeData.DmgProducts) {
+            prodInfo =  '<div class="col-sm-3">'+
+                        ' <span data-toggle="tooltip" data-placement="top" title="'+nodeData.DmgProducts[p].name+": "+nodeData.DmgProducts[p].type+'">'+
+                       '<img src="/rest/product/'+clientID+'/'+nodeData.DmgProducts[p].picture+'" height="80">'+
+                        '</span>'+
+                        '</div>';
+            };
+    };
+    var titleDev = '<h4 class="text-center"><u>Device type for node '+nodeData.NodeID+'</u></h4><h5>';
     if (nodeData.DmgDevices.length != 0) {
-        titleDev = "There is already domogik device created for node "+nodeData.NodeID+".<br>You can also use one below.";
+        titleDev += '<li>Domogik device(s) already created.</li><li>You can also use one below.</li>'
         devState = "fa-check-circle icon-success";
         devContent = '<div class="container-fluid">';
         var duplicate = "";
@@ -754,6 +765,16 @@ function renderNodeStatusCol(data, type, full, meta) {
         for (var nD in nodeData.DmgDevices) {
             var header = nodeData.DmgDevices[nD].name;
             var refDmg = header.replace(/\s+/g, '-');
+            iconP = "";
+            if (nodeData.DmgDevices[nD].parameters.instance == undefined || nodeData.DmgDevices[nD].parameters.instance.value == "1") {
+                // TODO : Handle products instance. Actualy product is only for instance number 1
+                for (p in nodeData.DmgProducts) {
+                    if (nodeData.DmgProducts[p].type == nodeData.DmgDevices[nD].device_type_id) {
+                        iconP = '<span class="fa fa-2x fa-product-hunt pull-right icon-info2" aria-hidden="true" title="Known product, full support"></span>';
+                    };
+                };
+            };
+
             if (nodeData.DmgDevices[nD].parameters.instance != undefined) {
                 header += ", instance " + nodeData.DmgDevices[nD].parameters.instance.value;
                 duplicate = ""
@@ -770,7 +791,7 @@ function renderNodeStatusCol(data, type, full, meta) {
                                             '<a class="bg-info" href="#" onclick="togglePanelCollapse(this);return false;" body="dmgDev_'+refDmg+'"' + ' toggle="toggledmgDev_'+refDmg+'">'+
                                                 '<h5>' + duplicate +
                                                     '<span class="glyphicon glyphicon-chevron-down pull-left" id="toggledmgDev_'+refDmg+'" aria-hidden="true" data-target="dmgDev_'+refDmg+'"></span>' +
-                                                    '<span>  '+header+' :'+'</span>'+
+                                                    '<span>  '+header+' :'+'</span>'+iconP+
                                                 '</h5>'+
                                                 '<span>'+nodeData.DmgDevices[nD].device_type_id+'</span>'+
                                             '</a>'+
@@ -782,11 +803,16 @@ function renderNodeStatusCol(data, type, full, meta) {
         };
         devContent += '</div>';
         dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-check-circle extbtn "+duplicateIc+"'" +
-                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+                " data-toggle='popover' title='"+'<div class="row">'+prodInfo+
+                '<div class="col-sm-6"><h4 class="text-center">Domogik device existing<br>for node '+nodeData.NodeID+"</h4></div>"+
+                '<div class="col-sm-3">'+
+                    '<span class="badge pull-right">Click '+
                     '<i class="fa fa-check-circle '+duplicateIc+'"></i><br>lock/unlock<br>display popup</span>'+
-                '<h4>Domogik device existing<br>for node '+nodeData.NodeID+"</h4></div>"+popoverClose+"'" +
+                "</div></div>"+popoverClose+"'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
-    };
+    } else { titleDev += '<li>No domogik device existing</li>' };
+    titleDev += '<li class="text-nowrap">Use button to create it.</li></h5>'
+
     if (Object.keys(nodeData.KnownDeviceTypes).length != 0) {
         devContent = '<div class="container-fluid">';
         var find = false;
@@ -796,61 +822,76 @@ function renderNodeStatusCol(data, type, full, meta) {
             var dRef = nD.split(".");
             var compRS = dRef[1]; // Node ID compare
             var compRD = "node";
-            var existD =[];
             if (dRef.length == 3) {
                 compRS = dRef[2]; // Instance compare
                 compRD = "instance";
                 instanceParam = '&instance='+ compRS
             };
-            if (dmgDev != ""){ // Don't insert devices already created
-                for (var nDT in nodeData.DmgDevices) {
-                    if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined && compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
-                        if (nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD])  {
-                            insert = false;
-                            break;
-                        } else {
-                            existD.push(nodeData.DmgDevices[nDT].device_type_id);
+            for (var nT in nodeData.KnownDeviceTypes[nD]) {
+                var existD =[];
+                if (dmgDev != ""){ // Don't insert devices already created
+                    for (var nDT in nodeData.DmgDevices) {
+                        if ((nodeData.DmgDevices[nDT].parameters[compRD] != undefined && compRS == nodeData.DmgDevices[nDT].parameters[compRD].value)) {
+                            if (nodeData.DmgDevices[nDT].device_type_id == nodeData.KnownDeviceTypes[nD][nT])  {
+                                insert = false;
+                                break;
+                            } else {
+                                existD.push(nodeData.DmgDevices[nDT].device_type_id);
+                            };
                         };
                     };
                 };
-            };
-            if (insert) {
-                if (existD.length != 0) {
-                    var extra = '<span>Existing device :<ul>';
-                    for (var d=0 ; d < existD.length ; d++) {
-                        extra +='<li><span class="bg-info"><strong>'+ existD[d]+'</strong></span></li>';
+                if (insert) {
+                    if (existD.length != 0) {
+                        var extra = '<span>Existing device :<ul>';
+                        for (var d=0 ; d < existD.length ; d++) {
+                            extra +='<li><span class="bg-info"><strong>'+ existD[d]+'</strong></span></li>';
+                        };
+                        extra += '</ul></span>';
+                    } else {var extra = "";};
+                    var iconP = "";
+                    if (nD.split(".")[2] == "1") {
+                        // TODO : Handle products instance. Actualy product is only for instance number 1
+                        for (p in nodeData.DmgProducts) {
+                            if (nodeData.DmgProducts[p].type == nodeData.KnownDeviceTypes[nD][nT]) {
+                                iconP = '<span class="fa fa-2x fa-product-hunt pull-right icon-info2" aria-hidden="true" title="Known product, full support"></span>';
+                            };
+                        };
                     };
-                    extra += '</ul></span>';
-                } else {var extra = "";};
-                devContent += '<p><strong>'+ nD + ' :</strong> ' + extra +
-                        ' <a href="/client/'+clientID+'/dmg_devices/new/type/'+nodeData.KnownDeviceTypes[nD]+
-                        '?networkid='+nodeData.NetworkID+'&node='+nodeData.NodeID+instanceParam+
-                        '&Reference='+nodeData.Model+'" '+
-                        'class="btn btn-info" id="createDev'+ nodeRef +'" target="_blank">' +
-                        '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>'+
-                        '  ' + nodeData.KnownDeviceTypes[nD]+
-                        '</a>'
-                    "</p>";
-                find = true;
+                    devContent += '<p><strong>'+ nD + ' :</strong> ' + extra +
+                            ' <a href="/client/'+clientID+'/dmg_devices/new/type/'+nodeData.KnownDeviceTypes[nD][nT]+
+                            '?networkid='+nodeData.NetworkID+'&node='+nodeData.NodeID+instanceParam+
+                            '&Reference='+nodeData.Model+'" '+
+                            'class="btn btn-info" id="createDev'+ nodeRef +'" target="_blank">' +
+                            '<span class="glyphicon glyphicon-plus extbtn" aria-hidden="true"></span>'+
+                            nodeData.KnownDeviceTypes[nD][nT]+iconP+
+                            '</a>'+
+                        "</p>";
+                    find = true;
+                };
             };
         };
         devContent += "</div>";
         if (find) {
             knDev = "<span id='knowndevicetypes"+ nodeRef + "' class='fa fa-asterisk icon-warning extbtn'" +
-                    " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
-                    '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                    "<h4>"+titleDev+'<br><span class="text-nowrap">Use button to create it.'+"</span></h4></div>"+popoverClose+"'" +
+                    " data-toggle='popover' title='"+'<div class="row">'+prodInfo+
+                    '<div class="col-sm-7">'+titleDev+
+                        '</div>'+
+                    '<div class="col-sm-2">'+
+                        '<span class="badge pull-right">Click '+
+                        '<i class="fa fa-asterisk icon-warning"></i><br>lock / unlock<br>display popup</span>'+
+                    "</div></div>"+popoverClose+"'" +
                     " data-container='body' data-content='" + devContent + "'></span>";
-            titleDev = "Some device type are already created for node "+nodeData.NodeID+".<br>Some other can be added with one below.";
-        } else {
-            titleDev = "No domogik device type existing for node "+nodeData.NodeID+".";
         };
     };
+    var titleDev = '<h4 class="text-center"><u>Device type for node '+nodeData.NodeID+'</u></h4><h5>';
+    if (prodInfo != "") { titleDev += '<li>Product identified for instance 1.</li>' };
     if (dmgDev != "" && knDev == ""){
-            titleDev = "Some device type are already used for node "+nodeData.NodeID+".<br>Some other can be added with one below.";
+            titleDev += '<li>Some device type are already used.</li><li>Some other can be added with one below.</li>';
         } else {
-            titleDev = "No domogik device type existing for node "+nodeData.NodeID+".";
+            titleDev += '<li>No domogik device type existing.</li>';
         };
+    titleDev += '</h5>'
     if (Object.keys(nodeData.NewDeviceTypes).length != 0) {
         devContent = '<div class="container-fluid">';
         for (var nD in nodeData.NewDeviceTypes) {
@@ -875,14 +916,16 @@ function renderNodeStatusCol(data, type, full, meta) {
         devContent += "</div>";
         var refNode = nodeData.NetworkID+'.'+nodeData.NodeID;
         newDev = "<span id='newdevicetypes"+ nodeRef + "' class='fa fa-plus-square icon-warning extbtn'" +
-                " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
-                    '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
-                "<h4>"+titleDev+"</h4>" +
-                '<button class="btn btn-info" onclick="sendNewDevice_Type(this)" refNode='+refNode+'>'+
-                    '<i class="fa fa-circle-o-notch" id="sendNewDeviceT-ic'+ nodeRef +'"></i>' +
-                    '<span> Create request on GitHub for integrate new device type</span>' +
-                '</button>' +
-                "</div>"+popoverClose+"'" +
+                " data-toggle='popover' title='"+'<div class="row">'+prodInfo+
+                    '<div class="col-sm-7">'+titleDev+
+                        '<button class="btn btn-info" onclick="sendNewDevice_Type(this)" refNode='+refNode+'>'+
+                            '<i class="fa fa-circle-o-notch extbtn" id="sendNewDeviceT-ic'+ nodeRef +'"></i>' +
+                            '<span> Create request on GitHub for integrate new device type</span>' +
+                        '</button></div>' +
+                    '<div class="col-sm-2">'+
+                        '<span class="badge pull-right">Click '+
+                        '<i class="fa fa-plus-square icon-warning"></i><br>lock / unlock<br>display popup</span>'+
+                    "</div></div>"+popoverClose+"'" +
                 " data-container='body' data-content='" + devContent + "'></span>";
     };
     if (devContent == "") {
@@ -894,7 +937,7 @@ function renderNodeStatusCol(data, type, full, meta) {
                 '<span> Restart detection ...</span>' +
             '</button>';};
         dmgDev = "<span id='nodedmgdevices"+ nodeRef + "' class='fa fa-exclamation-circle icon-danger extbtn'" +
-               " data-toggle='popover' title='"+'<div><span class="badge pull-right">Click '+
+               " data-toggle='popover' title='"+'<div>'+prodInfo+'<span class="badge pull-right">Click '+
                     '<i class="fa fa-exclamation-circle icon-danger"></i><br>lock / unlock<br>display popup</span>'+
                 "<h4>Neither domogik device find !</h4></div>'" +
                " data-content='" + devContent + "'></span>";
