@@ -122,7 +122,7 @@ class OZWavemanager():
             self._xplPlugin.force_leave()
             raise OZwaveManagerException (u"Directory openzwave config not exist : %s"  % self._configPath)
         elif not os.access(self._configPath,  os.R_OK) :
-            self._log.error(u"User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
+            self._log.error(u"User %s haven't read access on openzwave directory : %s"  %(user,  self._configPath))
             raise OZwaveManagerException ("User %s haven't write access on openzwave directory : %s"  %(user,  self._configPath))
         if not os.path.exists(self._userPath) :
             self._log.info(u"Directory openzwave user not exist, trying create : %s" , self._userPath)

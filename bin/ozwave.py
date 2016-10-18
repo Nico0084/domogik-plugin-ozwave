@@ -38,7 +38,7 @@ Implements
 # A debugging code checking import error
 try:
     from domogik.xpl.common.xplconnector import Listener
-    from domogik.xpl.common.plugin import XplPlugin
+    from domogik.xpl.common.plugin import XplPlugin, PACKAGES_DIR
     from domogik.xpl.common.xplmessage import XplMessage
     from domogik.xpl.common.xplconnector import XplTimer
 
@@ -74,7 +74,11 @@ class OZwave(XplPlugin):
         self._ctrlHBeat = None
         print ('Mode log openzwave :',  ozwlogConf)
         # Recupère l'emplacement des fichiers de configuration OZW
-        pathUser = self.get_data_files_directory()
+        try :
+            pathUser = self.get_data_files_directory()
+        except :
+            self.log.warning('Data directory access error : {0}'.format(traceback.format_exc())
+            pathUser = "{0}/{1}/{2}_{3}/data/".format(self.libraries_directory, PACKAGES_DIR, self._type, self._name)
         pathConfig = self.get_config('configpath') + '/'
         # Initialise le manager Open zwave
 
