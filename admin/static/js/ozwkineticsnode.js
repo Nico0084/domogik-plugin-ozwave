@@ -1,4 +1,4 @@
-// Neighboors and group association library for showing zwave ode device.
+// Neighboors and group association library for showing zwave node device.
 var grpsStage;
 var neighborsGraph;
 
@@ -20,61 +20,123 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         dragBoundFunc : function(pos){
             var newPos = {x: pos.x, y: pos.y};
             if (dragConstrain && this.attrs.ktcNode.nodeZW.Capabilities.indexOf("Primary Controller" ) == -1) {
+                var scale = this.attrs.ktcNode.ktcGraph.nodeLayer.scale();
+                var offset = this.attrs.ktcNode.ktcGraph.nodeLayer.offset();
+                var scalePos = {x:(pos.x+offset.x)/scale.x , y:(pos.y+offset.y)/scale.y};
+
                 var minF = 100;
                 var radius = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
                 var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
                 if (ktcCtrl) {
-                    var x = ktcCtrl.pictureNode.getX(); // center point
-                    var y = ktcCtrl.pictureNode.getY(); // center point
+                    var center = ktcCtrl.position() // center point
                 } else {
-                    var x= this.attrs.ktcNode.ktcStage.getWidth() / 2;
-                    var y= this.attrs.ktcNode.ktcStage.getHeight() / 2;
+                    var center = {x: this.attrs.ktcNode.ktcStage.getWidth() / 2,
+                                  y: this.attrs.ktcNode.ktcStage.getHeight() / 2};
                 };
-                var scale = radius / Math.sqrt(Math.pow(newPos.x - x, 2) + Math.pow(newPos.y - y, 2)); // distance formula ratio
-                if (scale < 0.9 || scale > 1.1) {
-                    newPos = {
-                         x: Math.round((newPos.x - x) * scale + x),
-                         y: Math.round((newPos.y - y) * scale + y)
-                    };
+                var ratio = Math.sqrt(Math.pow(scalePos.x - center.x, 2) + Math.pow(scalePos.y - center.y, 2)) / radius ; // distance formula ratio
+                if (ratio < 0.9 || ratio > 1.1) {
+                    var a = (scalePos.y - center.y)/(scalePos.x - center.x);
+                    var b = center.y- (a * center.x);
+                    var t = ratio < 0.9 ? 0.9 : 1.1;
+                    var len = radius * t;
+                    if (scalePos.x < center.x) { len = -len;};
+                    var x = center.x;
+                    var y = center.y;
+                    scalePos = getPointTension(x, y, a, b, len);
+                    newPos = {x:(scalePos.x*scale.x)-offset.x, y:(scalePos.y*scale.y)-offset.y};
                 };
             };
             return newPos;
         }
     });
     var op =1;
+    var label = getLabelDevice(this.nodeZW);
     if (this.nodeZW['State sleeping']) {op = 0.3; };
-    this.pictureImg = new Kinetic.Circle({
-        x: 0,
-        y: 0,
-        radius: r,
-        fillRadialGradientStartPoint: 0,
-        fillRadialGradientStartRadius: 0,
-        fillRadialGradientEndPoint: 0,
-        fillRadialGradientEndRadius: r,
-        fillRadialGradientColorStops: this.getColorState(),
-        stroke: 'black',
-        strokeWidth: 2,
-        shadowColor: 'black',
-        shadowBlur: 2,
-        shadowOffset: {x:5,y:5},
-        shadowOpacity: 0.5,
-        name:"pictureImg",
-        opacity: op,
-        ktcNode : this
+    if (this.nodeZW.DmgProducts.length != 0) { // Display image  product instead of circle
+        var imgP = new Image();
+        this.pictProd = imgP;
+        var kNode = this;
+        var that = this;
+        var imgSize = r * 1.3;
+        this.pictProd.onload = function(){
+            var img = new Kinetic.Image({
+                x: -imgSize,
+                y: -imgSize,
+                image: imgP,
+                width: 2*imgSize,
+                height: 2*imgSize,
+                name:"pictProd",
+                ktcNode : kNode
+              });
+            that.pictureNode.add(img);
+            img.moveToBottom();
+            img.attrs.ktcNode.updateLinkPath();
+        };
+        this.pictProd.src = '/rest/product/'+clientID+'/'+this.nodeZW.DmgProducts[0].picture;
+        var yT = r+5;
+        var xT = -(label.length *3.2);
+        if (label.length > ((2*imgSize)/5)) {
+            xT = -imgSize;
+        };
+        var widthT = -2*xT;
+        this.pictureImg = new Kinetic.Rect({
+            x: xT,
+            y: r,
+            width: widthT,
+            height: 20,
+            cornerRadius: 8,
+            fillLinearGradientStartPoint: {x:5, y:20},
+            fillLinearGradientEndPoint: {x:widthT/2, y:0},
+            fillLinearGradientColorStops: this.getColorState(),
+            stroke: 'black',
+            strokeWidth: 2,
+            shadowColor: 'black',
+            shadowBlur: 2,
+            shadowOffset: {x:5,y:5},
+            shadowOpacity: 0.5,
+            name:"pictureImg",
+            opacity: op,
+            ktcNode : this
         });
-    var t = getLabelDevice(this.nodeZW);
-    if (t.length > ((2*r)/5)) { yt = 8-r;
-    } else {yt = -5;};
+    } else {
+        this.pictureImg = new Kinetic.Circle({
+            x: 0,
+            y: 0,
+            radius: r,
+            fillRadialGradientStartPoint: 0,
+            fillRadialGradientStartRadius: 0,
+            fillRadialGradientEndPoint: 0,
+            fillRadialGradientEndRadius: r,
+            fillRadialGradientColorStops: this.getColorState(),
+            stroke: 'black',
+            strokeWidth: 2,
+            shadowColor: 'black',
+            shadowBlur: 2,
+            shadowOffset: {x:5,y:5},
+            shadowOpacity: 0.5,
+            name:"pictureImg",
+            opacity: op,
+            ktcNode : this
+        });
+        var xT = -r +2;
+        var widthT = 2*r-4;
+        if (label.length > ((2*r)/5)) { yT = 8-r;
+        } else {yT = -5;};
+    };
     this.text = new Kinetic.Text({
-        x: -r +2,
-        y: yt,
-        width:2*r-4,
-        text: t,
+        x: xT,
+        y: yT,
+        width: widthT,
+        text: label,
         fontSize: 12,
         fontFamily: "Calibri",
         fill: "black",
         align : "center"
     });
+    var s = this.text.size();
+    if (this.pictureImg.className == "Rect"){
+        this.pictureImg.height(s.height+10);
+    };
     this.pictureNode.add(this.pictureImg);
     this.pictureNode.add(this.text);
     this.links = new Array ();
@@ -125,17 +187,16 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
             var ray = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
             var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
             if (ktcCtrl) {
-                var xOrg = ktcCtrl.pictureNode.getX(); // center point
-                var yOrg = ktcCtrl.pictureNode.getY(); // center point
+                var org = ktcCtrl.position(); // center point
             } else {
-                var xOrg= this.attrs.ktcNode.ktcStage.getWidth() / 2;
-                var yOrg= this.attrs.ktcNode.ktcStage.getHeight() / 2;
+                var org = {x: this.attrs.ktcNode.ktcStage.getWidth() / 2,
+                           y: this.attrs.ktcNode.ktcStage.getHeight() / 2};
             };
             var size = this.attrs.ktcNode.size();
-            var s = (size.width + size.height) / 4;
+            var s = Math.sqrt(Math.pow(size.width, 2) + Math.pow(size.height, 2))/2;
             this.dragHelper.add(new Kinetic.Circle({
-                x: xOrg,
-                y: yOrg,
+                x: org.x,
+                y: org.y,
                 radius: (0.9 * ray) - s,
                 stroke: 'black',
                 strokeWidth: 2,
@@ -144,8 +205,8 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
                 })
             );
             this.dragHelper.add(new Kinetic.Circle({
-                x: xOrg,
-                y: yOrg,
+                x: org.x,
+                y: org.y,
                 radius: (1.1 * ray) + s,
                 stroke: 'red',
                 strokeWidth: 2,
@@ -168,19 +229,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     });
 
     this.pictureNode.on("dragmove", function() {
-        var layer;
-        var qPts;
-        for (var i=0; i<this.attrs.ktcNode.links.length;i++) {
-            if (this.attrs.ktcNode.links[i].calculatePos) {
-                var qPts = this.attrs.ktcNode.links[i].ktcNodes[0].ktcGraph.findPath(
-                        this.attrs.ktcNode.links[i].ktcNodes[0],
-                        this.attrs.ktcNode.links[i].ktcNodes[1]);
-                this.attrs.ktcNode.links[i].link.attrs.curved =  qPts.curved;
-                this.attrs.ktcNode.links[i].calculatePos = false;
-                layer = this.attrs.ktcNode.links[i].follownode(this.attrs.ktcNode, qPts);
-            };
-        };
-        if (layer != undefined) {layer.batchDraw();};
+        this.attrs.ktcNode.updateLinkPath();
     });
 
     this.pictureNode.on("mousemove", function(){
@@ -209,7 +258,6 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         mousePos=0;
     });
     this.layer.add(this.pictureNode);
-
 };
 
 KtcNode.prototype.destroy = function () {
@@ -335,10 +383,14 @@ KtcNode.prototype.getTypeLink = function() {
 
 KtcNode.prototype.update = function() {
     this.checklinks();
-    this.pictureImg.setFillRadialGradientColorStops(this.getColorState());
     this.ktcGraph.tooltip.hide();
     var op =1;
     if (this.nodeZW['State sleeping']) {op = 0.3; };
+    if (this.pictureImg.className == "Rect"){
+        this.pictureImg.setFillLinearGradientColorStops(this.getColorState());
+    } else {
+        this.pictureImg.setFillRadialGradientColorStops(this.getColorState());
+    };
     this.pictureImg.opacity(op);
     for (var l in this.links)  {this.links[l].update();};
     this.ktcGraph.linkLayer.batchDraw ();
@@ -347,7 +399,58 @@ KtcNode.prototype.update = function() {
 //    console.log('redraw kinetic node :' + this.nodeZW.NodeID);
 };
 
+KtcNode.prototype.updateLinkPath = function() {
+    var layer;
+    var qPts;
+    for (var i=0; i< this.links.length;i++) {
+        if (this.links[i].calculatePos) {
+            var qPts = this.links[i].ktcNodes[0].ktcGraph.findPath(
+                    this.links[i].ktcNodes[0],
+                    this.links[i].ktcNodes[1]);
+            this.links[i].link.attrs.curved =  qPts.curved;
+            this.links[i].calculatePos = false;
+            layer = this.links[i].follownode(this, qPts);
+        };
+    };
+    if (layer != undefined) {layer.batchDraw();};
+};
+
+KtcNode.prototype.position = function() {
+    if (this.pictureImg.className == "Rect"){
+        var scale = this.ktcGraph.nodeLayer.scale();
+        var offset = this.ktcGraph.nodeLayer.offset();
+        var img = this.pictureNode.get(".pictProd");
+        var sRect = this.pictureImg.size();
+        var pRect = this.pictureImg.getAbsolutePosition();
+        var xm,ym;
+        if (img.length > 0 ) {
+            var x,y,x1,y1;
+            var pImg = img[0].getAbsolutePosition();
+            if (pImg.x < pRect.x) {x = pImg.x;} else { x = pRect.x;};
+            if (pImg.x+img[0].size().width < pRect.x+sRect.width) {x1 = pImg.x+img[0].size().width;} else { x1 = pRect.x+sRect.width;};
+            y = pImg.y;
+            y1 = pRect.y + sRect.height;
+            xm = (x1 - x)/2 + x;
+            ym = (y1 - y)/2 + y;
+        } else {
+            xm = pRect.x+(sRect.width/2);
+            ym = pRect.y+(sRect.height/2);
+        };
+        return {x:(xm + offset.x)/scale.x, y:(ym + offset.y)/scale.y};
+    };
+    return this.pictureNode.position();
+};
+
 KtcNode.prototype.size = function() {
+    if (this.pictureImg.className == "Rect"){
+        var img = this.pictureNode.get(".pictProd");
+        var size = this.pictureImg.size();
+        if (img.length > 0 ) {
+            size.height += img[0].size().height;
+            size.width += img[0].size().width;
+        };
+        return size;
+    };
     return this.pictureImg.size();
 };
 
@@ -1830,7 +1933,8 @@ KtcNeighborsGraph.prototype.getNodesPos = function (s) {
     var size;
     for (n in nodesData) {
         if (nodesData[n].ktcNode != undefined) {
-            pos = nodesData[n].ktcNode.pictureNode.position();
+//            pos = nodesData[n].ktcNode.pictureNode.position();
+            pos = nodesData[n].ktcNode.position();
             size = nodesData[n].ktcNode.size();
             if (size.width == 0) {
                 size.width = s;
@@ -1899,19 +2003,19 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
 
 KtcNeighborsGraph.prototype.findPath = function (kN1, kN2){
     var nodesPos = this.getNodesPos(50);
-    var x1 = kN1.pictureNode.getX(), y1 = kN1.pictureNode.getY();
-    var x2 = kN2.pictureNode.getX(), y2 = kN2.pictureNode.getY();
-    var xm = (x1+x2)/2 , ym = (y1 + y2) / 2;
+    var p1 = kN1.position()
+    var p2 = kN2.position()
+    var xm = (p1.x+p2.x)/2 , ym = (p1.y + p2.y) / 2;
     var pmT = {"x": xm, "y": ym};
-    var qPts = {"org": {"x": x1, "y": y1},
-                "dest" :{"x": x2, "y": y2},
+    var qPts = {"org": {"x": p1.x, "y": p1.y},
+                "dest" :{"x": p2.x, "y": p2.y},
                 "from": [0, 0, xm, ym],
                 "to":[0, 0, xm, ym],
-                "points": getLinePoints(x1, y1, x2, y2),
+                "points": getLinePoints(p1.x, p1.y, p2.x, p2.y),
                 "curved": false};
     var tension = 0;
     var stepT = 5;
-    var maxT = (Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2)) / 2) - stepT;
+    var maxT = (Math.sqrt(Math.pow(p2.x-p1.x,2)+Math.pow(p2.y-p1.y,2)) / 2) - stepT;
     if (nodesPos.length != 0 ) {
         var solved = false;
         var nb =0;
@@ -1923,8 +2027,8 @@ KtcNeighborsGraph.prototype.findPath = function (kN1, kN2){
                         if (pointInRect(qPts.points[p].x, qPts.points[p].y, nodesPos[np].gRect)) {
 //                            console.log("    Point Position ("+qPts.points[p].x+","+qPts.points[p].y+") intersec node "+nodesPos[np].ktcNode.nodeZW.NodeID);
                             tension += stepT;
-                            pmT = moveMedianPts(x1,y1, xm, ym, x2, y2, tension);
-                            qPts = quadraticPoints(x1, y1, pmT.x, pmT.y, x2, y2);
+                            pmT = moveMedianPts(p1.x,p1.y, xm, ym, p2.x, p2.y, tension);
+                            qPts = quadraticPoints(p1.x, p1.y, pmT.x, pmT.y, p2.x, p2.y);
                             solved = false;
                             break;
                         };
@@ -1988,7 +2092,7 @@ function getLinePoints(x1, y1, x2, y2) {
         var y = y1;
     } else {
         var x = x2;
-        y = y2;
+        var y = y2;
     };
     for (var l=10; l<len-10; l+=10) {
         points.push(getPointTension(x, y, a, b, l));
