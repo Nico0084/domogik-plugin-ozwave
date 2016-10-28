@@ -215,13 +215,9 @@ class ZWaveNode:
         if values :
             for value in values:
                 for dmgDevice in value.dmgDevice :
-#                    print (dmgDevice)
                     if 'batterycheck' in dmgDevice['parameters']:
-                        oldCheck = self._ozwmanager._plugin.get_parameter(dmgDevice, 'batterycheck')
-                        self._ozwmanager.udpate_device_param(dmgDevice['parameters']['batterycheck']['id'], 'batterycheck', 'y' if check else 'n')
-#                        print (u"Set the db for batteryCheck parameter : {0} , {1}".format(oldCheck, check))
-#                    else : print (u"Domogik device exist but without batterycheck parameters, using memory value : {0}".format(check))
-#                else : print (u"No domogik device created with batterycheck parameters, using memory value : {0}".format(check))
+                        if self._ozwmanager.udpate_device_param(dmgDevice['parameters']['batterycheck']['id'], 'y' if check else 'n') :
+                            self.log.info(u"Parameter <batterycheck> to {0} updated.".format(check))
         return self._batteryCheck
 
     def getBatteryCheck(self):
@@ -1119,7 +1115,8 @@ class ZWaveNode:
 
     def liklyDmgProducts(self):
         """Return list of all domogik product from zwave detected product"""
-        self.dmgProducts = self._ozwmanager.getProductById(self.product)
+        # TODO: For momment only one could exist, but handling many products depending of zwave modul config will add. Like configurable modul.
+        self.dmgProducts = [self._ozwmanager.getProductById(self.product)]
 
     def liklyDmgDevices(self):
         """Return list of all likely domogik device from all valueNodes"""
@@ -1176,7 +1173,7 @@ class ZWaveNode:
     #                                    print n, devices[refDev]['listSensors']
 
                     if not value._valueData['readOnly'] : # value set as command
-                        cmds = self._ozwmanager.getCommandByName(newD['label'])
+                        cmds = self._ozwmanager.getCommandByKey(newD['label'])
                         added = []
                         for c in cmds :
     #                        print "        Check cmd {0} : {1}".format(c, cmds[c])

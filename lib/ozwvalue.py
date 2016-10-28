@@ -339,7 +339,7 @@ class ZWaveValueNode:
             types =[]
             unit = self._getDmgUnitFromZW()
             if not self._valueData['readOnly'] : # value set as command
-                cmds = self._node._ozwmanager.getCommandByName(labelDomogik)
+                cmds = self._node._ozwmanager.getCommandByKey(labelDomogik)
                 if cmds :
                     for cmd in cmds :
                         for param in cmds[cmd]['parameters'] :

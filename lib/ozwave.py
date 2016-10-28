@@ -164,12 +164,10 @@ class OZWavemanager():
         self.getDeviceClasses()
         self.getManufacturers()
         self._plugin.add_stop_cb(self.stop)
-        # get the data_types
-        self._loadDataType()
         # create DomogikLabelAvailable list from json
         self.InitDomogikLabelAvailable()
         # get the devices list
-        self.refreshDevices()
+        self.refreshDevices(self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 2))
         for a_device in self._plugin.devices:
             self.addDeviceCtrl(a_device)
         if not self._devicesCtrl :
@@ -185,31 +183,18 @@ class OZWavemanager():
     isInitFully = property(lambda self: self._getIsInitFully())
     pyOZWLibVersion = property(lambda self: self._getPyOZWLibVersion())
 
-    def on_MQ_Message(self, msgid, content):
-        """Handle pub message from MQ"""
-        print u"New pub message {0}, {1}".format(msgid, content)
-        if msgid == "device.update":
-            self._log.debug(u"New pub message {0}, {1}".format(msgid, content))
-            self.threadingRefreshDevices()
+    def udpate_device_param(self, paramId, value=None):
+        """Call base plugin methode to update static device parameter"""
+        return self._plugin.udpate_device_param(paramId, value)
 
-    def udpate_device_param(self, paramId, key=None, value=None):
-        """Call DBHelper to update static device parameter"""
-        with self._db.session_scope():
-            config = self._db.udpate_device_param(paramId, key, value)
-            self._log.debug(u"Setting global device parameter {0}, key {1} on value {2}".format(paramId, key, value))
-            if config is not None:
-                self.threadingRefreshDevices()
-
-    def threadingRefreshDevices(self, max_attempt = 2):
+    def AsyncRefreshDevices(self, max_attempt = 2):
         """Call get_device_list from MQ
             could take long time, run in thread to get free process"""
-        threading.Thread(None, self.refreshDevices, "th_refreshDevices", (), {"max_attempt": max_attempt}).start()
+        threading.Thread(None, self._plugin.refresh_devices, "th_refreshDevices", (), {"max_attempt": max_attempt}).start()
 
-    def refreshDevices(self, max_attempt = 2):
-        devices = self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 2)
+    def refreshDevices(self, devices):
         print devices
         if devices :
-            self._plugin.devices = devices
             self._plugin.publishMsg('ozwave.manager.refreshdeviceslist', {'error': ""})
             for node in self._nodes.itervalues():
                 node.refreshAllDmgDevice()
@@ -248,7 +233,7 @@ class OZWavemanager():
         while not self._devicesCtrl and not self._stop.isSet(): # no domogik device ctrl find, so try to reload devices
             self._stop.wait(5)
             if not self._stop.isSet():
-                self.refreshDevices(1)
+                self.refreshDevices(self._plugin.get_device_list(quit_if_no_device = False, max_attempt = 1))
                 for a_device in self._plugin.devices:
                     self.addDeviceCtrl(a_device)
         if self._devicesCtrl :
@@ -265,23 +250,9 @@ class OZWavemanager():
             self.openDeviceCtrl(device)
         self._plugin.publishMsg('ozwave.manager.state', self.getManagerInfo())
 
-    def _loadDataType(self):
-        mq_client  = MQSyncReq(self._plugin.zmq)
-        msg = MQMessage()
-        msg.set_action('datatype.get')
-        result = mq_client.request('manager', msg.get(), timeout=10)
-        if result :
-            self._dataTypes = result.get_data()['datatypes']
-            self._log.info(u"data_types list loaded.")
-        else :
-            self._log.warning(u"Error on retreive data_types list from MQ.")
-
     def getDataType(self, name):
         """Return Datatype dict corresponding to name """
-        if self._dataTypes == [] : self._loadDataType()
-        for dT in self._dataTypes :
-            if dT == name : return self._dataTypes[dT]
-        return {}
+        return self._plugin.get_data_type(name)
 
     def getCmdClassLabelConversions(self, cmdClss, label):
         """Load file lib/cmd_class_conversion.json and return possible values for a label of  commandclass."""
@@ -317,38 +288,15 @@ class OZWavemanager():
     def getProductById(self, productId):
         """Return the product(s) set in json corresponding to productId.
            productId must contain id."""
-        products = []
-        productId = productId.lower()
-#        print "Retrieve products id : {0}".format(productId)
-        for product in self._plugin.json_data['products']:
-            if productId.find(product['id'].lower()) != -1:
-#                print "    Find product : {0}".format(product)
-                product[u'picture'] = self._plugin.get_picture_product(product)
-                products.append(product)
-        return products
+        return self._plugin.get_product_by_id(productId)
 
     def getSensorByName(self, name):
         """Return the sensor(s) set in json corresponding to name """
-        sensors = {}
-        name = name.lower()
-        print "Retrieve sensor name : {0}".format(name)
-        for sensor in self._plugin.json_data['sensors']:
-            if self._plugin.json_data['sensors'][sensor]['name'].lower() == name :
-#                print "    Find sensor : {0}".format(self._plugin.json_data['sensors'][sensor])
-                sensors[sensor] = self._plugin.json_data['sensors'][sensor]
-        return sensors
+        return self._plugin.get_sensors_by_name(name)
 
-    def getCommandByName(self, name):
-        """Return the command(s) set in json corresponding to name """
-        cmds = {}
-        name = name.lower()
-        print "Retrieve command name : {0}".format(name)
-        for cmd in self._plugin.json_data['commands']:
-            for param in self._plugin.json_data['commands'][cmd]['parameters']:
-                if param['key'].lower() == name :
-#                    print "    Find command : {0}".format(self._plugin.json_data['commands'][cmd])
-                    cmds[cmd] = self._plugin.json_data['commands'][cmd]
-        return cmds
+    def getCommandByKey(self, key):
+        """Return the command(s) set in json corresponding to key value"""
+        return self._plugin.get_commands_by_key(key)
 
     def findDeviceTypes(self, likelyDevices):
         """Search if device_type correspond to likely devices and return them."""
@@ -1683,7 +1631,7 @@ class OZWavemanager():
         elif request == 'manager.get' :
             report = self.getManagerInfo()
         elif request == 'manager.refreshdeviceslist':
-            self.threadingRefreshDevices()
+            self.AsyncRefreshDevices()
             report = {'error':''}
         elif request == 'openzwave.get' :
             report = self.getOpenzwaveInfo()

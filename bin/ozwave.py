@@ -87,6 +87,7 @@ class OZwave(Plugin):
                 self.log.error('Error on creating 2nd attempt OZWmanager : {0}'.format(e2))
                 self.force_leave()
                 return
+        self.register_cb_update_devices(self.myzwave.refreshDevices)
         self.add_mq_sub('device.update')
         # Start thread for starting ozwave sercices
         self.myzwave.starter.start()
@@ -101,20 +102,10 @@ class OZwave(Plugin):
     def get_lib_directory(self):
         return "{0}/{1}_{2}/lib/".format(self.packages_directory, self._type, self._name)
 
-    def get_picture_product(self, product):
-        """Return product picture file from json plugin, else None.
-           @param : product : the json dict definition from json plugin.
-        """
-        for ext in PRODUCTS_PICTURES_EXTENSIONS:
-            file = "{0}.{1}".format(product['id'], ext)
-            if os.path.isfile("{0}/{1}".format(self.get_products_directory(), file)):
-                return file
-        return None
-
     def on_message(self, msgid, content):
         #Transmit mq message to manager
-        if self.myzwave is not None :
-            self.myzwave.on_MQ_Message(msgid, content)
+        Plugin.on_message(self, msgid, content)
+        #For momment no other message than devices.update handled
 
     def on_mdp_request(self, msg):
         # display the req message
