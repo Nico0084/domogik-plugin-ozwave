@@ -1,12 +1,21 @@
 // Neighboors and group association library for showing zwave node device.
 var grpsStage;
 var neighborsGraph;
+var MINFORCE = 10;
 
 var nodeStateColor = {'inCarou' : [0, "#E9FBAA", 1, "#DCD100"],         // yellow
                       'inCarouSelect': [0, "#685CDA", 1, "#1200B5"], // blue
                       'inGrp': [0, "#FFA9FF", 1, "#DC00D9"],              // pink
                       'inGrpSelect': [0, "#FC9090", 1, "#D00000"]     // red
                      };
+
+function getMinForce() {
+    if (nodesData.length > 10) {
+        return MINFORCE * nodesData.length;
+    } else {
+        return MINFORCE * 10;
+    };
+};
 
 KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     this.nodeZW = nodeZW;
@@ -24,8 +33,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
                 var offset = this.attrs.ktcNode.ktcGraph.nodeLayer.offset();
                 var scalePos = {x:(pos.x+offset.x)/scale.x , y:(pos.y+offset.y)/scale.y};
 
-                var minF = 100;
-                var radius = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
+                var radius = getMinForce() + getGraphForce(this.attrs.ktcNode.nodeZW);
                 var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
                 if (ktcCtrl) {
                     var center = ktcCtrl.position() // center point
@@ -34,10 +42,10 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
                                   y: this.attrs.ktcNode.ktcStage.getHeight() / 2};
                 };
                 var ratio = Math.sqrt(Math.pow(scalePos.x - center.x, 2) + Math.pow(scalePos.y - center.y, 2)) / radius ; // distance formula ratio
-                if (ratio < 0.9 || ratio > 1.1) {
+                if (ratio < 0.8 || ratio > 1.2) {
                     var a = (scalePos.y - center.y)/(scalePos.x - center.x);
                     var b = center.y- (a * center.x);
-                    var t = ratio < 0.9 ? 0.9 : 1.1;
+                    var t = ratio < 0.8 ? 0.8 : 1.2;
                     var len = radius * t;
                     if (scalePos.x < center.x) { len = -len;};
                     var x = center.x;
@@ -183,8 +191,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
                 draggable: false,
                 name: 'dragHelper'
             });
-            var minF = 100;
-            var ray = minF + getGraphForce(this.attrs.ktcNode.nodeZW);
+            var ray = getMinForce() + getGraphForce(this.attrs.ktcNode.nodeZW);
             var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
             if (ktcCtrl) {
                 var org = ktcCtrl.position(); // center point
@@ -1952,7 +1959,7 @@ KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, last
     var nodesPos = this.getNodesPos(2 * rNode);
     var xc= this.ktcStage.getWidth() / 2;
     var yc= this.ktcStage.getHeight() / 2;
-    var minF = 100;
+    var minF = getMinForce();
     if (lastAngle == undefined) {var angle = 0;
     } else { angle = lastAngle; };
     var x=0, y=0;
@@ -2063,7 +2070,7 @@ function pointInRect(x, y, gRect) {
 };
 
 function getGraphForce (nodeData) {
-    return (100 - (nodeData.ComQuality)) * 6
+    return (100 - (nodeData.ComQuality)) * 10
 };
 
 function moveMedianPts (x1, y1, xm, ym, x2, y2, tension) {
