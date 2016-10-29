@@ -52,7 +52,7 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     var op =1;
     var label = getLabelDevice(this.nodeZW);
     if (this.nodeZW['State sleeping']) {op = 0.3; };
-    if (this.nodeZW.DmgProducts.length != 0) { // Display image  product instead of circle
+    if (this.nodeZW.DmgProducts.length != 0 && this.nodeZW.DmgProducts[0].picture != undefined) { // Display image  product instead of circle
         var imgP = new Image();
         this.pictProd = imgP;
         var kNode = this;
