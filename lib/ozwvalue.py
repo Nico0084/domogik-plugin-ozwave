@@ -556,6 +556,8 @@ class ZWaveValueNode:
             self._node.handleAlarmStep(self)
             return None
         deviceParam =  self.getDmgDeviceParam()
+        clssConversion = self.getCmdClassConversion()
+        self.log.debug(u"Class convertion : {0}".format(clssConversion))
         if deviceParam is not None :
             dmgSensor = self.getDmgSensor(deviceParam['label'])
             if dmgSensor :
@@ -578,37 +580,62 @@ class ZWaveValueNode:
                             sensorMsg['data']  = {'type': self.labelDomogik, 'current':  self._valueData['value']}
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_THERMOSTAT_SETPOINT' :
                         sensorMsg['data']  = {'type': 'setpoint', 'current': self._valueData['value']}
-                        if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units']  # TODO: A vérifier pas sur que l'unit soit util
+                        if self._valueData['units'] != '': sensorMsg['data'] ['units'] = self._valueData['units']  # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_BINARY' :
                         if self._valueData['type'] == 'Bool' :
-                            sensorMsg ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0}
+                            sensorMsg['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0}
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_MULTILEVEL' :
                         if self._valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
                             value = round(self._valueData['value'], 2)
                         else:
                             value = self._valueData['value']
-                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current': value}
-                        if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
+                        sensorMsg['data'] = {'type': self.labelDomogik, 'current': value}
+                        if self._valueData['units'] != '': sensorMsg['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_BATTERY' :
-                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
-                        if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
+                        sensorMsg['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
+                        if self._valueData['units'] != '': sensorMsg['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_POWERLEVEL' :
-                        sensorMsg ['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
+                        sensorMsg['data'] = {'type': self.labelDomogik, 'current':self._valueData['value']}
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_METER' :
                         if self._valueData['type'] ==  'Decimal' :   #TODO: A supprimer quand Widget gerera les digits.
                             value = round(self._valueData['value'], 2)
                         else:
                             value = self._valueData['value']
-                        sensorMsg ['data'] = {'type' : self.labelDomogik,  'current' : value}
-                        if self._valueData['units'] != '': sensorMsg ['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
+                        sensorMsg['data'] = {'type' : self.labelDomogik,  'current' : value}
+                        if self._valueData['units'] != '': sensorMsg['data'] ['units'] = self._valueData['units'] # TODO: A vérifier pas sur que l'unit soit util
                     elif self._valueData['commandClass'] == 'COMMAND_CLASS_SENSOR_ALARM' :  # considère toute valeur != 0 comme True
                         sensorMsg ['data'] = {'type': self.labelDomogik, 'current' : 1 if self._valueData['value'] else 0} # gestion du sensor binary pour widget binary
 #                        self._node.handleAlarmStep(self)
                     else : sensorMsg = None
-                if sensorMsg is not None : self.log.debug(u"Sensor value to Dmg device : {0}".format(sensorMsg))
+                if sensorMsg is not None :
+                    if clssConversion != {} :
+                        sensorMsg['data']['current'] = self.cmdClassConvert(clssConversion, sensorMsg['data']['current'])
+                        self.log.debug(u"{0} {1}, converted value result {2} for sensor {3}".format(self._valueData['commandClass'], self.labelDomogik, sensorMsg['data']['current'] , dmgSensor[sensor]))
+                    self.log.debug(u"Sensor value to Dmg device : {0}".format(sensorMsg))
             else : self.log.debug(u"No sensor find for device {0} - {1}".format(deviceParam, self.labelDomogik))
         else: self.log.debug(u"Sensor value not implemented to Dmg device : {0} - {1}".format(self._valueData['commandClass'], self.labelDomogik))
         return sensorMsg
+
+    def getCmdClassConversion(self):
+        """Return conversion format if exist else {}"""
+        return self._node._ozwmanager.getCmdClassLabelConversions(self._valueData['commandClass'], self.labelDomogik)
+
+    def cmdClassConvert(self, clssConv, value):
+        """"Handle comparaison for cmd class conversion to value"""
+        try :
+            if clssConv['type'] == 'bool' :
+                for v, vc in clssConv['values'].iteritems() :
+                    if bool(v) == bool(value) : return vc
+            elif clssConv['type'] in ['byte', 'int', 'long', 'decimal'] :
+                for v, vc in clssConv['values'].iteritems() :
+                    self.log.debug(u"{0}, {1}".format(v, vc))
+                    if float(v) == float(value) : return vc
+            elif clssConv['type'] == 'str' :
+                for v, vc in clssConv['values'].iteritems() :
+                    if str(v) == str(value) : return vc
+        except :
+            self.log.error(u"Fail to convert {0} value {1} in type {2}: {3}".format(self._valueData['commandClass'], value, clssConv['type'], traceback.format_exc()))
+            return value
 
     def getAlarmSensorMsg(self):
         """Must be call at end of alarm sequence, return value to sensor msg"""

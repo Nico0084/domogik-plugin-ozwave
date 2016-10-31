@@ -1,86 +1,134 @@
 {
 	"COMMAND_CLASS_ALARM" : {
 		"General" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Smoke" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Carbon Monoxide" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Carbon Dioxide" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Heat" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Flood" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Access Control" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Burglar" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Power Management" : {
-			"3" : 0,
-			"2" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "3" : 0,
+                "2" : 1,
+                "254" : 0
+            }
 		},
 		"System" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Emergency" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Clock" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Appliance" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+                "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"HomeHealth" : {
-			"0" : 0,
-			"1" : 1,
-			"254" : 0
+            "type": "byte",
+            "values" : {
+                "0" : 0,
+                "1" : 1,
+                "254" : 0
+            }
 		},
 		"Alarm Level" : {
-			"0" : "No Alarm",
-			"2" : "Power Applied",
-			"17" : "Tamper Event",
-			"255" : "Low Battery"
+            "type": "byte",
+            "values" : {
+                "0" : "No Alarm",
+                "2" : "Power Applied",
+                "17" : "Tamper Event",
+                "255" : "Low Battery"
+            }
 		},
 		"Alarm Report" : {
-			"0" : "No Alarm",
-			"2" : "Power Applied",
-			"17" : "Tamper Event",
-			"255" : "Low Battery"
+            "type": "byte",
+            "values" : {
+                "0" : "No Alarm",
+                "2" : "Power Applied",
+                "17" : "Tamper Event",
+                "255" : "Low Battery"
+            }
 		}
-	}
+    }
 }
