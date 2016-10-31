@@ -67,14 +67,14 @@
             "type": "ozwave.battery-level_low-battery_sensor-alarm_tamper-event"
         }, {
             "name" : "Danfoss living connect",
-            "id" : "014G0013",
+            "id" : "Z Thermostat",
             "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
             "type": "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c"
         }, {
-            "name" : "Fibaro motion sensor",
+            "name" : "FGMS001 Fibaro motion sensor",
             "id" : "FGMS001",
             "documentation" : "http://www.fibaro.com/en/the-fibaro-system/motion-sensor",
-            "type": "ozwave.battery-level_binary-sensor_luminance_temperature-c"
+            "type": "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c"
         }, {
             "name" : "Fibaro door opening sensor",
             "id" : "FGK101",
@@ -400,7 +400,7 @@
         "motion-sensor-binary" : {
             "name" : "Motion Sensor",
             "incremental": false,
-            "data_type" : "DT_Binary",
+            "data_type" : "DT_Motion",
             "conversion" : "",
             "timeout": 0,
             "history": {
@@ -414,7 +414,7 @@
         "motion-sensor-binary-inv" : {
             "name" : "Motion Sensor",
             "incremental": false,
-            "data_type" : "DT_Binary",
+            "data_type" : "DT_Motion",
             "conversion" : "for_Binary_Inversion",
             "timeout": 0,
             "history": {
@@ -428,8 +428,8 @@
         "motion-sensor-level" : {
             "name" : "General",
             "incremental": false,
-            "data_type" : "DT_Number",
-            "conversion" : "",
+            "data_type" : "DT_Motion",
+            "conversion" : "from_Level_to_DT_Binary",
             "timeout": 0,
             "history": {
                     "store": true,
@@ -1941,11 +1941,43 @@
             }]
         },
         "ozwave.battery-level_binary-sensor_luminance_temperature-c" :{
-            "description" : "Sensor sensor 4in1 (battery)",
+            "description" : "Sensor sensor 3in1 (battery)",
             "id": "ozwave.battery-level_binary-sensor_luminance_temperature-c",
-            "name" : "Sensor sensor 4in1 (battery)",
+            "name" : "Sensor sensor 3in1 (battery)",
             "commands": [],
             "sensors": ["binary-sensor", "luminance", "temperature-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c" :{
+            "description" : "Sensor sensor 4in1 (battery)",
+            "id": "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c",
+            "name" : "Sensor sensor 4in1 (battery)",
+            "commands": [],
+            "sensors": ["binary-sensor", "luminance", "motion-sensor-level", "temperature-c", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
