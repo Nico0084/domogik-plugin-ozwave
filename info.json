@@ -74,7 +74,7 @@
             "name" : "FGMS001 Fibaro motion sensor",
             "id" : "FGMS001",
             "documentation" : "http://www.fibaro.com/en/the-fibaro-system/motion-sensor",
-            "type": "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c"
+            "type": "ozwave.battery-level_level_luminance_motion-sensor-binary_temperature-c"
         }, {
             "name" : "Fibaro door opening sensor",
             "id" : "FGK101",
@@ -1972,12 +1972,12 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c" :{
+        "ozwave.battery-level_level_luminance_motion-sensor-binary_temperature-c" :{
             "description" : "Sensor sensor 4in1 (battery)",
-            "id": "ozwave.battery-level_binary-sensor_luminance_motion-sensor-level_temperature-c",
+            "id": "ozwave.battery-level_level_luminance_motion-sensor-binary_temperature-c",
             "name" : "Sensor sensor 4in1 (battery)",
             "commands": [],
-            "sensors": ["binary-sensor", "luminance", "motion-sensor-level", "temperature-c", "battery-level"],
+            "sensors": ["motion-sensor-binary", "luminance", "level", "temperature-c", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
