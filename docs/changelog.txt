@@ -1,20 +1,23 @@
 ==========
 Change log
 ==========
-0.5.3 : (05-10-2016)
+0.5.3 : (07-11-2016)
 --------------------
 - Change log :
     - Json Change :
+        - Use DT_Motion
         - Rename some product references
         - Add products "AEOTEC ZW089 Recessed Door Sensor Gen5", "QUBINO ZMNHCDx Flush Shutter", "QUBINO ZMNHJD1 heating pilot wire".
         - Add "pilot-wire-level" sensor/command
         - Add some device_types and fix somme typo.
+    - Handle CommandClass Alarm as string sensor.
     - Change pictures product to .png
     - Handle products domogik devices plugin associated to detected devices and known zwave modul.
     - Improved domogik device detection.
     - Improve Advanced Admin user information for node link to domogik device.
 	- Add in Advanced Admin node xml detail from openzwave config displayed by xonomy js lib. TODO: Edit/save mode.
-	- Fix Advanced Admin display network menu on overlay. 
+	- Fix Advanced Admin graph neighbors zoom, improve display.
+	- Fix Advanced Admin display network menu on overlay.
     - Fix some Unicode.
 	- Update doc
 
