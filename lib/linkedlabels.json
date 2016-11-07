@@ -34,6 +34,9 @@
     ],
     "heating pilot wire" : [
         "level"
+    ],
+    "Alarm Report" : [
+        "Alarm Level"
     ]
 }
 

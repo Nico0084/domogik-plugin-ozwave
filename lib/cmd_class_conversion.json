@@ -116,6 +116,7 @@
             "type": "byte",
             "values" : {
                 "0" : "No Alarm",
+                "1" : "Power Applied",
                 "2" : "Power Applied",
                 "17" : "Tamper Event",
                 "255" : "Low Battery"
@@ -125,6 +126,7 @@
             "type": "byte",
             "values" : {
                 "0" : "No Alarm",
+                "1" : "Power Applied",
                 "2" : "Power Applied",
                 "17" : "Tamper Event",
                 "255" : "Low Battery"

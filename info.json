@@ -64,7 +64,7 @@
             "name" : "SF812 Smoke Alarm",
             "id" : "SF812",
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/SF812.aspx",
-            "type": "ozwave.battery-level_low-battery_sensor-alarm_tamper-event"
+            "type": "ozwave.alarm-str-report_battery-level_smoke-alarm"
         }, {
             "name" : "Danfoss living connect",
             "id" : "Z Thermostat",
@@ -2004,12 +2004,12 @@
                 "type" : "boolean"
             }]
         },
-        "ozwave.battery-level_low-battery_sensor-alarm_tamper-event" :{
-            "description" : "Sensor security alarm (battery)",
-            "id": "ozwave.battery-level_low-battery_sensor-alarm_tamper-event",
-            "name" : "Sensor security alarm (battery)",
+        "ozwave.alarm-str-report_battery-level_smoke-alarm" :{
+            "description" : "Sensor security smoke alarm (battery)",
+            "id": "ozwave.alarm-str-report_battery-level_smoke-alarm",
+            "name" : "Sensor security smoke alarm (battery)",
             "commands": [],
-            "sensors": ["sensor-alarm", "tamper-event","low-battery", "battery-level"],
+            "sensors": ["alarm-str-report", "smoke-alarm", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
