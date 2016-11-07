@@ -27,31 +27,31 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
         name: 'picturenode',
         ktcNode : this,
         dragBoundFunc : function(pos){
-            var newPos = {x: pos.x, y: pos.y};
+            var newPos = {x: pos.x, y: pos.y}; // new point offset and scale depending
             if (dragConstrain && this.attrs.ktcNode.nodeZW.Capabilities.indexOf("Primary Controller" ) == -1) {
                 var scale = this.attrs.ktcNode.ktcGraph.nodeLayer.scale();
                 var offset = this.attrs.ktcNode.ktcGraph.nodeLayer.offset();
-                var scalePos = {x:(pos.x+offset.x)/scale.x , y:(pos.y+offset.y)/scale.y};
-
-                var radius = getMinForce() + getGraphForce(this.attrs.ktcNode.nodeZW);
+                var radius = getMinForce() + getGraphForce(this.attrs.ktcNode.nodeZW); // no scale depending
+                radius = radius * (Math.sqrt(Math.pow(scale.x, 2) + Math.pow(scale.y, 2))/Math.SQRT2); // scale radius
                 var ktcCtrl = GetControllerNode(this.attrs.ktcNode.nodeZW.NetworkID).ktcNode;
                 if (ktcCtrl) {
-                    var center = ktcCtrl.position() // center point
+                    var center = ktcCtrl.position() // center point no scale
+                    center.x = (center.x-offset.x)*scale.x;  // offset and scale depending
+                    center.y = (center.y-offset.y)*scale.y;
                 } else {
                     var center = {x: this.attrs.ktcNode.ktcStage.getWidth() / 2,
                                   y: this.attrs.ktcNode.ktcStage.getHeight() / 2};
                 };
-                var ratio = Math.sqrt(Math.pow(scalePos.x - center.x, 2) + Math.pow(scalePos.y - center.y, 2)) / radius ; // distance formula ratio
+                var ratio = Math.sqrt(Math.pow(pos.x - center.x, 2) + Math.pow(pos.y - center.y, 2)) / radius ; // distance formula ratio no scale
                 if (ratio < 0.8 || ratio > 1.2) {
-                    var a = (scalePos.y - center.y)/(scalePos.x - center.x);
+                    var a = (pos.y - center.y)/(pos.x - center.x);
                     var b = center.y- (a * center.x);
                     var t = ratio < 0.8 ? 0.8 : 1.2;
                     var len = radius * t;
-                    if (scalePos.x < center.x) { len = -len;};
+                    if (pos.x < center.x) { len = -len;};
                     var x = center.x;
                     var y = center.y;
-                    scalePos = getPointTension(x, y, a, b, len);
-                    newPos = {x:(scalePos.x*scale.x)-offset.x, y:(scalePos.y*scale.y)-offset.y};
+                    newPos = getPointTension(x, y, a, b, len);
                 };
             };
             return newPos;
@@ -236,6 +236,10 @@ KtcNode = function  (x, y, r, nodeZW, layer, graph) {
     });
 
     this.pictureNode.on("dragmove", function() {
+        this.attrs.ktcNode.updateLinkPath();
+    });
+
+    this.pictureNode.on("mousedown", function() {
         this.attrs.ktcNode.updateLinkPath();
     });
 
@@ -425,16 +429,23 @@ KtcNode.prototype.updateLinkPath = function() {
 KtcNode.prototype.position = function() {
     if (this.pictureImg.className == "Rect"){
         var scale = this.ktcGraph.nodeLayer.scale();
-        var offset = this.ktcGraph.nodeLayer.offset();
+        var offset = this.ktcGraph.nodeLayer.offset(); // No scale depending
+        offset.x = offset.x * scale.x;
+        offset.y = offset.y * scale.y;
         var img = this.pictureNode.get(".pictProd");
-        var sRect = this.pictureImg.size();
-        var pRect = this.pictureImg.getAbsolutePosition();
+        var sRect = this.pictureImg.size(); // No scale depending
+        sRect.width = sRect.width * scale.x;
+        sRect.height = sRect.height * scale.y;
+        var pRect = this.pictureImg.getAbsolutePosition(); // offset and scale depending
         var xm,ym;
         if (img.length > 0 ) {
             var x,y,x1,y1;
-            var pImg = img[0].getAbsolutePosition();
+            var pImg = img[0].getAbsolutePosition(); // offset and scale depending
+            var sImg = img[0].size(); // No scale depending
+            sImg.width = sImg.width * scale.x;
+            sImg.height = sImg.height * scale.y;
             if (pImg.x < pRect.x) {x = pImg.x;} else { x = pRect.x;};
-            if (pImg.x+img[0].size().width < pRect.x+sRect.width) {x1 = pImg.x+img[0].size().width;} else { x1 = pRect.x+sRect.width;};
+            if (pImg.x+sImg.width < pRect.x+sRect.width) {x1 = pRect.x+sRect.width;} else { x1 = pImg.x+sImg.width;};
             y = pImg.y;
             y1 = pRect.y + sRect.height;
             xm = (x1 - x)/2 + x;
@@ -445,7 +456,7 @@ KtcNode.prototype.position = function() {
         };
         return {x:(xm + offset.x)/scale.x, y:(ym + offset.y)/scale.y};
     };
-    return this.pictureNode.position();
+    return this.pictureNode.position(); // offset and scale depending
 };
 
 KtcNode.prototype.size = function() {
@@ -1722,13 +1733,15 @@ ktcScrollbar = function (contenaire, direction, layer) {
         document.body.style.cursor = "default";
     });
     this.scrollBar.on("dragmove", function() {
-        var p = this.attrs.area.ktcParent.getNodesCenter();
+        var c = this.attrs.area.ktcParent.getCenter();
+        var offset = this.attrs.area.ktcParent.nodeLayer.offset();
+        var scale = this.attrs.area.ktcParent.nodeLayer.scale();
         if (this.attrs.area.direction == 'horizontal') { // horizontale
-            p.x = this.attrs.area.getScrollPosition();
+            offset.x = (this.attrs.area.getScrollPosition()-c.x)/scale.x;
         } else {
-            p.y = this.attrs.area.getScrollPosition();
+            offset.y = (this.attrs.area.getScrollPosition()-c.y)/scale.y;
         };
-        this.attrs.area.ktcParent.setNodesCenter(p.x, p.y);
+        this.attrs.area.ktcParent.setNodesCenter(offset.x, offset.y);
     });
 
     this.scrollBar.on("dragend", function() {
@@ -1749,8 +1762,10 @@ ktcScrollbar.prototype.reziseWidth = function (dw) {
         var length = areaW / 3;
         this.scrollBar.setX(this.scrollBar.getX() * ratio);
         this.scrollBar.setWidth(length);
-        var offset = this.ktcParent.getNodesCenter();
-        this.ktcParent.setNodesCenter(this.getScrollPosition(), offset.y);
+        var c = this.ktcParent.getCenter();
+        var scale = this.ktcParent.nodeLayer.scale();
+        var offset = this.ktcParent.getOffset();
+        this.ktcParent.setNodesCenter((this.getScrollPosition()-c.x)/scale.x, offset.y);
     } else {
         this.scrollBar.setX(this.scrollBar.getX() + dw);
         this.scrollArea.setX(this.scrollArea.getX() + dw);
@@ -1763,15 +1778,34 @@ ktcScrollbar.prototype.getScrollPosition = function () {
         var length = areaW / 3;
         var scrollPos = (this.scrollBar.getX() + (length/2)) - (areaW/2);
         var ratio = this.ktcParent.space.width/ (areaW - length);
-        var scrollPos = scrollPos * ratio ;
+        var scrollPos = scrollPos * ratio;
     } else {
-        var areaW = this.scrollArea.getHeight();
-        var length = areaW / 3;
-        var scrollPos = (this.scrollBar.getY() + (length/2)) - (areaW/2);
-        var ratio = this.ktcParent.space.height/ (areaW - length);
-        var scrollPos = scrollPos * ratio ;
+        var areaH = this.scrollArea.getHeight();
+        var length = areaH / 3;
+        var scrollPos = (this.scrollBar.getY() + (length/2)) - (areaH/2);
+        var ratio = this.ktcParent.space.height/ (areaH - length);
+        var scrollPos = scrollPos * ratio;
     };
     return scrollPos;
+};
+
+ktcScrollbar.prototype.setScrollPosition = function (scrollPos) {
+    var c = this.ktcParent.getCenter();
+    if (this.direction == 'horizontal') {
+        scrollPos += c.x;
+        var areaW = this.scrollArea.getWidth();
+        var length = areaW / 3;
+        var ratio = this.ktcParent.space.width/ (areaW - length);
+        scrollPos = scrollPos / ratio ;
+        this.scrollBar.x(scrollPos - (length/2) + (areaW/2));
+    } else {
+        scrollPos += c.y;
+        var areaH = this.scrollArea.getHeight();
+        var length = areaH / 3;
+        var ratio = this.ktcParent.space.width/ (areaH - length);
+        scrollPos = scrollPos / ratio ;
+        this.scrollBar.y(scrollPos - (length/2) + (areaH/2));
+    };
 };
 
 KtcNeighborsGraph = function (divId){
@@ -1786,7 +1820,7 @@ KtcNeighborsGraph = function (divId){
     this.ktcStage = new Kinetic.Stage({
         container: divId,
         width: width,
-        height: 600,
+        height: 700,
         neighborsGraph : this
     });
     this.space = {width : 2000, height : 1000};
@@ -1824,13 +1858,15 @@ KtcNeighborsGraph = function (divId){
     this.tooltipLayer = new Kinetic.Layer();
     this.buildKineticNeighbors();
     var graph = this
+    this.refreshAllLinksPath();
     window.onresize = function resizeStage(){
         var cont =  document.getElementById(divId);
         var w = cont.getBoundingClientRect();
-        var dw = (w.width - 25) - graph.ktcStage.getWidth() ;
-        graph.ktcStage.setWidth(w.width - 25);
+        var dw = (w.width - 30) - graph.ktcStage.getWidth() ;
+        graph.ktcStage.setWidth(w.width - 30);
         graph.hScrollBar.reziseWidth(dw);
         graph.vScrollBar.reziseWidth(dw);
+        graph.scrollLayer.batchDraw();
      };
 };
 
@@ -1862,7 +1898,7 @@ KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
     var pos = [0, 0, 0];
     for (var i=0; i<nodesData.length;i++) {
         if (nodesData[i].Capabilities.indexOf("Primary Controller") != -1) {
-            pos = [xc, yc, 0];
+            pos = [0, 0, 0];
             r = 40;
         } else {
             pos = this.calculNodePosition(25, nodesData[i], pos[2]);
@@ -1893,12 +1929,27 @@ KtcNeighborsGraph.prototype.buildKineticNeighbors = function () {
     this.ktcStage.add(this.nodeLayer);
     this.ktcStage.add(this.tooltipLayer);
     this.ktcStage.add(this.scrollLayer);
+    this.setNodesCenter(-xc,-yc);
+    var nodesArea = this.getNodesArea();
+    var newScale = {x:1,y:1};
+    var scale = {x:(2*xc)/(nodesArea.x2-nodesArea.x1)-0.1, y:(2*yc)/(nodesArea.y2-nodesArea.y1)-0.1};
+    if (scale.x < 1) {
+            newScale.x = Math.round(scale.x*10)/10;
+            newScale.y = newScale.x;
+    };
+    if ((scale.y < 1) && (scale.y < newScale.x)) {
+            newScale.y = Math.round(scale.y*10)/10;
+            newScale.x = newScale.y;
+    };
+    if (newScale.x != 1) {
+        this.setScale(newScale);
+    };
 };
 
 KtcNeighborsGraph.prototype.addNode = function(nodeData) {
     if (nodeData.Capabilities.indexOf("Primary Controller") != -1) {
         var r = 40;
-        pos = [xc, yc, 0];
+        pos = [0, 0, 0];
     } else {
         var r = 25;
         pos = this.calculNodePosition(r, nodeData, 0);
@@ -1923,16 +1974,59 @@ KtcNeighborsGraph.prototype.addNode = function(nodeData) {
 };
 
 KtcNeighborsGraph.prototype.getNodesCenter = function () {
+    var rect = this.getNodesArea();
+    return {x: (rect.x2-rect.x1)/2, y: (rect.y2-rect.y1)/2};
+};
+
+KtcNeighborsGraph.prototype.getNodesArea = function () {
+    var nodesPos = this.getNodesPos(50);
+    var rect = {x1: 10000, y1:10000, x2:0, y2:0};
+    if (nodesPos.length != 0 ) {
+        for (np in nodesPos) {
+            if (nodesPos[np].gRect.x1 < rect.x1) { rect.x1 = nodesPos[np].gRect.x1;};
+            if (nodesPos[np].gRect.y1 < rect.y1) { rect.y1 = nodesPos[np].gRect.y1;};
+            if (nodesPos[np].gRect.x2 > rect.x2) { rect.x2 = nodesPos[np].gRect.x2;};
+            if (nodesPos[np].gRect.y2 > rect.y2) { rect.y2 = nodesPos[np].gRect.y2;};
+        };
+    } else {
+        rect = {x1: 0, y1:0, x2:this.ktcStage.width(), y2:this.ktcStage.height()};
+    };
+    return rect;
+};
+
+KtcNeighborsGraph.prototype.getOffset = function () {
     return this.nodeLayer.getOffset();
 };
 
+KtcNeighborsGraph.prototype.getCenter = function () {
+    return {x: this.ktcStage.getWidth() / 2, y: this.ktcStage.getHeight() / 2};
+};
+
 KtcNeighborsGraph.prototype.setNodesCenter = function (x, y) {
-    this.linkLayer.offsetX(x);
-    this.linkLayer.offsetY(y);
-    this.nodeLayer.offsetX(x);
-    this.nodeLayer.offsetY(y);
-    this.nodeLayer.batchDraw();
-    this.linkLayer.batchDraw();
+    this.linkLayer.offset({x:x,y:y}).batchDraw();
+    this.nodeLayer.offset({x:x,y:y}).batchDraw();
+};
+
+KtcNeighborsGraph.prototype.refreshAllLinksPath = function () {
+    for (n in nodesData) {
+        if (nodesData[n].ktcNode != undefined) {
+            nodesData[n].ktcNode.updateLinkPath();
+        };
+    };
+};
+
+KtcNeighborsGraph.prototype.setScale = function (scale) {
+    var center = this.getCenter();
+    var offsetOrg = this.getOffset();
+    var scaleOrg = this.nodeLayer.scale();
+    offsetOrg = {x: ((offsetOrg.x*scaleOrg.x) + center.x)/scale.x, y: ((offsetOrg.y*scaleOrg.y) + center.y)/scale.y};
+    var offset = {x: (-center.x / scale.x) + offsetOrg.x, y: (-center.y / scale.y) + offsetOrg.y};
+    this.linkLayer.scale(scale);
+    this.nodeLayer.scale(scale);
+    this.setNodesCenter(offset.x, offset.y)
+    this.hScrollBar.setScrollPosition(offset.x*scale.x);
+    this.vScrollBar.setScrollPosition(offset.y*scale.y);
+    this.scrollLayer.batchDraw();
 };
 
 KtcNeighborsGraph.prototype.getNodesPos = function (s) {
@@ -1940,7 +2034,6 @@ KtcNeighborsGraph.prototype.getNodesPos = function (s) {
     var size;
     for (n in nodesData) {
         if (nodesData[n].ktcNode != undefined) {
-//            pos = nodesData[n].ktcNode.pictureNode.position();
             pos = nodesData[n].ktcNode.position();
             size = nodesData[n].ktcNode.size();
             if (size.width == 0) {
@@ -1957,8 +2050,8 @@ KtcNeighborsGraph.prototype.getNodesPos = function (s) {
 
 KtcNeighborsGraph.prototype.calculNodePosition = function (rNode, nodeData, lastAngle) {
     var nodesPos = this.getNodesPos(2 * rNode);
-    var xc= this.ktcStage.getWidth() / 2;
-    var yc= this.ktcStage.getHeight() / 2;
+    var xc=0;
+    var yc=0;
     var minF = getMinForce();
     if (lastAngle == undefined) {var angle = 0;
     } else { angle = lastAngle; };

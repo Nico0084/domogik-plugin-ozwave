@@ -26,8 +26,15 @@
             var scale = neighborsGraph.nodeLayer.scale();
             scale.x += 0.1;
             scale.y += 0.1;
-            neighborsGraph.linkLayer.scale(scale).batchDraw();
-            neighborsGraph.nodeLayer.scale(scale).batchDraw();
+            if (scale.x <= 2) {
+                neighborsGraph.setScale(scale);
+            } else {
+                new PNotify({
+                    type: 'notice',
+                    title: 'Max zoom (x2) achieved' ,
+                    delay: 4000
+                });
+            };
         };
     });
     $("#zoomOut").click(function(e) {
@@ -35,8 +42,15 @@
             var scale = neighborsGraph.nodeLayer.scale();
             scale.x -= 0.1;
             scale.y -= 0.1;
-            neighborsGraph.linkLayer.scale(scale).batchDraw();
-            neighborsGraph.nodeLayer.scale(scale).batchDraw();
+            if (scale.x >= 0.1) {
+                neighborsGraph.setScale(scale);
+            } else {
+                new PNotify({
+                    type: 'notice',
+                    title: 'Min zoom (/10) achieved' ,
+                    delay: 4000
+                });
+            };
         };
     });
     $("#dragConstrain").change(function(e) {
