@@ -110,6 +110,11 @@
             "id" : "ZMNHJD1",
             "documentation" : "http://blog.nord-domotique.com/index.php/2016/07/14/micromodule-qubino-pour-fil-pilote-zmnhjd1/",
             "type": "ozwave.pilot-wire-level_switch__pilot-wire-level_switch"
+        }, {
+            "name" : "NorthQ NQ-9121 Gas Meter",
+            "id" : "NQ-9121",
+            "documentation" : "http://northq.com/qgas/",
+            "type": "ozwave.battery-level_meter-gas"
         }
     ],
     "configuration" : [{
@@ -667,6 +672,20 @@
             "name" : "Count",
             "incremental": true,
             "data_type" : "DT_Number",
+            "conversion" : "",
+            "timeout": 0,
+            "history": {
+                    "store": true,
+                    "duplicate": false,
+                    "max": 0,
+                    "expire": 0,
+                    "round_value": 0
+            }
+        },
+        "meter-gas" : {
+            "name" : "Gas",
+            "incremental": true,
+            "data_type" : "DT_VolumeM3",
             "conversion" : "",
             "timeout": 0,
             "history": {
@@ -2184,6 +2203,38 @@
                 "min_value": 1,
                 "key": "instance",
                 "type": "integer"
+            }]
+        },
+        "ozwave.battery-level_meter-gas" :{
+            "description" : "Thermostat with only setpoint (battery)",
+            "id": "ozwave.battery-level_meter-gas",
+            "name" : "Gas meter (battery)",
+            "commands": [],
+            "sensors": ["meter-gas", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
             }]
         }
     },

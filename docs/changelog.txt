@@ -1,7 +1,7 @@
 ==========
 Change log
 ==========
-0.5.3 : (07-11-2016)
+0.5.3 : (27-12-2016)
 --------------------
 - Change log :
     - Json Change :
@@ -10,6 +10,7 @@ Change log
         - Add products "AEOTEC ZW089 Recessed Door Sensor Gen5", "QUBINO ZMNHCDx Flush Shutter", "QUBINO ZMNHJD1 heating pilot wire".
         - Add "pilot-wire-level" sensor/command
         - Add some device_types and fix somme typo.
+        - Add NorthQ NQ-9121 Gas Meter Product and device type.
     - Handle CommandClass Alarm as string sensor.
     - Change pictures product to .png
     - Handle products domogik devices plugin associated to detected devices and known zwave modul.
@@ -31,7 +32,7 @@ Change log
 		- Modify binary **Bright/Dim Increase/Decrease Up/down** button as a single command
 		- Modify device_types associate
 		- Add details configuration values openzwave options help
-	- Handle **Bright/Dim Increase/Decrease Up/down** button 
+	- Handle **Bright/Dim Increase/Decrease Up/down** button
 	- Update doc
 
 0.5.1 : (27-06-2016)
