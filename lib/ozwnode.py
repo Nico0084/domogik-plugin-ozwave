@@ -1145,7 +1145,8 @@ class ZWaveNode:
                     added = []
                     for s in sensors :
     #                    print "        Check sensor {0} : {1}".format(s, sensors[s])
-                        if sensors[s]['data_type'] in dataTypes : added.append(s)
+                        if sensors[s]['data_type'] in dataTypes and value.dmgDevice == [] :
+                            added.append(s)
     #                print "    Added sensors : {0}".format(added)
                     if added :
                         if not devices[refDev]['listSensors'] :
@@ -1186,7 +1187,7 @@ class ZWaveNode:
     #                        print "        Check cmd {0} : {1}".format(c, cmds[c])
                             for param in cmds[c]['parameters'] :
     #                            print "            Check label {0} for param {1}".format(newD['label'], param)
-                                if newD['label'] == param['key'].lower() and param['data_type'] in dataTypes :
+                                if newD['label'] == param['key'].lower() and param['data_type'] in dataTypes and value.dmgDevice == [] :
                                     added.append(c)
     #                    print "    Added commands : {0}".format(added)
                         if added :
