@@ -317,6 +317,7 @@ class ZWaveValueNode:
         if self._valueData['units'].lower() == "seconds" : return u"s"
         elif self._valueData['units'].lower() == "c" : return u"\xb0C"
         elif self._valueData['units'].lower() == "f" : return u"\xb0F"
+        elif self._valueData['units'].lower() == "cubic meters" : return u"m3"
         return u"{0}".format(self._valueData['units'])
 
     def _getLabelDomogik(self):
