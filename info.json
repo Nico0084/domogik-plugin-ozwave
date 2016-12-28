@@ -2206,7 +2206,7 @@
             }]
         },
         "ozwave.battery-level_meter-gas" :{
-            "description" : "Thermostat with only setpoint (battery)",
+            "description" : "Gas Meter reader (battery)",
             "id": "ozwave.battery-level_meter-gas",
             "name" : "Gas meter (battery)",
             "commands": [],
