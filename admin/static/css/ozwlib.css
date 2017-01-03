@@ -1,6 +1,10 @@
 @charset "UTF-8";
 /* CSS Document */
 
+.marge {
+    margin-left: 3em;
+}
+
 /* bootstrap glyphicons extend */
 
 .row-spacing {

@@ -178,91 +178,135 @@
 
 <script type="text/javascript">
 
-        var activeNetwork = "{{ network_active }}";
-        clientID = "{{ clientid }}";
-        ozwInfo = {{ openzwaveInfo|tojson }}
+    var activeNetwork = "{{ network_active }}";
+    clientID = "{{ clientid }}";
+    ozwInfo = {{ openzwaveInfo|tojson }}
 
-        /* Action which shows and hides div with a id */
-        $("[id^='toggle-OZWconfig']").click(function() {
-          var target_selector = $(this).attr('data-target');
-          toggleVisible(target_selector, this.id);
-          return false;
-        });
+    /* Action which shows and hides div with a id */
+    $("[id^='toggle-OZWconfig']").click(function() {
+      var target_selector = $(this).attr('data-target');
+      toggleVisible(target_selector, this.id);
+      return false;
+    });
 
-        function toggleVisible(target_selector, icon_selector) {
-          var $target = $("[id^='"+target_selector+"']" );
-          if ($target.is(':hidden')) {
-            $target.show("fast" );
-            $('#'+icon_selector).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
-          } else {
-            $target.hide( "fast" );
-            $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
-          };
+    function toggleVisible(target_selector, icon_selector) {
+      var $target = $("[id^='"+target_selector+"']" );
+      if ($target.is(':hidden')) {
+        $target.show("fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+      } else {
+        $target.hide( "fast" );
+        $('#'+icon_selector).removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+      };
+    };
+
+    function sidebarVisible(target_selector, state) {
+      var $target = $("[id^='"+target_selector+"']" );
+      if (state) {
+        $target.show("fast" );
+      } else {
+        $target.hide( "fast" );
+      };
+    };
+
+    function setCtrlStatusHtml(ctrl) {
+        var htmlCtrl = $("#ctrl-info_"+ctrl.NetworkID);
+        if (htmlCtrl.length == 0) {
+            $("<h2 id='ctrl-info_"+ctrl.NetworkID+"'></h2>").insertAfter("#manager-info");
+            htmlCtrl = $("#ctrl-info_"+ctrl.NetworkID);
         };
-
-        function sidebarVisible(target_selector, state) {
-          var $target = $("[id^='"+target_selector+"']" );
-          if (state) {
-            $target.show("fast" );
-          } else {
-            $target.hide( "fast" );
-          };
+        var contentHtml = "";
+        var error = '';
+        var icon = ' fa-smile-o';
+        var iconColor = ' icon-success';
+        var info = '';
+        if (ctrl.error != undefined && ctrl.error != '') {
+            error = "<p class='marge'>- "+ctrl.error+"</p>";
+            iconColor = " icon-danger";
         };
-
-        function selectActiveNetwork(NetworkID) {
-            sidebarVisible('network-menu', true);
-            activeNetwork = NetworkID;
-            $("#debug-networkactive").text(NetworkID);
-            $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
-            $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
-            $("#network-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/network");
-            $("#ctrltools-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/ctrltools");
+        if (ctrl.init != undefined && ctrl.init != '') {
+            init = "<p class='marge'>- "+ctrl.init+"</p>";
         };
+        if (ctrl.status == 'dead') {
+            icon = ' fa-exclamation-circle';
+            info = "<p class='marge'>- {% trans %}Check openzwave and plugin log file{% endtrans %}.</p>";
+        } else if (ctrl.status == 'alive') {
+            info =  "<p class='marge'>- {% trans %}You can use full access on left menu{% endtrans %}.</p>";
+        } else if (ctrl.status == 'starting') {
+            if (ctrl.init != undefined && ctrl.init.search('Opening') == -1)  {
+                info = "<p class='marge'>- {% trans %}Discovery of nodes, be patient{% endtrans %} ...</p>";
+            };
+            if (ctrl.init != undefined && (ctrl.init.search('In progress') != -1 || ctrl.init.search('ready') != -1))  {
+                info += "<p class='marge'>- {% trans %}You can already use full access on left menu{% endtrans %}.</p>";
+            };
+        } else if (ctrl.status == 'stopped') {
+            icon = ' fa-stop';
+            iconColor = " icon-danger";
+            info = "<p class='marge'>- {% trans %}Stopped{% endtrans %}.</p>"
+        } else {
+            icon = ' fa-question-circle';
+            iconColor = " icon-warning";
+            info = "<p class='marge'>- {% trans %}Unknown status{% endtrans %}: "+ ctrl.status +"</p>";
+        };
+        contentHtml = "<i class='fa"+icon+iconColor+"'></i> {% trans %}Zwave controller{% endtrans %} "+ctrl.NetworkID+" - "+ctrl.HomeID+
+                             init + info + error;
+        $(htmlCtrl).html(contentHtml);
+    };
 
-        $("[id^='saveconf_']").click(function() {
-            var NetworkID = this.id.split("_")[1];
-            $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
-            sendRequest("ozwave.ctrl.saveconf", { "networkId": NetworkID }, function(data, result) {
-                if (data.content.result == "error") {
-                    new PNotify({
-                        type: 'error',
-                        title: 'Fail to save config file',
-                        text: data.content.error,
-                        delay: 6000
-                    });
-                } else {
-                    new PNotify({
-                        type: 'success',
-                        title: 'Config file saved',
-                        text: data.content.msg,
-                        delay: 4000
-                    });
-                };
-                updateBtSavedConf(data.content.NetworkID, data.content.saved);
-            });
+    function selectActiveNetwork(NetworkID) {
+        sidebarVisible('network-menu', true);
+        activeNetwork = NetworkID;
+        $("#debug-networkactive").text(NetworkID);
+        $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
+        $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
+        $("#network-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/network");
+        $("#ctrltools-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/ctrltools");
+    };
+
+    $("[id^='saveconf_']").click(function() {
+        var NetworkID = this.id.split("_")[1];
+        $("#icsaveconf_" + NetworkID).removeClass("glyphicon-floppy-save glyphicon-floppy-saved").addClass("glyphicon-hourglass");
+        sendRequest("ozwave.ctrl.saveconf", { "networkId": NetworkID }, function(data, result) {
+            if (data.content.result == "error") {
+                new PNotify({
+                    type: 'error',
+                    title: 'Fail to save config file',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: 'Config file saved',
+                    text: data.content.msg,
+                    delay: 4000
+                });
+            };
+            updateBtSavedConf(data.content.NetworkID, data.content.saved);
         });
-        $("#refrechdevList").click(function() {
-            var NetworkID = this.id.split("_")[1];
-            $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh fa-spin");
-            sendRequest("ozwave.manager.refreshdeviceslist", {}, function(data, result) {
-                if (result == "error" || data.content.error != "") {
-                    $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
-                    new PNotify({
-                        type: 'error',
-                        title: 'Fail to refresh domogik device list',
-                        text: data.content.error,
-                        delay: 6000
-                    });
-                } else {
-                    new PNotify({
-                        type: 'success',
-                        title: 'Refresh domogik device list',
-                        text: 'Refresh sended, waiting response...',
-                        delay: 4000
-                    });
-                };
-            });
+    });
+    $("#refrechdevList").click(function() {
+        var NetworkID = this.id.split("_")[1];
+        $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh fa-spin");
+        sendRequest("ozwave.manager.refreshdeviceslist", {}, function(data, result) {
+            if (result == "error" || data.content.error != "") {
+                $("#refrechdevList-ic").removeClass().addClass("fa fa-refresh");
+                new PNotify({
+                    type: 'error',
+                    title: 'Fail to refresh domogik device list',
+                    text: data.content.error,
+                    delay: 6000
+                });
+            } else {
+                new PNotify({
+                    type: 'success',
+                    title: 'Refresh domogik device list',
+                    text: 'Refresh sended, waiting response...',
+                    delay: 4000
+                });
+            };
         });
+    });
 
     $( document ).ready(function() {
         var ws_onmessage_menu = ws.onmessage;
@@ -301,6 +345,7 @@
                                     if ((data.content.type == 'change') || (data.content.type == 'status')) {
                                         $("#ctrl-tab_"+data.content.NetworkID).removeClass().addClass("label status-" + data.content.status).attr("data-original-title",data.content.init);
                                         $("#ctrl-tab_"+data.content.NetworkID).text(data.content.NetworkID + " - " + data.content.HomeID);
+                                        var error = '';
                                         if (data.content.HomeID != null) {
                                             updateBtSavedConf(data.content.NetworkID, data.content.saved);
                                         };
@@ -312,7 +357,10 @@
                                                 delay: 6000
                                             });
                                             $("#manager-init").text(data.content.NetworkID+': '+data.content.usermsg);
+                                            error = data.content.usermsg;
                                         };
+                                        setCtrlStatusHtml({'NetworkID': data.content.NetworkID, 'HomeID': data.content.HomeID, 'init' : data.content.usermsg,
+                                                                'status': data.content.status, 'error': error, 'Model': ''});
                                         <!-- debug infos -->
                                         $("#debug-ctrl").text(JSON.stringify(data.content));
                                     };

@@ -1266,13 +1266,15 @@ class OZWavemanager():
                 retval[u"Node fail"] = ctrl.getFailedNodeCount()
                 retval[u"ListNodeId"] = ctrl.getNodesId()
             else:
-                retval[u"Model"] = u"Zwave network not ready, be patient..."
-            retval[u"error"] = ""
+                if retval[u"error"] != "" :
+                    retval[u"Model"] = u"Zwave network unusable"
+                else :
+                    retval[u"Model"] = u"Zwave network not ready, be patient..."
             return retval
         else :
             retval[u"error"] = u"Network ID <{0}> not registered, wait or check configuration and hardware.".format(networkId)
             retval[u"init"] = NodeStatusNW[0] # Uninitialized
-            retval["status"] = u"unknown"
+            retval[u"status"] = u"unknown"
             return retval
 
     def getZWRefFromDB(self, deviceID, id, type = 'cmd'):
@@ -1971,6 +1973,7 @@ class PrimaryController():
     def getStatus(self):
         """Renvoi l'état du controleur."""
         retval = {}
+        retval["error"] = ''
         retval["init"] = NodeStatusNW[0] # Uninitialized
         retval["status"] = 'unknown'
         retval["saved"] = self._saved
@@ -1982,12 +1985,16 @@ class PrimaryController():
                 else :
                     retval["init"] = NodeStatusNW[3] # In progress - Devices initializing
                     retval["status"] = 'starting'
+            elif self._ozwmanager._openingDriver == self.driver :
+                retval["init"] = 'Opening driver {0}'.format(self.driver)
+                retval["status"] = 'starting'
             if self.ctrlActProgress and self.ctrlActProgress.has_key('state') and self.ctrlActProgress['state'] == libopenzwave.PyControllerState[4] :
                 retval['status'] ='locked' #Waiting
         elif self.status == 'close' : retval["status"] = 'stopped'
         elif self.status == 'fail' :
             retval["status"] = 'dead'
             retval["init"] = 'Out of operation'
+            retval["error"] = 'Openzwave opening driver {0} fail'.format(self.driver)
         return retval
 
     def getNodes(self):
