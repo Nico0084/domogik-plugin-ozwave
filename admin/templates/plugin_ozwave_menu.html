@@ -92,9 +92,6 @@
                 </a>
             </li>
         {% endfor %}
-            <li id="debug-tab" {% if network_active == "" %}class="active"{% endif %}>
-                <a data-toggle="tab" href="#debug-pane" onclick="sidebarVisible('network-menu', false);return true;">Debug tools</a>
-            </li>
             <li id="tools-tab" {% if network_active == "tools" %}class="active"{% endif %}>
                 <a data-toggle="tab" href="#tools-pane" onclick="sidebarVisible('network-menu', false);window.location.href='/plugin_ozwave/{{ clientid }}/tools';return true;">ozw tools</a>
             </li>
@@ -146,26 +143,6 @@
         <!-- Page is insered after -->
         </div>
     {% endfor %}
-        <div class="tab-pane" id="debug-pane">
-            <h3>Raw data page selection :</h3>
-                <li><b>{% trans %}network_active{% endtrans %} : </b><span id="debug-networkactive">{{ network_active }}</span></li>
-                <li><b>{% trans %}networkmenu_active{% endtrans %} : </b><span id="debug-networkmenuactive">{{ networkmenu_active }}</span></li>
-            <h3>Raw data Openzwave :</h3>
-                <li><b>{% trans %}openzwaveInfo{% endtrans %} : </b></li>
-                <pre id="debug-ozw">{{ openzwaveInfo }}</pre>
-            <h3>Raw data Manager :</h3>
-                <li><b>{% trans %}managerState{% endtrans %} : </b></li>
-                <pre id="debug-manager">{{ managerState }}</pre>
-            <h3>Raw data Controller :</h3>
-                <li><b>{% trans %}zw_network{% endtrans %} : </b></li>
-                <pre id="debug-ctrl">{{ network_state }}</pre>
-            <h3>Raw data Nodes :</h3>
-                <li><b>{% trans %}nodes_state{% endtrans %} : </b></li>
-                <pre id="debug-nodes">{{ nodes_state }}</pre>
-            <h3>Raw data ozwave plugin client detail :</h3>
-                <li><b>{% trans %}client_detail{% endtrans %} : </b></li>
-                <pre id="debug-client">{{ client_detail }}</pre>
-        </div>
         <div class="tab-pane{% if network_active == 'tools' %} active{% endif %}" id="tools-pane">
         <!-- Page is insered after -->
         </div>
@@ -256,7 +233,7 @@
     function selectActiveNetwork(NetworkID) {
         sidebarVisible('network-menu', true);
         activeNetwork = NetworkID;
-        $("#debug-networkactive").text(NetworkID);
+     //   $("#debug-networkactive").text(NetworkID);
         $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
         $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
         $("#network-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/network");
@@ -362,7 +339,7 @@
                                         setCtrlStatusHtml({'NetworkID': data.content.NetworkID, 'HomeID': data.content.HomeID, 'init' : data.content.usermsg,
                                                                 'status': data.content.status, 'error': error, 'Model': ''});
                                         <!-- debug infos -->
-                                        $("#debug-ctrl").text(JSON.stringify(data.content));
+                                    //    $("#debug-ctrl").text(JSON.stringify(data.content));
                                     };
                                     if (data.content.type == 'hard-reset') {
                                         new PNotify({
@@ -453,8 +430,6 @@
                                 };
                             };
                             $("#ozw-options").html(options);
-                            <!-- debug infos -->
-                            $("#debug-ozw").text(JSON.stringify(data.content));
                         };
                         break;
                     case "manager" :
@@ -480,9 +455,9 @@
                                            tabNew += "' data-toggle='tooltip' data-placement='bottom' title='Save openzwave network config'>" +
                                                 "<span id='icsaveconf_" + data.content.Controllers[item].NetworkID+"' class='glyphicon "+ saveIc +"'></span> </span>" +
                                                 "</h4> </a> </li>";
-                                         $(tabNew).insertBefore("#debug-tab");
+                                         $(tabNew).insertBefore("#tools-tab");
                                          tabNew = "<div class='tab-pane' id='" + data.content.Controllers[item].NetworkID + "'></div>";
-                                         $(tabNew).insertBefore("#debug-pane");
+                                         $(tabNew).insertBefore("#tools-pane");
                                          $('#ozwave-navbar a[href="#'+data.content.Controllers[item].NetworkID+'"]').tab('show');
                                          $("#ctrl-tab_" + data.content.Controllers[item].NetworkID).tooltip();
                                          $("#saveconf_" + data.content.Controllers[item].NetworkID).tooltip();
@@ -493,8 +468,6 @@
                                         updateBtSavedConf(data.content.Controllers[item].NetworkID, data.content.Controllers[item].saved);
                                     };
                                 };
-                                <!-- debug infos -->
-                                $("#debug-manager").text(JSON.stringify(data.content));
                                 break;
                             case "refreshdeviceslist" :
                                 if (data.content.error == '') {
