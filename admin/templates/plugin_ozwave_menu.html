@@ -233,7 +233,6 @@
     function selectActiveNetwork(NetworkID) {
         sidebarVisible('network-menu', true);
         activeNetwork = NetworkID;
-     //   $("#debug-networkactive").text(NetworkID);
         $("#ctrl-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/controller");
         $("#nodes-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/nodes");
         $("#network-href").attr('href',"/plugin_ozwave/{{ clientid }}/" + NetworkID + "/network");
@@ -338,8 +337,6 @@
                                         };
                                         setCtrlStatusHtml({'NetworkID': data.content.NetworkID, 'HomeID': data.content.HomeID, 'init' : data.content.usermsg,
                                                                 'status': data.content.status, 'error': error, 'Model': ''});
-                                        <!-- debug infos -->
-                                    //    $("#debug-ctrl").text(JSON.stringify(data.content));
                                     };
                                     if (data.content.type == 'hard-reset') {
                                         new PNotify({
