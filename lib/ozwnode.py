@@ -1236,7 +1236,8 @@ class ZWaveNode:
                             self._knownDeviceTypes[kDev].append(product['type'])
                             break
             else :
-                self._knownDeviceTypes[(self.networkID, self.nodeId, 1)] = [product['type']]
+                if product != {} :
+                    self._knownDeviceTypes[(self.networkID, self.nodeId, 1)] = [product['type']]
         for dmgDev in self._dmgDevices:
             instance = 1 if dmgDev["device_type_id"] in ["ozwave.primary_controller", "ozwave.node"] else int(dmgDev['parameters']['instance']['value'])
             popList = []
