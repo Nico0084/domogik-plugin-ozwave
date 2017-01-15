@@ -829,9 +829,10 @@ function renderCmdClssValue(data, type, full, meta) {
                         '</span>';
                 } else {
                     valueData.realvalue = valueData.value;
+                    if (valueData.errorRead != "") {var color = " icon-danger";} else {var color = "";};
                     modify = '<span class="input-addon-xs label-warning"><i id="stic'+ valueRef +
-                        '" class="fa fa-warning" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node."> '+
-                        'Not recovered</i>'+
+                        '" class="fa fa-warning'+color+'" data-toggle="tooltip" data-placement="bottom" title="Value not confirmed by node. '+
+                            valueData.errorRead+'"> '+ 'Not recovered</i>'+
                         '<span id="reqValRefresh'+ valueRef + '"class="btn btn-xs btn-info pull-right" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Request refresh value">'+
                             '<span class="glyphicon glyphicon-refresh"></span>'+
                         '</span>'+

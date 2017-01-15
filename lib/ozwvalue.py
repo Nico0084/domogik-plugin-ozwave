@@ -92,6 +92,8 @@ class ZWaveValueNode:
         self._valueData = valueData
         self._lastUpdate = time.time()
         self._realValue = None
+        self._errorRead = ""
+        self._nbRequestRead = 0
         self._tempConv = True # Conversion forcée de F en °C, a mettre en option.
         self._valueData['min'] = self._node._manager.getValueMin(self._valueData['id'])
         self._valueData['max'] = self._node._manager.getValueMax(self._valueData['id'])
@@ -127,6 +129,7 @@ class ZWaveValueNode:
         valueData['homeId'] = int(valueData['homeId']) # int for javascript compatiblity
         valueData['id'] = str(valueData['id']) # str for javascript compatiblity
         valueData['realvalue'] = self._realValue
+        valueData['errorRead'] = self._errorRead
         return valueData
 
     def HandleSleepingSetvalue(self):
@@ -281,9 +284,18 @@ class ZWaveValueNode:
         new = True if self._valueData['value'] != valueData['value'] else False
         self._valueData.update(dict(valueData))
         self._realValue = self._valueData['value']
+        self._errorRead = ""
+        self._nbRequestRead = 0
         self._lastUpdate = time.time()
         self._node.reportToUI({'type': 'value-changed', 'usermsg' :'Value has changed.', 'data': self.formatValueDataToJS()})
         return new
+
+    def setRequestRead(self):
+        """Count resquest value read to ozw and handle error if fail more than 5 times."""
+        self._nbRequestRead += 1
+        if self._nbRequestRead > 5 :
+            self._errorRead = u"Can't read value from node: Probably an bad definition value in openzwave config."
+            self.log.warning("{0} : {1}, {2}".format(self._node.refName, self._errorRead, self._valueData))
 
     def convertInType(self,  val):
         """Convertion val in type of value."""

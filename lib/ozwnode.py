@@ -601,6 +601,8 @@ class ZWaveNode:
         if not self._sleeping :
             self.log.debug(u"Requesting config params values for node {0}".format(self.refName))
             self._manager.requestAllConfigParams(self._homeId, self._nodeId)
+            for value in self.getValuesForCommandClass('COMMAND_CLASS_CONFIGURATION'):
+                value.setRequestRead()
             report = {'error' : u"", 'usermsg' : u"Requesting all config params values for node {0}".format(self.refName)}
             self._requestConfig = False # Flag set to False to unlock update all config value at once."
         else :
