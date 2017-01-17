@@ -54,12 +54,12 @@
             ws_onmessage_ozwave(e);
             var data = JSON.parse(e.data);
             if (data.msgid == "plugin.status") {
-                if ( data.content['host'] == 'vmdomogik0' && 'plugin-ozwave' == data.content['type'] + '-'+ data.content['name'] ) {
-                    if (data.content['event'] == "dead" || data.content['event'] == "stopped" || data.content['event'] == "fail") {
+                if ( data.content.host == '{{client_detail.host}}' && data.content.type + '-'+ data.content.name == '{{client_detail.package_id}}') {
+                    if (data.content.event == "dead" || data.content.event == "stopped" || data.content.event == "fail") {
                         $("#ozw-info").html("<i class='fa fa-exclamation-circle icon-warning'></i> {% trans %}Plugin not running.{% endtrans %}");
                         $("#manager-info").html("");
                         $("[id^='ctrl-info']").html("");
-                    } else if (data.content['event'] == "starting") {
+                    } else if (data.content.event == "starting") {
                         $("#ozw-info").html("<i class='fa fa-smile-o icon-info'></i> {% trans %}Openzwave Library starting, should be running soon...{% endtrans %}");
                         $("#manager-info").html("");
                         $("[id^='ctrl-info']").html("");

@@ -294,14 +294,14 @@
             ws_onmessage_menu(e);
             var data = JSON.parse(e.data);
             if (data.msgid == "plugin.status") {
-                if (data.content['type'] + '-'+ data.content['name'] == 'plugin-ozwave') {
-                    if (data.content['event'] == "starting" || data.content['event'] == "stopped" || data.content['event'] == "fail") {
+                if ( data.content.host == '{{client_detail.host}}' && data.content.type + '-'+ data.content.name == '{{client_detail.package_id}}') {
+                    if (data.content.event == "starting" || data.content.event == "stopped" || data.content.event == "fail") {
                         if ($('#client-status .status').text() != "starting") {
                             $("#ozw-status").removeClass().addClass("label status-stopped");
                             $("#manager-status").removeClass().addClass("label status-stopped");
                             $("#manager-init").text("Stopped");
                             $("[id^='ctrl-tab_']").removeClass().addClass("label status-stopped").attr("data-original-title","Controller not in line");
-                            if (data.content['event'] == "starting"){$("[id^='ctrl-tab_']").text('To discover');};
+                            if (data.content.event == "starting"){$("[id^='ctrl-tab_']").text('To discover');};
                         } else {
                             $("#ozw-status").removeClass().addClass("label status-starting");
                             $("#manager-status").removeClass().addClass("label status-stopped");
