@@ -1231,14 +1231,14 @@ class ZWaveNode:
         """Check if domogik products is listed in _knownDeviceTypes and add it if need.
            Clean all devices detected in _knownDeviceTypes  list."""
         for product in self.dmgProducts:
-            if self._knownDeviceTypes != {} :
-                for kDev in self._knownDeviceTypes:
-                    if kDev[2] == 1 : # Actualy domogik handle only one device_type per product, so this correspond to instance 1 of zwave modul.
-                        if product['type'] not in self._knownDeviceTypes[kDev]:
-                            self._knownDeviceTypes[kDev].append(product['type'])
-                            break
-            else :
-                if product != {} :
+            if product != {} :
+                if self._knownDeviceTypes != {}:
+                    for kDev in self._knownDeviceTypes:
+                        if kDev[2] == 1 : # Actualy domogik handle only one device_type per product, so this correspond to instance 1 of zwave modul.
+                            if product['type'] not in self._knownDeviceTypes[kDev]:
+                                self._knownDeviceTypes[kDev].append(product['type'])
+                                break
+                else :
                     self._knownDeviceTypes[(self.networkID, self.nodeId, 1)] = [product['type']]
         for dmgDev in self._dmgDevices:
             instance = 1 if dmgDev["device_type_id"] in ["ozwave.primary_controller", "ozwave.node"] else int(dmgDev['parameters']['instance']['value'])
