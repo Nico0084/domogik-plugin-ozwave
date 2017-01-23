@@ -102,6 +102,8 @@ class OZWavemanager():
         self._completMsg = self._plugin.get_config('cpltmsg')
         self._dataTypes = []
         self.linkedLabels = []
+        self._clssConversions = None
+        self.__timeReload = time.time() # TODO: Internal count to refresh every 60s by reload cmd_class_conversion.json, needed for develop rev.
         self._device = self._plugin.get_config('device')
         autoPath = self._plugin.get_config('autoconfpath')
         user = pwd.getpwuid(os.getuid())[0]
@@ -255,11 +257,14 @@ class OZWavemanager():
         return self._plugin.get_data_type(name)
 
     def getCmdClassLabelConversions(self, cmdClss, label):
-        """Load file lib/cmd_class_conversion.json and return possible values for a label of  commandclass."""
-        json_file = "{0}/cmd_class_conversion.json".format(self._plugin.get_lib_directory())
-        cmdClasses = json.load(open(json_file))
+        """Load file lib/cmd_class_conversion.json and return possible values for a label of commandclass."""
+        # TODO: Reload json file process probably not need for final revision.
+        if self._clssConversions is None or self.__timeReload + 60 <= time.time():
+            self.__timeReload = time.time()
+            json_file = "{0}/cmd_class_conversion.json".format(self._plugin.get_lib_directory())
+            self._clssConversions = json.load(open(json_file))
         label = label.lower()
-        for cmdC, labels in cmdClasses.iteritems() :
+        for cmdC, labels in self._clssConversions.iteritems() :
             if cmdC == cmdClss :
                 for l, values in labels.iteritems() :
                     if l.lower() == label :
