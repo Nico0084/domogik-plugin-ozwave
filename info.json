@@ -71,6 +71,11 @@
             "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
             "type": "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c"
         }, {
+            "name" : "Danfoss -- Popp Radiator Thermostat",
+            "id" : "Z Thermostat",
+            "documentation" : "http://www.popp.eu/thermostat/",
+            "type": "ozwave.battery-level_temperature-c_thermostat-setpoint-c__thermostat-setpoint-c"
+        }, {
             "name" : "FGMS001 Fibaro motion sensor",
             "id" : "FGMS001",
             "documentation" : "http://www.fibaro.com/en/the-fibaro-system/motion-sensor",
@@ -2125,6 +2130,38 @@
             "name" : "Thermostat (battery)",
             "commands": ["thermostat-setpoint-c"],
             "sensors": ["thermostat-setpoint-c", "battery-level"],
+            "parameters" : [{
+                "key" : "networkid",
+                "xpl": false,
+                "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
+                "type" : "string"
+            },{
+                "key" : "node",
+                "xpl": false,
+                "description" : "Zwave node id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "instance",
+                "xpl": false,
+                "description" : "Zwave node instance id",
+                "type" : "integer",
+                "max_value": 255,
+                "min_value": 1
+            },{
+                "key" : "batterycheck",
+                "xpl": false,
+                "description" : "Check battery level at zwave device wakeup.",
+                "type" : "boolean"
+            }]
+        },
+        "ozwave.battery-level_temperature-c_thermostat-setpoint-c__thermostat-setpoint-c" :{
+            "description" : "Thermostat with temperature and setpoint (battery)",
+            "id": "ozwave.battery-level_temperature-c_thermostat-setpoint-c__thermostat-setpoint-c",
+            "name" : "Thermostat with temperature (battery)",
+            "commands": ["thermostat-setpoint-c"],
+            "sensors": ["temperature-c", "thermostat-setpoint-c", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
                 "xpl": false,
