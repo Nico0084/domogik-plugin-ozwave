@@ -71,8 +71,8 @@
             "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
             "type": "ozwave.battery-level_thermostat-setpoint-c__thermostat-setpoint-c"
         }, {
-            "name" : "Danfoss -- Popp Radiator Thermostat",
-            "id" : "Z Thermostat",
+            "name" : "Danfoss Popp Radiator Thermostat",
+            "id" : "Popp Radiator Thermostat",
             "documentation" : "http://www.popp.eu/thermostat/",
             "type": "ozwave.battery-level_temperature-c_thermostat-setpoint-c__thermostat-setpoint-c"
         }, {
