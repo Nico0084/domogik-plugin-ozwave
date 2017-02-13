@@ -638,7 +638,9 @@ class ZWaveValueNode:
     def cmdClassConvert(self, clssConv, value):
         """"Handle comparaison for cmd class conversion to value"""
         try :
-            if clssConv['type'] == 'bool' :
+            if clssConv['type'] == 'trigger' :
+                return 1
+            elif clssConv['type'] == 'bool' :
                 for v, vc in clssConv['values'].iteritems() :
                     if bool(v) == bool(value) : return vc
             elif clssConv['type'] in ['byte', 'int', 'long', 'decimal'] :

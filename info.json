@@ -66,6 +66,11 @@
             "documentation" : "http://www.everspring.com/Products/HomeAutomation/SF812.aspx",
             "type": "ozwave.alarm-str-report_battery-level_smoke-alarm"
         }, {
+            "name" : "AN180 Plug-in ON/OFF Module",
+            "id" : "AN180",
+            "documentation" : "http://www.everspring.com/Products/HomeAutomation/AN180.aspx",
+            "type": "ozwave.power-management-alarm_switch__switch"
+        }, {
             "name" : "Danfoss living connect",
             "id" : "Z Thermostat",
             "documentation" : "http://fr.cd.danfoss.com/xxTypex/585933.html",
@@ -774,12 +779,12 @@
         "power-management-alarm" : {
             "name" : "Power Management",
             "incremental": false,
-            "data_type" : "DT_Binary",
+            "data_type" : "DT_Trigger",
             "conversion" : "",
             "timeout": 0,
             "history": {
                     "store": true,
-                    "duplicate": false,
+                    "duplicate": true,
                     "max": 0,
                     "expire": 0,
                     "round_value": 0
