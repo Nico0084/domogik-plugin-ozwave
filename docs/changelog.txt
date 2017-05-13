@@ -5,22 +5,22 @@ Change log
 0.5.4 : (13-05-2017)
 --------------------
 - Change log :
-	- Python-openzwave 0.4 compatibility tested
-	- Add **install_dependencies.sh -pip** option for python-openzwave >=0.4.0 install from pip
-	- Make python-openzwave 0.3.3 as default version used by install_dependencies.sh
+    - Python-openzwave 0.4 compatibility tested.
+    - Add **install_dependencies.sh -pip** option for python-openzwave >=0.4.0 install from pip.
+    - Make python-openzwave 0.3.3 as default version used by install_dependencies.sh.
     - Json Change :
-        - Add Danfos Popp Popp Radiator Thermostat
-        - Add Everspring AN180 Plug-in ON/OFF Module (Test Power management alarm as Trigger mod)
-		- Add NorthQ NQ-9121 Gas Meter support
-	    - Reload json class conversion file only within 60s
-	- Improve unreadable ozw value diagnostic
-	- Exclude existing sensor/command dmg device in detected device
-	- Improve user starting plugin informations in admin
-	- Convert zw cubic meter to m3 domogik unit
-	- Remove admin debug-pane
-	- Fix, dmgdevicelink case no product
-	- Fix product empty in dmgProducts
-	- Fix advanced admin plugin status host id
+        - Add Danfos Popp Popp Radiator Thermostat.
+        - Add Everspring AN180 Plug-in ON/OFF Module (Test Power management alarm as Trigger mod).
+        - Add NorthQ NQ-9121 Gas Meter support.
+        - Reload json class conversion file only within 60s.
+    - Improve unreadable ozw value diagnostic.
+    - Exclude existing sensor/command dmg device in detected device.
+    - Improve user starting plugin informations in admin.
+    - Convert zw cubic meter to m3 domogik unit.
+    - Remove admin debug-pane.
+    - Fix, dmgdevicelink case no product.
+    - Fix product empty in dmgProducts.
+    - Fix advanced admin plugin status host id.
 
 0.5.3 : (27-12-2016)
 --------------------
@@ -37,11 +37,11 @@ Change log
     - Handle products domogik devices plugin associated to detected devices and known zwave modul.
     - Improved domogik device detection.
     - Improve Advanced Admin user information for node link to domogik device.
-	- Add in Advanced Admin node xml detail from openzwave config displayed by xonomy js lib. TODO: Edit/save mode.
-	- Fix Advanced Admin graph neighbors zoom, improve display.
-	- Fix Advanced Admin display network menu on overlay.
+    - Add in Advanced Admin node xml detail from openzwave config displayed by xonomy js lib. TODO: Edit/save mode.
+    - Fix Advanced Admin graph neighbors zoom, improve display.
+    - Fix Advanced Admin display network menu on overlay.
     - Fix some Unicode.
-	- Update doc
+    - Update doc.
 
 0.5.2 : (03-08-2016)
 --------------------
@@ -49,12 +49,12 @@ Change log
 - Change log :
     - Json Change :
         - Remove **Humidity** sensor, use only **Relative humidity**
-		- Create general conversion **for_Binary_Inversion** and sensors binary inversion
-		- Modify binary **Bright/Dim Increase/Decrease Up/down** button as a single command
-		- Modify device_types associate
-		- Add details configuration values openzwave options help
-	- Handle **Bright/Dim Increase/Decrease Up/down** button
-	- Update doc
+        - Create general conversion **for_Binary_Inversion** and sensors binary inversion
+        - Modify binary **Bright/Dim Increase/Decrease Up/down** button as a single command
+        - Modify device_types associate
+        - Add details configuration values openzwave options help
+    - Handle **Bright/Dim Increase/Decrease Up/down** button
+    - Update doc
 
 0.5.1 : (27-06-2016)
 --------------------
@@ -186,41 +186,41 @@ Historical for domogik version 0.3.x
         - Update doc.
 
 - 0.2b4 : (05-28-2013) Compatibily library : the same.
-	- Target : domogik and domoweb
-	- Change log :
-	    - Fixe bug plugin starting with package installation
-	    - Add Domoweb version. (first 0.2.b4)
-	    - Add support tools, memory usage and log report to UI.
-	    - Change websocket server private plugin to generic usage.
-	    - Add load xml open-zwave usage, don't finish coding.
+    - Target : domogik and domoweb
+    - Change log :
+        - Fixe bug plugin starting with package installation
+        - Add Domoweb version. (first 0.2.b4)
+        - Add support tools, memory usage and log report to UI.
+        - Change websocket server private plugin to generic usage.
+        - Add load xml open-zwave usage, don't finish coding.
 
 - 0.2b3 : Compatibily library : python_openzwave >= 0.2.5 (rev : b434c50b795b), tailer >=0.2.1
-	- Target : python_openzwave, domogik and domoweb
-	- Update, compile and install python_openzwave
-	- Install tailer : "sudo pip install tailer" or "sudo easy_install tailer"
-	- Change log :
-	    - Add test network and node
-	    - Add id message req-ack
+    - Target : python_openzwave, domogik and domoweb
+    - Update, compile and install python_openzwave
+    - Install tailer : "sudo pip install tailer" or "sudo easy_install tailer"
+    - Change log :
+        - Add test network and node
+        - Add id message req-ack
 
 - 0.2b2 : Compatibily library : the same.
-	- Target : domogik and domoweb
-	- An insert_data or a reinstall is necessary
-	- Change log :
-	    - Check user directory and config directory acces
-	    - Realtime improvements for graph neighbors
-	    - Add Start/Stop driver function
-	    - Add zwave device switch with power meter (Everspring (C.T.) - AN158 full handling)
-	    - Fixe ON/OFF sensor return status
+    - Target : domogik and domoweb
+    - An insert_data or a reinstall is necessary
+    - Change log :
+        - Check user directory and config directory acces
+        - Realtime improvements for graph neighbors
+        - Add Start/Stop driver function
+        - Add zwave device switch with power meter (Everspring (C.T.) - AN158 full handling)
+        - Fixe ON/OFF sensor return status
 
 - 0.2b1 : Compatibily library : OpenZwave >= 1.0.645, python_openzwave >= 0.2.5, ws4py >= 0.3.0-beta
-	- Target : domogik and domoweb
-	- Install new dependency `ws4py 0.3.0-beta <dependencies.html#Install WebSocket library for Python>`_
-	- An insert_data or a reinstall is necessary
-	- Enter new wsportserver key (Plugin configuration) and save the config (necessary to restart plugin if is started)
+    - Target : domogik and domoweb
+    - Install new dependency `ws4py 0.3.0-beta <dependencies.html#Install WebSocket library for Python>`_
+    - An insert_data or a reinstall is necessary
+    - Enter new wsportserver key (Plugin configuration) and save the config (necessary to restart plugin if is started)
 
 - 0.1b8 :
-	- An insert_data or a reinstall is necessary.
-	- Created primary controller device for domogik and traced back to the state it to domogik.
+    - An insert_data or a reinstall is necessary.
+    - Created primary controller device for domogik and traced back to the state it to domogik.
 
 Do an insert data
 -----------------
@@ -228,6 +228,6 @@ In your domogik directory with user domogik :
 
 .. code-block:: bash
 
-	$ src/tools/packages/insert_data.py src/share/domogik/plugins/ozwave.json
+    $ src/tools/packages/insert_data.py src/share/domogik/plugins/ozwave.json
 
 

@@ -1,12 +1,6 @@
-.. image:: https://travis-ci.org/Nico0084/domogik-plugin-ozwave.svg?branch=develop
-    :target: https://travis-ci.org/Nico0084/domogik-plugin-ozwave
-    :alt: Travis status
+[![Travis Status](https://travis-ci.org/Nico0084/domogik-plugin-ozwave.svg?branch=develop)](https://travis-ci.org/Nico0084/domogik-plugin-ozwave)
+[![Documentation Status](http://readthedocs.org/projects/domogik-plugin-ozwave/badge/?version=develop)](http://domogik-plugin-ozwave.readthedocs.io/en/master/?badge=develop)
 
-.. image:: http://readthedocs.org/projects/domogik-plugin-ozwave/badge/?version=develop
-	:target: http://domogik-plugin-ozwave.readthedocs.io/en/develop/ozwave.html
-	:alt: Documentation Status
-
-=====================
 domogik-plugin-ozwave
 =====================
 
@@ -23,5 +17,3 @@ Viewing and setting Zwave devices is accessed in advanced plugin page from the a
 Supported by domogik >=0.5.2
 Development is in progress, features will get gradually
 
-Beta version, work only for test
-================================

@@ -2,8 +2,8 @@
 # based on the template version 1
 # the templates are availables in the documentation on http://docs.domogik.org/domogik/dev/en/package_development/plugins/tests/travis_templates.html
 # sudo: false
-sudo: required
-dist: trusty
+#sudo: required
+#dist: trusty
 addons:
   apt:
     packages:
@@ -19,9 +19,9 @@ mysql:
   username: travis
   encoding: utf8
 env:
-  DMG_BRANCH=testcase_non_xpl
+  DMG_BRANCH=develop
   DMG_PLUGIN=ozwave
-  VIRTUALENV=/home/travis/virtualenv/python2.7.10
+#  VIRTUALENV=/home/travis/virtualenv/python2.7.10
 install:
   - cd ~
   - git clone https://github.com/Nico0084/domogik.git
@@ -29,7 +29,8 @@ install:
   - git checkout $DMG_BRANCH
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
 before_script:
-  - ~/domogik/src/domogik/tests/travis/travis_trusty-setup-database.sh
+#  - ~/domogik/src/domogik/tests/travis/travis_trusty-setup-database.sh
+  - ~/domogik/src/domogik/tests/travis/travis-setup-database.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-domogik-mq.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-domogik.sh
   - ~/domogik/src/domogik/tests/travis/travis-install-plugin.sh
@@ -42,7 +43,8 @@ before_script:
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
-  - $VIRTUALENV/bin/python zwemulator.py &
+#  - $VIRTUALENV/bin/python zwemulator.py &
+  - ./bin/python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
