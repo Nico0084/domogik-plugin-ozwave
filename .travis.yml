@@ -38,7 +38,7 @@ before_script:
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency python-openzwave lib"
-  - sudo ./install_dependencies.sh
+  - sudo ./install_dependencies.sh -pip
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
