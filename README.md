@@ -1,5 +1,5 @@
 [![Travis Status](https://travis-ci.org/Nico0084/domogik-plugin-ozwave.svg?branch=develop)](https://travis-ci.org/Nico0084/domogik-plugin-ozwave)
-[![Documentation Status](http://readthedocs.org/projects/domogik-plugin-ozwave/badge/?version=develop)](http://domogik-plugin-ozwave.readthedocs.io/en/master/?badge=develop)
+[![Documentation Status](http://readthedocs.org/projects/domogik-plugin-ozwave/badge/?version=develop)](http://domogik-plugin-ozwave.readthedocs.io/en/develop)
 
 domogik-plugin-ozwave
 =====================

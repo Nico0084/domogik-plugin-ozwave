@@ -2,14 +2,8 @@
 # based on the template version 1
 # the templates are availables in the documentation on http://docs.domogik.org/domogik/dev/en/package_development/plugins/tests/travis_templates.html
 # sudo: false
-#sudo: required
+sudo: required
 #dist: trusty
-addons:
-  apt:
-    packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
 language: python
 python:
   - "2.7"
