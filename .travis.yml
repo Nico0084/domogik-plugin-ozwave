@@ -34,7 +34,7 @@ before_script:
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency python-openzwave lib"
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
-  - sudo /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/nstall_dependencies.sh -pip
+  - sudo /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/install_dependencies.sh -pip
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
