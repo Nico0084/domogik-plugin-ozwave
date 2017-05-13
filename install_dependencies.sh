@@ -145,11 +145,17 @@ do
             export VIRTUALENV=$2
             shift 2
             ;;
+      -pip)
+            title "Install python-openzwave from pip"
+            apt-get install --force-yes -y make libudev-dev g++ libyaml-dev
+			pip install python_openzwave
+            exit 0
+            ;;
       *)  # No more options
             if [[ $python_openzwave_version = "" ]]
                 then
                     echo "****** Get default version *****"
-                    python_openzwave_version="0.3.1"
+                    python_openzwave_version="0.3.3"
                     echo "Default : "$python_openzwave_version
             fi
             break
