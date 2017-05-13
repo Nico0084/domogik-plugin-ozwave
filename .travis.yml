@@ -38,17 +38,7 @@ before_script:
   - sudo apt-get install socat
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency python-openzwave lib"
-  - git clone https://github.com/OpenZWave/python-openzwave.git
-  - cd python-openzwave
-  - ls -l
-  - git checkout master
-  - sudo make python-deps
-  - sudo $VIRTUALENV/bin/pip install Cython
-  - sudo make repo-deps
-  - make update
-  - make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
-  - sudo $VIRTUALENV/bin/pip freeze
-  - ls -l $VIRTUALENV/lib/python2.7/site-packages/
+  - sudo ./install_dependencies.sh
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
