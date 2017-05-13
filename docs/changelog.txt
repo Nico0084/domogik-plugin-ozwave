@@ -1,6 +1,27 @@
 ==========
 Change log
 ==========
+
+0.5.4 : (13-05-2017)
+--------------------
+- Change log :
+	- Python-openzwave 0.4 compatibility tested
+	- Add **install_dependencies.sh -pip** option for python-openzwave >=0.4.0 install from pip
+	- Make python-openzwave 0.3.3 as default version used by install_dependencies.sh
+    - Json Change :
+        - Add Danfos Popp Popp Radiator Thermostat
+        - Add Everspring AN180 Plug-in ON/OFF Module (Test Power management alarm as Trigger mod)
+		- Add NorthQ NQ-9121 Gas Meter support
+	    - Reload json class conversion file only within 60s
+	- Improve unreadable ozw value diagnostic
+	- Exclude existing sensor/command dmg device in detected device
+	- Improve user starting plugin informations in admin
+	- Convert zw cubic meter to m3 domogik unit
+	- Remove admin debug-pane
+	- Fix, dmgdevicelink case no product
+	- Fix product empty in dmgProducts
+	- Fix advanced admin plugin status host id
+
 0.5.3 : (27-12-2016)
 --------------------
 - Change log :

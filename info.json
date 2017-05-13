@@ -1945,26 +1945,26 @@
             "sensors": ["binary-sensor", "flood-alarm", "temperature-c", "motion-sensor-level", "battery-level"],
             "parameters" : [{
                 "key" : "networkid",
-                                    "xpl": false,
+                "xpl": false,
                 "description" : "Zwave network name if refered in controller node or Openzwave Home ID",
                 "type" : "string"
             },{
                 "key" : "node",
-                                    "xpl": false,
+                "xpl": false,
                 "description" : "Zwave node id",
                 "type" : "integer",
                 "max_value": 255,
                 "min_value": 1
             },{
                 "key" : "instance",
-                                    "xpl": false,
+                "xpl": false,
                 "description" : "Zwave node instance id",
                 "type" : "integer",
                 "max_value": 255,
                 "min_value": 1
             },{
                 "key" : "batterycheck",
-                                    "xpl": false,
+                "xpl": false,
                 "description" : "Check battery level at zwave device wakeup.",
                 "type" : "boolean"
             }]
@@ -2297,7 +2297,7 @@
         "domogik_min_version" : "0.5.0",
         "name": "ozwave",
         "type" : "plugin",
-        "version" : "0.5.3"
+        "version" : "0.5.4"
     },
     "json_version" : 2
     }
