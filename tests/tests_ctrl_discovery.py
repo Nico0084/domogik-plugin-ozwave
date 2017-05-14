@@ -113,9 +113,9 @@ if __name__ == "__main__":
         pass # there are no xpl params for this plugin
         # create
         device_id = td.create_device(params)['id']
-
     except:
         print(u"Error while creating the test devices : {0}".format(traceback.format_exc()))
+        plugin.force_leave(return_code = 1)
         sys.exit(1)
     ### prepare and run the test suite
     suite = unittest.TestSuite()

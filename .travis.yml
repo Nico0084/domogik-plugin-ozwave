@@ -18,7 +18,7 @@ env:
 #  VIRTUALENV=/home/travis/virtualenv/python2.7.10
 install:
   - cd ~
-  - git clone https://github.com/Nico0084/domogik.git
+  - git clone https://github.com/domogik/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
@@ -39,7 +39,7 @@ before_script:
   - cd ~/py-zwave-emulator/bin
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
 #  - $VIRTUALENV/bin/python zwemulator.py &
-  - ./bin/python zwemulator.py &
+  - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
 script:
   - echo $TRAVIS_BUILD_DIR
