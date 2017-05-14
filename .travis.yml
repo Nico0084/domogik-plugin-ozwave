@@ -31,6 +31,7 @@ before_script:
   - cd ~
   - echo "==== Install zwave emulator dependency"
   - sudo apt-get install socat
+  - sudo pip install pyserial
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency python-openzwave lib"
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
