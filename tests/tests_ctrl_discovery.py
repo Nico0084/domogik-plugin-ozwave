@@ -93,7 +93,7 @@ if __name__ == "__main__":
         td.del_devices_by_client(client_id)
     except:
         print(u"Error while deleting all the test device for the client id '{0}' : {1}".format(client_id, traceback.format_exc()))
-        sys.exit(1)
+#        sys.exit(1)
 
     # create a test device
     try:
