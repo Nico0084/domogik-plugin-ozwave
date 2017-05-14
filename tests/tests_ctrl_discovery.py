@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from domogik.common.plugin import Plugin
-from domogik.tests.common.helpers import get_device_list
 from domogik.tests.common.plugintestcase import PluginTestCase
 from domogik.tests.common.testplugin import TestPlugin
 from domogik.tests.common.testdevice import TestDevice
@@ -25,7 +24,10 @@ class ZwaveCtrlTestCase(PluginTestCase):
 
             xpl-trig : schema:cid.basic, data:{'calltype': 'inbound', 'phone' : '0102030405'}
         """
-        global device_ctrl
+        global networkid
+        global driver
+        global device_id
+        global timer_status
 
         r = subprocess.check_output('ps aux | grep ozwave', shell=True)
         print (u"----- Process : {0}".format(r))
@@ -33,19 +35,14 @@ class ZwaveCtrlTestCase(PluginTestCase):
         r = subprocess.check_output('ps aux', shell=True)
         print (u"----- ALL Process : {0}".format(r))
 
-        print(u"Device Controller = {0}".format(device_ctrl))
-        print(u"Device id = {0}".format(device_ctrl['id']))
-        for step in self.configuration:
-            print(u"Check that the value ({0}) of controller status has been inserted in database".format(step))
-            sensor = TestSensor(device_ctrl['id'], "ctrl-status")
-            state = False
-            startT = time.time()
-            while time.time() < startT + step['timeout'] and not state :
-                if sensor.get_last_value()[1]== step['status'] :
-                    state = True
-                else :
-                    time.sleep(1)
-            self.assertTrue(state)
+        data = {"ctrl-status" : 1}
+        self.assertTrue(self.wait_for_mq(device_id = device_id,
+                                          data = data,
+                                          timeout = timer_status * 2))
+        time.sleep(1)
+        print(u"Check that the values of the MQ message has been inserted in database")
+        sensor = TestSensor(device_id, "ctrl-status")
+        self.assertTrue(sensor.get_last_value()[1] == str(data['ctrl-status']))
 
 
 if __name__ == "__main__":
@@ -57,11 +54,8 @@ if __name__ == "__main__":
 
     ### global variables
     # the key will be the device address
-    create_devices = { "ctrl" : {
-            "networkid" : "ZwaveNetwork",
-            "driver": "/tmp/ttyS0"
-            }
-    }
+    networkid = "ZwaveNetwork",
+    driver = "/tmp/ttyS0"
 
     ### configuration
 
@@ -104,62 +98,46 @@ if __name__ == "__main__":
     # create a test device
     try:
         params = td.get_params(client_id, "ozwave.primary_controller")
-        for key, dev, in create_devices.iteritems():
-            # fill in the params
-            params["device_type"] = "ozwave.primary_controller"
-            params["name"] = "test_device_ctrlozwave_{0}".format(key)
-            params["reference"] = "reference"
-            params["description"] = "description"
-            # global params
-            for the_param in params['global']:
-                if the_param['key'] == "networkid":
-                    the_param['value'] = dev['networkid']
-                if the_param['key'] == "driver":
-                    the_param['value'] = dev['driver']
-            # xpl params
-            pass # there are no xpl params for this plugin
-            # create
-            if td.create_device(params):
-                print(u"Device {0} created".format(params["name"]))
+        # fill in the params
+        params["device_type"] = "ozwave.primary_controller"
+        params["name"] = "Test Ctrl Zwave"
+        params["reference"] = "reference"
+        params["description"] = "description"
+        # global params
+        for the_param in params['global']:
+            if the_param['key'] == "networkid":
+                the_param['value'] = networkid
+            if the_param['key'] == "driver":
+                the_param['value'] = driver
+        # xpl params
+        pass # there are no xpl params for this plugin
+        # create
+        device_id = td.create_device(params)['id']
 
     except:
         print(u"Error while creating the test devices : {0}".format(traceback.format_exc()))
-#        plugin.force_leave(return_code = 1)
-#        sys.exit(1)
-    devices = get_device_list("plugin", name, get_sanitized_hostname())
-    device_ctrl = None
-    for dev in devices :
-        if dev['device_type_id'] == "ozwave.primary_controller" and dev['name'] ==  "test_device_ctrlozwave_ctrl" :
-            device_ctrl = dev
-            break
-    print(u"Find device controller id : {0}".format(device_ctrl))
-    try :
-        ### prepare and run the test suite
-        suite = unittest.TestSuite()
-        # check domogik is running, configure the plugin
-        suite.addTest(ZwaveCtrlTestCase("test_0001_domogik_is_running", plugin, name, cfg))
-        suite.addTest(ZwaveCtrlTestCase("test_0010_configure_the_plugin", plugin, name, cfg))
+        sys.exit(1)
+    ### prepare and run the test suite
+    suite = unittest.TestSuite()
+    # check domogik is running, configure the plugin
+    suite.addTest(ZwaveCtrlTestCase("test_0001_domogik_is_running", plugin, name, cfg))
+    suite.addTest(ZwaveCtrlTestCase("test_0010_configure_the_plugin", plugin, name, cfg))
 
-        # start the plugin
-        suite.addTest(ZwaveCtrlTestCase("test_0050_start_the_plugin", plugin, name, {'timeout' : 20}))
+    # start the plugin
+    suite.addTest(ZwaveCtrlTestCase("test_0050_start_the_plugin", plugin, name, cfg))
 
-        # do the specific plugin tests
-        # test zwave ctrl start step
-        suite.addTest(ZwaveCtrlTestCase("test_0100_ctrl_status", plugin, name,  [{"status": "starting", "timeout": 60},
-                                                                                                                  {"status": "alive", "timeout": 60}]))
+    # do the specific plugin tests
+    # test zwave ctrl start step
+    suite.addTest(ZwaveCtrlTestCase("test_0100_ctrl_status", plugin, name,  cfg))
 
-        # do some tests comon to all the plugins
-        #suite.addTest(ZwaveCtrlTestCase("test_9900_hbeat", plugin, name, cfg))
-        suite.addTest(ZwaveCtrlTestCase("test_9990_stop_the_plugin", plugin, name, {'timeout' : 20}))
+    # do some tests comon to all the plugins
+    #suite.addTest(ZwaveCtrlTestCase("test_9900_hbeat", plugin, name, cfg))
+    suite.addTest(ZwaveCtrlTestCase("test_9990_stop_the_plugin", plugin, name, cfg))
 
-        # quit
-        res = unittest.TextTestRunner().run(suite)
-        if res.wasSuccessful() == True:
-            rc = 0   # tests are ok so the shell return code is 0
-        else:
-            rc = 1   # tests are not ok so the shell return code is != 0
-        plugin.force_leave(return_code = rc)
-
-    except:
-        print(u"Error while running test : {0}".format(traceback.format_exc()))
-        plugin.force_leave(return_code = 1)
+    # quit
+    res = unittest.TextTestRunner().run(suite)
+    if res.wasSuccessful() == True:
+        rc = 0   # tests are ok so the shell return code is 0
+    else:
+        rc = 1   # tests are not ok so the shell return code is != 0
+    plugin.force_leave(return_code = rc)
