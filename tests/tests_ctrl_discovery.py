@@ -109,7 +109,7 @@ if __name__ == "__main__":
         cli = MQSyncReq(zmq.Context())
         msg = MQMessage()
         msg.set_action('device.params')
-        msg.set_data({'device_type': 'ozwave.primary_controller'})
+        msg.set_data({'device_type': 'ozwave.primary_controller', 'client_id': client_id})
         response = cli.request('admin', msg.get(), timeout=15)
         if response is not None:
             response = response.get_data()
