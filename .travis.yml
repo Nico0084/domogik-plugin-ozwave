@@ -18,7 +18,8 @@ env:
 #  VIRTUALENV=/home/travis/virtualenv/python2.7.10
 install:
   - cd ~
-  - git clone https://github.com/domogik/domogik.git
+#  - git clone https://github.com/domogik/domogik.git
+  - git clone https://github.com/Nico0084/domogik.git
   - cd domogik
   - git checkout $DMG_BRANCH
   - ~/domogik/src/domogik/tests/travis/travis-install-dependencies.sh
