@@ -48,13 +48,13 @@ script:
   - dmg_testrunner -a /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/tests/
 after_script:
   - ~/domogik/src/domogik/tests/travis/travis-after.sh
+  - ls -l /var/log/domogik
+  - echo "********** search ERROR in log *******************"
+  - cat -A /var/log/domogik/* | grep -A 10 ERROR
   - echo "********** ozwave plugin_test.log *******************"
   - cat /var/log/domogik/plugin_test.log
-  - ls -l /var/lib/domogik//domogik_packages/plugin_ozwave/bin
   - echo "********** ozwave Plugin start error *******************"
   - cat /var/log/domogik/ozwave_start_error.log
-  - sudo find / -iname ozwave_start_error.log
-  - sudo find / -iname plugin_ozwave.log
   - echo "********** ZWave-emulator log *******************"
   - cat ~/py-zwave-emulator/bin/test.log
   - echo "********** Openzwave lib log *******************"
