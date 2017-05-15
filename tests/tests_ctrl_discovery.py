@@ -7,6 +7,12 @@ from domogik.tests.common.testplugin import TestPlugin
 from domogik.tests.common.testdevice import TestDevice
 from domogik.tests.common.testsensor import TestSensor
 from domogik.common.utils import get_sanitized_hostname
+
+import zmq
+from zmq.eventloop.ioloop import IOLoop
+from domogikmq.reqrep.client import MQSyncReq
+from domogikmq.message import MQMessage
+
 from datetime import datetime
 import time
 import unittest
@@ -97,7 +103,24 @@ if __name__ == "__main__":
 
     # create a test device
     try:
-        params = td.get_params(client_id, "ozwave.primary_controller")
+#        params = td.get_params(client_id, "ozwave.primary_controller")
+
+#        TODO : To replace by td.get param when domogik testcase will use MQ
+        cli = MQSyncReq(zmq.Context())
+        msg = MQMessage()
+        msg.set_action('device.params')
+        msg.set_data({'device_type': 'ozwave.primary_controller'})
+        response = cli.request('admin', msg.get(), timeout=15)
+        if response is not None:
+            response = response.get_data()
+            if 'result' in response :
+                print(u"{0} : The params are: {1}".format(datetime.now(), response['result']))
+                params = response['result']
+            else :
+                print("Error when getting devices param for {0} : {1}".format(client_id, response))
+        else :
+            print("Error when getting devices param for {0}".format(client_id))
+
         # fill in the params
         params["device_type"] = "ozwave.primary_controller"
         params["name"] = "Test Ctrl Zwave"
@@ -112,7 +135,21 @@ if __name__ == "__main__":
         # xpl params
         pass # there are no xpl params for this plugin
         # create
-        device_id = td.create_device(params)['id']
+#        device_id = td.create_device(params)['id']
+        msg = MQMessage()
+        msg.set_action('device.create')
+        msg.set_data({'data': params})
+        response = cli.request('admin', msg.get(), timeout=20)
+        if response is not None:
+            response = response.get_data()
+            if 'result' in response :
+                print(u"{0} : The new device is: {1}".format(datetime.now(), response['result']))
+                device_id =  response['result']
+            else :
+                print("Error when creating the device : {0} : {1}".format(params, response))
+        else :
+            print("Error when creating the device : {0}".format(params))
+
     except:
         print(u"Error while creating the test devices : {0}".format(traceback.format_exc()))
         plugin.force_leave(return_code = 1)
