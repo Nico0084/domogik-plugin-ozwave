@@ -31,14 +31,13 @@ before_script:
   - cd ~
   - echo "==== Install zwave emulator dependency"
   - sudo apt-get install socat
-  - sudo pip install pyserial
+  - pip install pyserial
   - git clone https://github.com/Nico0084/py-zwave-emulator.git
   - echo "==== Install Plugin dependency python-openzwave lib"
   - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN
   - sudo /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/install_dependencies.sh -pip
   - echo "==== Start zwave emulator"
   - cd ~/py-zwave-emulator/bin
-  - ls -l /var/lib/domogik/domogik_packages/plugin_$DMG_PLUGIN/bin
 #  - $VIRTUALENV/bin/python zwemulator.py &
   - python zwemulator.py &
   - sudo ~/domogik/src/domogik/tests/travis/travis-start-domogik.sh
