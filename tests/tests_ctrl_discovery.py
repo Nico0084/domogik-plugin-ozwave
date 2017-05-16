@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from domogik.common.plugin import Plugin
+from domogik.common.plugin import Plugin, XplPlugin
 from domogik.tests.common.plugintestcase import PluginTestCase
 from domogik.tests.common.testplugin import TestPlugin
 from domogik.tests.common.testdevice import TestDevice
@@ -65,8 +65,10 @@ if __name__ == "__main__":
 
     ### configuration
 
-    # set up the xpl features
-    plugin = Plugin(name = 'test',
+    # set up the plugin features
+#    plugin = Plugin(name = 'test',
+# TODO: To replace by Plugin class when domogik plugintestcase will handle non xpl
+    plugin = XplPlugin(name = 'test',
                        daemonize = False,
                        parser = None,
                        test  = True)
@@ -104,8 +106,7 @@ if __name__ == "__main__":
     # create a test device
     try:
 #        params = td.get_params(client_id, "ozwave.primary_controller")
-
-#        TODO : To replace by td.get param when domogik testcase will use MQ
+# TODO: To replace by td.get_params when domogik testcase will use MQ
         cli = MQSyncReq(zmq.Context())
         msg = MQMessage()
         msg.set_action('device.params')
@@ -136,6 +137,7 @@ if __name__ == "__main__":
         pass # there are no xpl params for this plugin
         # create
 #        device_id = td.create_device(params)['id']
+# TODO: To replace by td.create_device when domogik testcase will use MQ
         msg = MQMessage()
         msg.set_action('device.create')
         msg.set_data({'data': params})
