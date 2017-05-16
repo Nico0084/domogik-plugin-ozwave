@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from domogik.common.plugin import Plugin, XplPlugin
+# TODO: Replace XplPlugin by Plugin class when domogik plugintestcase will handle non xpl
+from domogik.common.plugin import Plugin
+from domogik.xpl.common.plugin import XplPlugin
 from domogik.tests.common.plugintestcase import PluginTestCase
 from domogik.tests.common.testplugin import TestPlugin
 from domogik.tests.common.testdevice import TestDevice
