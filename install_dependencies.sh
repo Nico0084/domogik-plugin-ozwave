@@ -12,27 +12,69 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-
+# Display a title
 function title() {
-    echo "**************************************"
-    echo "* $1"
-    echo "**************************************"
+    tput cols > /dev/null 2>&1
+    if [[ $? -eq 0 ]] ; then
+        # tput cols works, we generate dynamically the width
+        printf '[xxxxxxx] %*s\n' "$(( ${COLUMNS:-$(tput cols)} - 10 ))" '' | tr ' ' - | tr 'x' ' '
+        echo "[       ]        $*"
+        printf '[xxxxxxx] %*s\n' "$(( ${COLUMNS:-$(tput cols)} - 10 ))" '' | tr ' ' - | tr 'x' ' '
+    else
+        # tput cols does not work (maybe this is run over ssh), we use 80 as width
+        printf '[xxxxxxx] %*s\n' "70" '' | tr ' ' - | tr 'x' ' '
+        echo "[       ]        $*"
+        printf '[xxxxxxx] %*s\n' "70" '' | tr ' ' - | tr 'x' ' '
+    fi
+}
+
+#info
+# Display messages in yellow
+function info() {
+    echo -e "[ INFO  ] \e[93m$*\e[39m"
+}
+
+# prompt
+# Display messages in blue
+function prompt() {
+    echo -e "[       ] \e[35m$*\e[39m"
+}
+
+# ok
+# Display messages in green
+function ok() {
+    echo -e "[ OK    ] \e[92m$*\e[39m"
+}
+
+# error
+# Display messages in red
+function error() {
+    #echo -e "[ ERROR ] \e[91m$*\e[39m"
+    echo -e "[ \e[5mERROR\e[0m ] \e[91m$*\e[39m"
+}
+
+# abort
+# display an error message and exit the installation script
+function abort() {
+    error $*
+    echo -e "[ \e[5mABORT\e[0m ] \e[91mThe installation is aborted due to the previous error!\e[39m"
+    exit 1
 }
 
 function raise_error() {
     if [[ $1 -ne 0 ]] ; then
-        echo "ERROR detected. Error code is : '$1'"
+        error $*
         continue
     fi
 }
 
 function continue() {
-    echo "Do you still want to continue ? [y/N]"
+    prompt "Do you still want to continue ? [y/N]"
     read yesno
     yesno=$(echo $yesno | awk '{print tolower($0)}')
     case $yesno in
-        "y") echo "continue" ;;
-        "n") echo "exiting..." ; exit 1;;
+        "y") ok "continue" ;;
+        "n") abort "exiting..." ;;
         *) continue;;
     esac
 }
@@ -40,18 +82,17 @@ function continue() {
 function check_debian_based() {
     distrib=$(lsb_release -si)
     if [[ $? -ne 0 ]] ; then
-        echo "ERROR : lsb_release not installed or not working. This script needs lsb_release to check if you are using a compliant OS"
+        error "lsb_release not installed or not working. This script needs lsb_release to check if you are using a compliant OS"
     fi
     if [[ "x$distrib" == "x" ]] ; then
-        echo "ERROR : unknown Linux release. This script is dedicated to Debian based Linux releases"
-        exit 1
+        abort "Unknown Linux release. This script is dedicated to Debian based Linux releases"
     fi
 
     case $distrib in
-        "Debian")     echo "The linux release is : '$distrib'. OK" ;;
-        "Ubuntu")     echo "The linux release is : '$distrib'. OK" ;;
-        "Raspbian")   echo "The linux release is : '$distrib'. OK" ;;
-        *)            echo "ERROR : your Linux release '$distrib' is not compliant with this installation script. This script is dedicated to Debian based Linux releases" ; exit 1 ;;
+        "Debian")     info "The linux release is : '$distrib'. OK" ;;
+        "Ubuntu")     info "The linux release is : '$distrib'. OK" ;;
+        "Raspbian")   info "The linux release is : '$distrib'. OK" ;;
+        *)            error "Your Linux release '$distrib' is not compliant with this installation script. This script is dedicated to Debian based Linux releases" ; exit 1 ;;
     esac
 
 }
@@ -71,11 +112,10 @@ check_debian_based
 title "Get the Domogik user..."
 DOMOGIK_USER=$(grep DOMOGIK_USER /etc/default/domogik | cut -d"=" -f2)
 if [[ "X"$DOMOGIK_USER == "X" ]] ; then
-    echo "It seems that no Domogik is installed on your system!"
-    exit 1
+    abort "It seems that no Domogik is installed on your system!"
 fi
-echo "Domogik user is : $DOMOGIK_USER"
-echo "Done"
+info "Domogik user is : $DOMOGIK_USER"
+ok "Done"
 
 
 #####################################################################
@@ -85,12 +125,12 @@ echo "Done"
 title "Install tailer with pip..."
 pip install tailer
 raise_error $?
-echo "Done"
+ok "Done"
 
 title "Install libudev-dev..."
 apt-get install -y libudev-dev
 raise_error $?
-echo "Done"
+ok "Done"
 
 
 #####################################################################
@@ -111,15 +151,13 @@ do
                     wget -N https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/pyozw_version.py
                     if [[ $? != 0 ]]
                         then
-                            echo ":( Can't get check version script."
-                            exit 1
+                            abort ":( Can't get check version script."
                         else
                             python_openzwave_version=$(python pyozw_version.py)
                     fi
                     shift
                 else
-                    echo ":( Option number mess : "$python_openzwave_version" , check your option script"
-                    exit 1
+                    abort ":( Option number mess : "$python_openzwave_version" , check your option script"
             fi
             ;;
       -v)
@@ -129,34 +167,39 @@ do
                     if [[ $2 =~ ^[0-9]+\.[0-9]+ ]]
                         then
                             python_openzwave_version=$2
-                            echo $python_openzwave_version
+                            ok $python_openzwave_version
                         else
-                            echo ":( Bad version number format : "$2" , use N.N.N"
-                            exit 1
+                            abort ":( Bad version number format : "$2" , use N.N.N"
                     fi
                     shift 2
                 else
-                    echo ":( Option number mess : "$python_openzwave_version" , check your option script"
-                    exit 1
+                    abort ":( Option number mess : "$python_openzwave_version" , check your option script"
             fi
             ;;
-      -env)
+      -env) # Must be at first
             title "Install python-openzwave lib in virtualenv : "$2
             export VIRTUALENV=$2
             shift 2
             ;;
       -pip)
             title "Install python-openzwave from pip"
+            if [[ $VIRTUALENV != "" ]]
+                then
+                    info "make install-lib in virtual env ("$VIRTUALENV")"
+                    source $VIRTUALENV/bin/activate
+
             apt-get install --force-yes -y make libudev-dev g++ libyaml-dev
 			pip install python_openzwave
+            raise_error $?
+            ok "Done"
             exit 0
             ;;
       *)  # No more options
             if [[ $python_openzwave_version = "" ]]
                 then
-                    echo "****** Get default version *****"
+                    info "****** Get default version *****"
                     python_openzwave_version="0.3.3"
-                    echo "Default : "$python_openzwave_version
+                    ok "Default : "$python_openzwave_version
             fi
             break
         ;;
@@ -167,8 +210,7 @@ export PYOZW=python-openzwave-${python_openzwave_version}
 wget -N -P ${TMP_DIR}  https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/${PYOZW}.tgz
 if [ $? -ne 0 ]
 then
-    echo ":( Can not get check archive file."
-    exit 1
+    abort ":( Can not get check archive file."
 else
     title "Version "$python_openzwave_version" retreived"
 fi
@@ -179,7 +221,7 @@ export TARGET=$TMP_DIR/$PYOZW.tgz
 
 chown -R $DOMOGIK_USER $TARGET
 raise_error $?
-echo "Done"
+ok "Done"
 
 title "Extract '$TARGET' in '$TMP_DIR/$PYOZW' ..."
 cd $TMP_DIR
@@ -188,39 +230,39 @@ raise_error $?
 chown -R $DOMOGIK_USER $TMP_DIR/$PYOZW
 raise_error $?
 cd $TMP_DIR/$PYOZW
-echo "Done"
+ok "Done"
 
 ### uninstall previous lib
 
 title "Uninstall the previous python-openzwave lib..."
 sudo make uninstall
 raise_error $?
-echo "Done"
+ok "Done"
 
 ### Install dependencies
 
 title "Install the dependencies..."
 make deps
 raise_error $?
-echo "Done"
+ok "Done"
 
 ### Build process
 
 title "Build python-openzwave..."
-echo "make clean..."
+info "make clean..."
 sudo make clean
 raise_error $?
 
-echo "make build..."
+info "make build..."
 su $DOMOGIK_USER -c "make build"
 raise_error $?
 
 if [[ $VIRTUALENV != "" ]]
     then
-        echo "make install-lib in virtual env ("$VIRTUALENV")"
+        info "make install-lib in virtual env ("$VIRTUALENV")"
         sudo make PYTHON_EXEC=$VIRTUALENV"/bin/python" install-lib
     else
-        echo "make install-lib..."
+        info "make install-lib..."
         sudo make install-lib
 fi
 raise_error $?
