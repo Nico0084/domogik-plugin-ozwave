@@ -187,7 +187,7 @@ do
                 then
                     info "make install-lib in virtual env ("$VIRTUALENV")"
                     source $VIRTUALENV/bin/activate
-
+            fi
             apt-get install --force-yes -y make libudev-dev g++ libyaml-dev
 			pip install python_openzwave
             raise_error $?
